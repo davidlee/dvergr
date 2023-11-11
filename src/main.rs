@@ -3,16 +3,18 @@
 // use bevy::window::WindowPlugin;
 use bevy::{
     core::FrameCount,
-    diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
+    // diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
     prelude::*,
-    window::{CursorGrabMode, PresentMode, WindowLevel, WindowTheme},
+    sprite::Anchor,
+    window::{PresentMode, WindowTheme},
 };
 
-struct Position {
-    x: u16,
-    y: u16,
-    z: u16,
-}
+// #[derive(Clone, Debug)]
+// struct Position {
+//     x: u16,
+//     y: u16,
+//     z: u16,
+// }
 
 struct Rect {
     width: f32,
@@ -41,14 +43,26 @@ impl TileConfig {
     fn h(&self) -> f32 {
         self.height + self.spacing
     }
+
+    fn x_offset(&self, col: u16) -> f32 {
+        let k: f32 = col as f32;
+        self.width * k + self.spacing * k
+    }
+
+    fn y_offset(&self, row: u16) -> f32 {
+        let k: f32 = row as f32;
+        self.height * k + self.spacing * k
+    }
+
+    fn size(&self) -> Vec2 {
+        Vec2::new(self.width, self.height)
+    }
 }
 
 #[derive(Debug)]
 struct TileSet {
     x_count: u16,
     y_count: u16,
-    // width: f32,
-    // height: f32,
     x: f32,
     y: f32,
 }
@@ -60,19 +74,18 @@ impl TileSet {
     fn initial() -> TileSet {
         let x_count = (WINDOW_CONFIG.width / TILE_CONFIG.w() - 0.0) as u16;
         let y_count = (WINDOW_CONFIG.height / TILE_CONFIG.h() - 0.0) as u16;
+
         let width: f32 =
-            x_count as f32 * TILE_CONFIG.width + (x_count - 1) as f32 * TILE_CONFIG.spacing;
+            x_count as f32 * TILE_CONFIG.width + (x_count + 2) as f32 * TILE_CONFIG.spacing;
 
         let height =
-            y_count as f32 * TILE_CONFIG.width + (y_count - 1) as f32 * TILE_CONFIG.spacing;
+            y_count as f32 * TILE_CONFIG.width + (y_count + 2) as f32 * TILE_CONFIG.spacing;
 
         TileSet {
             x_count,
             y_count,
-            // width,
-            // height,
-            x: 0.0 - (width / 2.0) + (TILE_CONFIG.width / 2.0),
-            y: 0.0 - (height / 2.0) + (TILE_CONFIG.height / 2.0),
+            x: (TILE_CONFIG.width - width) / 2.0,
+            y: (TILE_CONFIG.height - height) / 2.0,
         }
     }
 }
@@ -91,15 +104,11 @@ const WINDOW_CONFIG: Rect = Rect {
 // struct Player;
 
 fn main() {
-    // let stageWidth: f32 = TILE_CONFIG.w() * 10.0;
-    // let stageHeight: f32 = TILE_CONFIG.h() * 10.0;
-
     App::new()
-        // .add_plugins(DefaultPlugins)
         .add_plugins((
             DefaultPlugins.set(WindowPlugin {
                 primary_window: Some(Window {
-                    title: "I am a window!".into(),
+                    title: "One day I will be a roguelike".into(),
                     resolution: (WINDOW_CONFIG.width, WINDOW_CONFIG.height).into(),
                     present_mode: PresentMode::AutoVsync,
                     // Tells wasm to resize the window according to the available canvas
@@ -119,7 +128,7 @@ fn main() {
                 }),
                 ..default()
             }),
-            LogDiagnosticsPlugin::default(),
+            // LogDiagnosticsPlugin::default(),
             // FrameTimeDiagnosticsPlugin,
         ))
         .add_systems(Startup, setup)
@@ -129,23 +138,25 @@ fn main() {
 
 fn setup(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
+
     let tileset = TileSet::initial();
     println!("TILESET {:?}", tileset);
 
-    let vxs: Vec<f32> = (0..tileset.x_count).map(|x| x as f32).collect();
-    let vys: Vec<f32> = (0..tileset.y_count).map(|x| x as f32).collect();
+    let cols: Vec<u16> = (0..tileset.x_count).collect();
+    let rows: Vec<u16> = (0..tileset.y_count).collect();
 
-    for xn in &vxs {
-        for yn in &vys {
+    for col in &cols {
+        for row in &rows {
             commands.spawn(SpriteBundle {
                 sprite: Sprite {
                     color: Color::rgb(0.45, 0.25, 0.75),
-                    custom_size: Some(Vec2::new(TILE_CONFIG.width, TILE_CONFIG.height)),
+                    custom_size: Some(TILE_CONFIG.size()),
+                    anchor: Anchor::TopLeft,
                     ..default()
                 },
                 transform: Transform::from_translation(Vec3::new(
-                    tileset.x + (TILE_CONFIG.w() * xn),
-                    tileset.y + (TILE_CONFIG.h() * yn),
+                    tileset.x + TILE_CONFIG.x_offset(*col),
+                    tileset.y + TILE_CONFIG.y_offset(*row),
                     0.,
                 )),
                 ..default()
@@ -153,6 +164,11 @@ fn setup(mut commands: Commands) {
         }
     }
 }
+
+// TODO add resizeability
+// TODO add tick to blit tiles
+// TODO convert to use bevy_ecs_tilemap
+// TODO figure out how to iterate over sprites
 
 fn tick(_commands: Commands) {
     // println!("tick");
