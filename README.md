@@ -117,22 +117,22 @@ DIFFICULTY	BASELINE	TN/MOD
 - impossible	-12	
 
 ## Dev Resources
-- (https://bevyengine.org/assets/)[bevy learning resources]
-- (https://www.youtube.com/playlist?list=PLVnntJRoP85JHGX7rGDu6LaF3fmDDbqyd)[learn bevy basics on YT]
-- (https://bfnightly.bracketproductions.com/chapter_1.html)[rust roguelike tutorial]
-- (https://taintedcoders.com)[bevy gamedev notes]
-- (https://bevy-cheatbook.github.io)[bevy cheatsheet]
-- (https://github.com/64kramsystem/learn_bevy_ecs_by_ripping_off-code/tree/master)[ripping off a roguelike]
-- (https://arewegameyet.rs/#ecosystem)[ecosystem]
-- (https://github.com/Trouv/bevy_ecs_ldtk)[LDTK integration]
-- (https://github.com/rive-app/rive-bevy)[rive integration]
-- (https://github.com/StarArawn/bevy_ecs_tilemap)[ECS tilemap]
+- [bevy learning resources](https://bevyengine.org/assets/)
+- [learn bevy basics on YT](https://www.youtube.com/playlist?list=PLVnntJRoP85JHGX7rGDu6LaF3fmDDbqyd)
+- [rust roguelike tutorial](https://bfnightly.bracketproductions.com/chapter_1.html)
+- [bevy gamedev notes](https://taintedcoders.com)
+- [bevy cheatsheet](https://bevy-cheatbook.github.io)
+- [ripping off a roguelike](https://github.com/64kramsystem/learn_bevy_ecs_by_ripping_off-code/tree/master)
+- [ecosystem](https://arewegameyet.rs/#ecosystem)
+- [LDTK integration](https://github.com/Trouv/bevy_ecs_ldtk)
+- [rive integration](https://github.com/rive-app/rive-bevy)
+- [ECS tilemap](https://github.com/StarArawn/bevy_ecs_tilemap)
 
 
 ## Maybe Laters
-- (https://github.com/StarArawn/kayak_ui)[kayak]
-- (https://github.com/ggez/aseprite)[aseprite]
-- (https://crates.io/crates/big-brain)[big braind AI]
+- [kayak](https://github.com/StarArawn/kayak_ui)
+- [aseprite](https://github.com/ggez/aseprite)
+- [big braind AI](https://crates.io/crates/big-brain)
 
 ## TODO 
 
