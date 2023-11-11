@@ -53,67 +53,67 @@ Untrained / beginners luck tests?
 
 STATS (15d10, allocate / random assignment)
 
-Ethos (will)
-Logos (reason / acuity) Pathos (charisma)
-Nous (intuition)
-Metis (wisdom / cunning)
-—
-Thew (power) Sinew (speed)
-Ligament (dexterity / fine motor skill)
-Marrow (vitality)
-—
-Water (composure)
-Glass (perception / focus)
-Wind (agility / coordination)
-—
-Wire (reflex / awareness)
-Wood (endurance)
-—
-Dust (§ magic, use artefact, etc)
+- Ethos (will)
+- Logos (reason / acuity) Pathos (charisma)
+- Nous (intuition)
+- Metis (wisdom / cunning)
+---
+- Thew (power) Sinew (speed)
+- Ligament (dexterity / fine motor skill)
+- Marrow (vitality)
+---
+- Water (composure)
+- Glass (perception / focus)
+- Wind (agility / coordination)
+---
+- Wire (reflex / awareness)
+- Wood (endurance)
+---
+- Dust (§ magic, use artefact, etc)
 
 STAT	RANK
-incapacitated	0   
-impaired	1   
-deficient	2  
-inferior	3  
-poor	4  
-ordinary	5  
-decent	6  
-talented	7    
-gifted	8  
-exceptional	9  
-perfect (human limit)	10 
-preternatural	11 
-mythic	12 
-divine	13+
+- incapacitated	0   
+- impaired	1   
+- deficient	2  
+- inferior	3  
+- poor	4  
+- ordinary	5  
+- decent	6  
+- talented	7    
+- gifted	8  
+- exceptional	9  
+- perfect (human limit)	10 
+- preternatural	11 
+- mythic	12 
+- divine	13+
 
 skills (open at 1):
 
 SKILL	RANK
-amateur	1-2  
-apprentice	3-4  
-journeyman	5-6  
-accomplished	7-8  
-adept	9-10  
-expert	10-11 
-champion / luminary	12-13
-master	13   
-grand master	14   
+- amateur	1-2  
+- apprentice	3-4  
+- journeyman	5-6  
+- accomplished	7-8  
+- adept	9-10  
+- expert	10-11 
+- champion / luminary	12-13
+- master	13   
+- grand master	14   
 
 baseline (50% TN) = 18:
 
 DIFFICULTY	BASELINE	TN/MOD
-foolproof	+18	
-routine	+15	
-easy	+13	
-simple	+10	
-moderate	+7	
-tricky (baseline)	+4	
-hard	+1	
-challenging	-2	
-harrowing	-5	
-desperate	-8	
-impossible	-12	
+- foolproof	+18	
+- routine	+15	
+- easy	+13	
+- simple	+10	
+- moderate	+7	
+- tricky (baseline)	+4	
+- hard	+1	
+- challenging	-2	
+- harrowing	-5	
+- desperate	-8	
+- impossible	-12	
 
 ## Dev Resources
 - (https://bevyengine.org/assets/)[bevy learning resources]
