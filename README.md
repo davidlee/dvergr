@@ -58,7 +58,8 @@ STATS (15d10, allocate / random assignment)
 - Nous (intuition)
 - Metis (wisdom / cunning)
 ---
-- Thew (power) Sinew (speed)
+- Thew (power)
+- Sinew (speed)
 - Ligament (dexterity / fine motor skill)
 - Marrow (vitality)
 ---
