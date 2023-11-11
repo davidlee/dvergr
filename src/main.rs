@@ -153,6 +153,7 @@ fn swap_texture_or_hide(
 // TODO convert to use bevy_ecs_tilemap
 // TODO figure out how to iterate over sprites
 
-fn tick(_commands: Commands) {
+fn tick(_commands: Commands, mut query: Query<&mut Transform>) {
+    query.for_each_mut(|x| println!("-> {:?}", x))
     // println!("tick");
 }
