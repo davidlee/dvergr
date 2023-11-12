@@ -134,6 +134,12 @@ DIFFICULTY	BASELINE	TN/MOD
 - [aseprite](https://github.com/ggez/aseprite)
 - [big braind AI](https://crates.io/crates/big-brain)
 
+
+## Research Notes
+- [extending ECS with relationships](https://ajmmertens.medium.com/building-games-in-ecs-with-entity-relationships-657275ba2c6c)
+- [entity-entity relationships in bevy](https://github.com/bevyengine/bevy/issues/3742)
+- [bevy RFCs](https://github.com/bevyengine/rfcs/tree/main/rfcs)
+
 ## TODO 
 
  - [x] initial language / framework bikeshedding
