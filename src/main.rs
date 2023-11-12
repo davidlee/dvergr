@@ -16,6 +16,34 @@ const DEFAULT_RES: Resolution = Resolution {
     y: 768.0,
 };
 
+#[derive(Component, Debug)]
+struct Creature;
+
+#[derive(Component, Debug)]
+struct Player;
+
+fn player_movement(mut query: Query<(&mut Player, &mut TilePos)>, keys: Res<Input<KeyCode>>) {
+    for (_player, mut pos) in query.iter_mut() {
+        // FIXME proper bounds checking
+        // TODO action points
+        if keys.just_pressed(KeyCode::Up) && pos.y < 32 {
+            pos.y += 1;
+        }
+
+        if keys.just_pressed(KeyCode::Down) && pos.y > 0 {
+            pos.y -= 1;
+        }
+
+        if keys.just_pressed(KeyCode::Left) && pos.x > 0 {
+            pos.x -= 1;
+        }
+
+        if keys.just_pressed(KeyCode::Right) && pos.x < 32 {
+            pos.x += 1;
+        }
+    }
+}
+
 fn main() {
     App::new()
         .add_plugins((DefaultPlugins
@@ -41,8 +69,7 @@ fn main() {
         .add_plugins(TilemapPlugin)
         .add_systems(Startup, startup)
         .add_systems(Update, (tick, bevy::window::close_on_esc))
-        // .add_systems(Update, helpers::camera::movement)
-        .add_systems(Update, swap_texture_or_hide)
+        .add_systems(Update, player_movement)
         .run();
 }
 
@@ -61,7 +88,7 @@ fn startup(
 ) {
     commands.spawn(Camera2dBundle::default());
 
-    let texture_handle: Handle<Image> = asset_server.load("tiles.png");
+    let texture_handle: Handle<Image> = asset_server.load("16x16_0.png");
 
     let tile_size = TilemapTileSize { x: 16.0, y: 16.0 };
 
@@ -96,8 +123,11 @@ fn startup(
         }
     }
 
+    // let's try adding another tilemap for a second layer
+    //
     let grid_size = tile_size.into();
     let map_type = TilemapType::default();
+    // let tilemap_transform =  get_tilemap_center_transform(&map_size, &grid_size, &map_type, 0.0y),
 
     commands.entity(tilemap_entity).insert(TilemapBundle {
         grid_size,
@@ -110,48 +140,32 @@ fn startup(
         ..Default::default()
     });
 
-    // Add atlas to array texture loader so it's preprocessed before we need to use it.
-    // Only used when the atlas feature is off and we are using array textures.
-    // #[cfg(all(not(feature = "atlas"), feature = "render"))]
-    // {
-    //     array_texture_loader.add(TilemapArrayTexture {
-    //         texture: TilemapTexture::Single(asset_server.load("tiles.png")),
-    //         tile_size,
-    //         ..Default::default()
-    //     });
-    // }
-}
+    let texture_handle: Handle<Image> = asset_server.load("16x16_char.png");
+    let mob_tile_storage: TileStorage = TileStorage::empty(map_size);
 
-fn swap_texture_or_hide(
-    asset_server: Res<AssetServer>,
-    keyboard_input: Res<Input<KeyCode>>,
-    mut query: Query<(&mut TilemapTexture, &mut Visibility)>,
-) {
-    if keyboard_input.just_pressed(KeyCode::Space) {
-        let texture_a = TilemapTexture::Single(asset_server.load("tiles.png"));
-        let texture_b = TilemapTexture::Single(asset_server.load("tiles2.png"));
-        for (mut tilemap_tex, _) in &mut query {
-            if *tilemap_tex == texture_a {
-                *tilemap_tex = texture_b.clone();
-            } else {
-                *tilemap_tex = texture_a.clone();
-            }
-        }
-    }
-    if keyboard_input.just_pressed(KeyCode::H) {
-        for (_, mut visibility) in &mut query {
-            *visibility = match *visibility {
-                Visibility::Inherited | Visibility::Visible => Visibility::Hidden,
-                Visibility::Hidden => Visibility::Visible,
-            };
-        }
-    }
-}
+    let tilemap_entity = commands.spawn_empty().id();
+    commands.entity(tilemap_entity).insert(TilemapBundle {
+        grid_size,
+        map_type,
+        size: map_size,
+        storage: mob_tile_storage,
+        texture: TilemapTexture::Single(texture_handle),
+        tile_size,
+        transform: get_tilemap_center_transform(&map_size, &grid_size, &map_type, 1.0),
+        ..Default::default()
+    });
 
-// TODO add resizeability
-// TODO add tick to blit tiles
-// TODO convert to use bevy_ecs_tilemap
-// TODO figure out how to iterate over sprites
+    let tile_pos: TilePos = TilePos { x: 1, y: 1 };
+
+    // insert a single tile
+    commands
+        .spawn(TileBundle {
+            position: tile_pos,
+            tilemap_id: TilemapId(tilemap_entity),
+            ..Default::default()
+        })
+        .insert((Player, Creature));
+}
 
 fn tick(_commands: Commands, mut query: Query<&mut Transform>) {
     query.for_each_mut(|x| println!("-> {:?}", x))
