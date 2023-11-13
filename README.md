@@ -51,26 +51,24 @@ Untrained / beginners luck tests?
 
 --
 
-STATS (15d10, allocate / random assignment)
+## STATS 
 
-- Ethos (will)
-- Logos (reason / acuity) Pathos (charisma)
-- Nous (intuition)
-- Metis (wisdom / cunning)
----
-- Thew (power)
-- Sinew (speed)
-- Ligament (dexterity / fine motor skill)
-- Marrow (vitality)
----
-- Water (composure)
-- Glass (perception / focus)
-- Wind (agility / coordination)
----
-- Wire (reflex / awareness)
-- Wood (endurance)
----
-- Dust (§ magic, use artefact, etc)
+Dexterity
+Agility
+Resilience
+Speed
+Power
+
+Will
+Intuition
+Magnetism
+Perception
+Acuity
+
+> Endurance (Resilience, Power)
+> Reflex (Speed, Instinct)
+> Composure (Will, Magnetism)
+
 
 STAT	RANK
 - incapacitated	0   

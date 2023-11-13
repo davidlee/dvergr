@@ -4,6 +4,7 @@ use bevy::{
 };
 
 use bevy_ecs_tilemap::prelude::*;
+use bevy_turborand::prelude::*;
 // mod helpers;
 
 struct Resolution {
@@ -21,6 +22,62 @@ struct Creature;
 
 #[derive(Component, Debug)]
 struct Player;
+
+#[derive(Component, Debug)]
+#[allow(dead_code)]
+struct Attributes {
+    dexterity: u8,
+    agility: u8,
+    resilience: u8,
+    speed: u8,
+    power: u8,
+    will: u8,
+    intuition: u8,
+    magnetism: u8,
+    perception: u8,
+    acuity: u8,
+}
+
+#[derive(Bundle)]
+struct PlayerBundle {
+    player: Player,
+    attributes: Attributes,
+}
+
+impl PlayerBundle {
+    fn new() -> Self {
+        let attributes = random_attributes();
+        println!("attributes: {:?}", attributes);
+        PlayerBundle {
+            player: Player,
+            attributes,
+        }
+    }
+}
+
+const D10_VALUES: [u8; 10] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+// fn rand_parabolic_d10() -> u8 {
+//     let rand = Rng::new();
+//     *rand.sample(&D10_VALUES).unwrap()
+// }
+
+fn random_attributes() -> Attributes {
+    let rand = Rng::new();
+    let d10 = || -> u8 { *rand.sample(&D10_VALUES).unwrap() };
+    Attributes {
+        dexterity: d10(),
+        agility: d10(),
+        resilience: d10(),
+        speed: d10(),
+        power: d10(),
+        will: d10(),
+        intuition: d10(),
+        magnetism: d10(),
+        perception: d10(),
+        acuity: d10(),
+    }
+}
 
 fn player_movement(mut query: Query<(&mut Player, &mut TilePos)>, keys: Res<Input<KeyCode>>) {
     for (_player, mut pos) in query.iter_mut() {
@@ -164,7 +221,7 @@ fn startup(
             tilemap_id: TilemapId(tilemap_entity),
             ..Default::default()
         })
-        .insert((Player, Creature));
+        .insert(PlayerBundle::new());
 }
 
 fn tick(_commands: Commands, mut query: Query<&mut Transform>) {
