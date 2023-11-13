@@ -38,19 +38,41 @@ struct Attributes {
     acuity: u8,
 }
 
+#[derive(Component, Debug)]
+#[allow(dead_code)]
+struct DerivedAttributes {
+    endurance: u8,
+    reflexes: u8,
+    composure: u8,
+}
+
+impl DerivedAttributes {
+    fn new(attrs: &Attributes) -> Self {
+        DerivedAttributes {
+            endurance: (attrs.resilience + attrs.power) / 2,
+            reflexes: (attrs.speed + attrs.acuity) / 2,
+            composure: (attrs.will + attrs.magnetism) / 2,
+        }
+        //
+    }
+}
+
 #[derive(Bundle)]
 struct PlayerBundle {
     player: Player,
     attributes: Attributes,
+    derived_attributes: DerivedAttributes,
 }
 
 impl PlayerBundle {
     fn new() -> Self {
         let attributes = random_attributes();
-        println!("attributes: {:?}", attributes);
+        let derived_attributes: DerivedAttributes = DerivedAttributes::new(&attributes);
+        println!("attributes: {:?} {:?}", attributes, derived_attributes);
         PlayerBundle {
             player: Player,
             attributes,
+            derived_attributes,
         }
     }
 }
@@ -76,6 +98,9 @@ fn random_attributes() -> Attributes {
         magnetism: d10(),
         perception: d10(),
         acuity: d10(),
+        // > Endurance (Resilience, Power)
+        // > Reflex (Speed, Instinct)
+        // > Composure (Will, Magnetism)
     }
 }
 
