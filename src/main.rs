@@ -1,320 +1,34 @@
 use bevy::{
     // app::AppError,
     prelude::*,
-    window::{PresentMode, WindowTheme},
+    window::{PresentMode, WindowResolution, WindowTheme},
 };
 
 use bevy_ecs_tilemap::prelude::*;
-use bevy_turborand::prelude::*;
-// mod helpers;
 
-struct Resolution {
-    x: f32,
-    y: f32,
+mod action;
+mod anatomy;
+mod attributes;
+mod config;
+mod damage;
+mod dice;
+mod map;
+mod sys {
+    pub mod player_movement;
 }
 
-const DEFAULT_RES: Resolution = Resolution {
-    x: 1024.0,
-    y: 768.0,
-};
+// use action::Direction;
+use attributes::*;
+use config::*;
+use sys::player_movement::*;
+
+// use map::*;
 
 #[derive(Component, Debug)]
 struct Creature;
 
 #[derive(Component, Debug)]
-struct Player;
-
-#[derive(Component, Debug, Clone)]
-#[allow(dead_code)]
-struct PrimaryAttributes {
-    dexterity: u8,
-    agility: u8,
-    resilience: u8,
-    speed: u8,
-    power: u8,
-    will: u8,
-    intuition: u8,
-    magnetism: u8,
-    perception: u8,
-    acuity: u8,
-}
-
-const D10_VALUES: [u8; 10] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-impl PrimaryAttributes {
-    fn random() -> PrimaryAttributes {
-        let rand = Rng::new();
-        let d10 = || -> u8 { *rand.sample(&D10_VALUES).unwrap() };
-        PrimaryAttributes {
-            dexterity: d10(),
-            agility: d10(),
-            resilience: d10(),
-            speed: d10(),
-            power: d10(),
-            will: d10(),
-            intuition: d10(),
-            magnetism: d10(),
-            perception: d10(),
-            acuity: d10(),
-        }
-    }
-}
-
-#[derive(Component, Debug)]
-#[allow(dead_code)]
-struct SecondaryAttributes {
-    stamina: u8,
-    reflexes: u8,
-    composure: u8,
-    stride: f32,   // square per tick at Relaxed pace
-    recovery: f32, // stamina per tick at rest
-}
-
-impl SecondaryAttributes {
-    fn new(attrs: &PrimaryAttributes) -> Self {
-        SecondaryAttributes {
-            stamina: (attrs.resilience + attrs.power) / 2,
-            reflexes: (attrs.speed + attrs.acuity) / 2,
-            composure: (attrs.will + attrs.magnetism) / 2,
-            recovery: 1.0,
-            stride: 1.0,
-        }
-        //
-    }
-}
-
-#[allow(dead_code)]
-#[derive(Component, Debug)]
-struct Attributes {
-    primary: PrimaryAttributes,
-    secondary: SecondaryAttributes,
-    stance: Stance,
-    pace: Pace,
-    facing: Direction,
-    moving: Option<Direction>,
-    inventory: (),
-    conditions: (),
-    needs: (),
-    thoughts: (),
-    wounds: (),
-}
-
-impl Attributes {
-    fn new() -> Attributes {
-        let primary = PrimaryAttributes::random();
-        let secondary = SecondaryAttributes::new(&(primary.clone()));
-        Attributes {
-            primary,
-            secondary,
-            stance: Stance::Standing,
-            pace: Pace::Relaxed,
-            facing: Direction::Up,
-            moving: None,
-            inventory: (),
-            conditions: (),
-            needs: (),
-            thoughts: (),
-            wounds: (),
-        }
-    }
-}
-
-#[allow(dead_code)]
-#[derive(Component, Debug)]
-enum Pace {
-    Inactive,    // 0.0
-    Painstaking, // 0.25
-    Deliberate,  // 0.5
-    Relaxed,     // 1.0 * stride
-    Brisk,       // 1.5
-    Rapid,       // 3.0
-    Reckless,    // 6.0
-}
-
-#[allow(dead_code)]
-#[derive(Component, Debug)]
-enum Stance {
-    Grappling, // other
-    Clinch,    // other
-    OnGuard,
-    Standing,
-    Flatfooted,
-    Unbalanced,
-    Falling,
-    Prone,
-    Kneeling,
-    Jumping,
-    Climbing,
-}
-
-#[allow(dead_code)]
-#[derive(Component, Debug, Copy, Clone)]
-enum Direction {
-    Up,
-    UpRight,
-    Right,
-    DownRight,
-    Down,
-    DownLeft,
-    Left,
-    UpLeft,
-}
-
-impl Direction {
-    fn as_xy(self) -> (i32, i32) {
-        match self {
-            Self::Up => (0, 1),
-            Self::UpRight => (1, 1),
-            Self::Right => (1, 0),
-            Self::DownRight => (1, -1),
-            Self::Down => (0, -1),
-            Self::DownLeft => (-1, -1),
-            Self::Left => (-1, 0),
-            Self::UpLeft => (-1, 1),
-        }
-    }
-}
-
-#[derive(Event, Debug)]
-struct PlayerMovementEvent {
-    direction: Direction,
-}
-
-mod Damage {
-    enum Kind {
-        Piercing,
-        Crushing,
-        Slashing,
-        Burning,
-        Freezing,
-        Plasma,
-        Arcane,
-        Divine,
-        Electrical,
-        Acid,
-        Radiation,
-        EnergyBeam,
-        Explosion,
-
-        Poison,
-        Choking,
-        Drowning,
-        Disease,
-        Sanity,
-        BloodLoss,
-        Trauma,
-    }
-}
-
-mod Anatomy {
-    enum Needs {
-        Thirst,
-        Hunger,
-        Breath,
-        Blood,
-        Stress,
-        Sleep,
-        Pain,
-        Medicine,
-    }
-
-    enum Conditions {
-        Blind,
-        Deaf,
-        Dumb,
-        Dehydrated,
-        Exhausted,
-        Angry,
-        Dissociation,
-        Despair,
-        Berserk,
-        Tantrum,
-        Unconscious,
-        Confused,
-        Shock,
-        Poison,
-        Cold,
-        Hot,
-        Wet,
-        Raving,
-        Vomiting,
-        Diarrhea,
-        Dizziness,
-        Nausea,
-        Intoxicated,
-        Seizure,
-    }
-
-    enum Injuries {
-        Shattered,
-        Pulverised,
-        Broken,
-        Slashed,
-        Chopped,
-        Cleaved,
-        Stabbed,
-        Pierced,
-        Bleeding,
-        Dismembered,
-        Disintegrated,
-        Stroke,
-        CardiacArrest,
-    }
-
-    mod Parts {
-
-        trait Head {}
-        trait Skull {}
-        trait Brain {}
-        trait Face {}
-        trait Eye {}
-        trait Ear {}
-        trait Nose {}
-        trait Mouth {}
-        trait Tongue {}
-        trait Neck {}
-        trait Torso {}
-        trait Spine {}
-        trait Ribcage {}
-        trait Pelvis {}
-        trait Hips {}
-        trait Shoulder {}
-        trait Abdomen {}
-        trait Groin {}
-        trait Limb {}
-        trait Arm {}
-        trait Bicep {}
-        trait Elbow {}
-        trait Forearm {}
-        trait Wrist {}
-        trait Hand {}
-        trait Foot {}
-        trait Finger {}
-        trait Thigh {}
-        trait Knee {}
-        trait Shin {}
-        trait Calf {}
-        trait Thumb {}
-        trait Toe {}
-        trait Heart {}
-        trait Lung {}
-        trait Liver {}
-        trait Spleen {}
-        trait Intestine {}
-        trait Artery {}
-        trait Vein {}
-        trait Nerve {}
-        trait Bone {}
-        trait Muscle {}
-        trait Tendon {}
-
-        // enum - left/right
-        //
-
-        // traits - head, chest, limb, arm, leg, extremity, hand, foot, finger, toe, ear, ...
-
-        // carry - structs
-    }
-}
+pub struct Player;
 
 // #[derive(Component, Debug)]
 // enum CurrentAction<T> {
@@ -346,97 +60,11 @@ impl PlayerBundle {
     }
 }
 
-fn keybindings(mut ev_player_move: EventWriter<PlayerMovementEvent>, keys: Res<Input<KeyCode>>) {
-    let shifted: bool = keys.any_pressed([KeyCode::ShiftLeft, KeyCode::ShiftRight]);
-
-    if keys.just_pressed(KeyCode::Up) {
-        ev_player_move.send(PlayerMovementEvent {
-            direction: if shifted {
-                Direction::UpLeft
-            } else {
-                Direction::Up
-            },
-        })
-    }
-
-    if keys.just_pressed(KeyCode::Down) {
-        ev_player_move.send(PlayerMovementEvent {
-            direction: if shifted {
-                Direction::DownRight
-            } else {
-                Direction::Down
-            },
-        })
-    }
-
-    if keys.just_pressed(KeyCode::Left) {
-        ev_player_move.send(PlayerMovementEvent {
-            direction: if shifted {
-                Direction::DownLeft
-            } else {
-                Direction::Left
-            },
-        })
-    }
-
-    if keys.just_pressed(KeyCode::Right) {
-        ev_player_move.send(PlayerMovementEvent {
-            direction: if shifted {
-                Direction::UpRight
-            } else {
-                Direction::Right
-            },
-        })
-    }
-}
-
 #[allow(dead_code, unused_mut, unused_variables)]
 fn commands_general(
     mut commands: Commands,
     mut query: Query<(&mut Player, &mut TilePos, &TilemapId)>,
 ) {
-}
-
-// TODO collision detection
-fn move_to<'a, 'b>(
-    &pos: &'a TilePos,
-    dir: &'b Direction,
-    map_size: &TilemapSize,
-) -> Result<TilePos, &'b str> {
-    let mut dest = TilePos { x: pos.x, y: pos.y };
-
-    let result = (|| -> Result<TilePos, &str> {
-        let (x, y) = dir.as_xy();
-        dest.x = (dest.x as i32 + x) as u32;
-        dest.y = (dest.y as i32 + y) as u32;
-        Ok(dest)
-    })()?;
-
-    if result.within_map_bounds(map_size) {
-        Ok(dest)
-    } else {
-        // TODO send invalid command notification
-        // println!("Out of bounds! {:?}", dest)
-        Err(&"out of bounds")
-    }
-}
-
-fn player_movement(
-    mut ev_player_move: EventReader<PlayerMovementEvent>,
-    mut pos_query: Query<(&mut Player, &mut TilePos)>,
-    map_size_query: Query<&TilemapSize>,
-) {
-    let (_player, mut pos) = pos_query.single_mut();
-    // FIXME find the TilemapSize through a sensible reference
-    let map_size: &TilemapSize = map_size_query.iter().find(|_x| -> bool { true }).unwrap();
-
-    for e in ev_player_move.iter() {
-        if let Ok(to) = move_to(&pos, &e.direction, map_size) {
-            TilePos { x: pos.x, y: pos.y } = to;
-        } else {
-            // invalid command
-        }
-    }
 }
 
 #[allow(dead_code, unused_mut, unused_variables)]
@@ -448,7 +76,7 @@ fn main() {
             .set(WindowPlugin {
                 primary_window: Some(Window {
                     title: "One day I will be a roguelike".into(),
-                    resolution: (DEFAULT_RES.x, DEFAULT_RES.y).into(),
+                    resolution: default_res(),
                     present_mode: PresentMode::AutoVsync,
                     // Tells wasm to resize the window according to the available canvas
                     fit_canvas_to_parent: true,
@@ -475,9 +103,12 @@ fn main() {
         .run();
 }
 
-fn get_tilemap_size(resolution: &Resolution, tile_size: &TilemapTileSize) -> TilemapSize {
-    let x: u32 = (resolution.x / tile_size.x) as u32;
-    let y: u32 = (resolution.y / tile_size.y) as u32;
+fn get_tilemap_size(resolution: &WindowResolution, tile_size: &TilemapTileSize) -> TilemapSize {
+    let w: u32 = resolution.width() as u32;
+    let h: u32 = resolution.height() as u32;
+
+    let x: u32 = w / tile_size.x as u32;
+    let y: u32 = h / tile_size.y as u32;
     TilemapSize { x, y }
 }
 
@@ -490,11 +121,12 @@ fn startup(
 ) {
     commands.spawn(Camera2dBundle::default());
 
-    let texture_handle: Handle<Image> = asset_server.load("16x16_0.png");
+    let texture_handle: Handle<Image> = asset_server.load("16x16_diag.png");
+    let window_res = default_res();
 
     let tile_size = TilemapTileSize { x: 16.0, y: 16.0 };
 
-    let map_size = get_tilemap_size(&DEFAULT_RES, &tile_size);
+    let map_size = get_tilemap_size(&window_res, &tile_size);
 
     // Create a tilemap entity a little early.
     // We want this entity early because we need to tell each tile which tilemap entity
