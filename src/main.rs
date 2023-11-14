@@ -1,4 +1,5 @@
 use bevy::{
+    // app::AppError,
     prelude::*,
     window::{PresentMode, WindowTheme},
 };
@@ -23,9 +24,9 @@ struct Creature;
 #[derive(Component, Debug)]
 struct Player;
 
-#[derive(Component, Debug)]
+#[derive(Component, Debug, Clone)]
 #[allow(dead_code)]
-struct Attributes {
+struct PrimaryAttributes {
     dexterity: u8,
     agility: u8,
     resilience: u8,
@@ -38,93 +39,271 @@ struct Attributes {
     acuity: u8,
 }
 
-#[derive(Component, Debug)]
-#[allow(dead_code)]
-struct DerivedAttributes {
-    endurance: u8,
-    reflexes: u8,
-    composure: u8,
+const D10_VALUES: [u8; 10] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+impl PrimaryAttributes {
+    fn random() -> PrimaryAttributes {
+        let rand = Rng::new();
+        let d10 = || -> u8 { *rand.sample(&D10_VALUES).unwrap() };
+        PrimaryAttributes {
+            dexterity: d10(),
+            agility: d10(),
+            resilience: d10(),
+            speed: d10(),
+            power: d10(),
+            will: d10(),
+            intuition: d10(),
+            magnetism: d10(),
+            perception: d10(),
+            acuity: d10(),
+        }
+    }
 }
 
-impl DerivedAttributes {
-    fn new(attrs: &Attributes) -> Self {
-        DerivedAttributes {
-            endurance: (attrs.resilience + attrs.power) / 2,
+#[derive(Component, Debug)]
+#[allow(dead_code)]
+struct SecondaryAttributes {
+    stamina: u8,
+    reflexes: u8,
+    composure: u8,
+    stride: f32,   // square per tick at Relaxed pace
+    recovery: f32, // stamina per tick at rest
+}
+
+impl SecondaryAttributes {
+    fn new(attrs: &PrimaryAttributes) -> Self {
+        SecondaryAttributes {
+            stamina: (attrs.resilience + attrs.power) / 2,
             reflexes: (attrs.speed + attrs.acuity) / 2,
             composure: (attrs.will + attrs.magnetism) / 2,
+            recovery: 1.0,
+            stride: 1.0,
         }
         //
     }
 }
 
+#[allow(dead_code)]
+#[derive(Component, Debug)]
+struct Attributes {
+    primary: PrimaryAttributes,
+    secondary: SecondaryAttributes,
+    stance: Stance,
+    pace: Pace,
+    facing: Direction,
+    moving: Option<Direction>,
+    inventory: (),
+    conditions: (),
+    needs: (),
+    thoughts: (),
+    wounds: (),
+}
+
+impl Attributes {
+    fn new() -> Attributes {
+        let primary = PrimaryAttributes::random();
+        let secondary = SecondaryAttributes::new(&(primary.clone()));
+        Attributes {
+            primary,
+            secondary,
+            stance: Stance::Standing,
+            pace: Pace::Relaxed,
+            facing: Direction::Up,
+            moving: None,
+            inventory: (),
+            conditions: (),
+            needs: (),
+            thoughts: (),
+            wounds: (),
+        }
+    }
+}
+
+#[allow(dead_code)]
+#[derive(Component, Debug)]
+enum Pace {
+    Inactive,    // 0.0
+    Painstaking, // 0.25
+    Deliberate,  // 0.5
+    Relaxed,     // 1.0 * stride
+    Brisk,       // 1.5
+    Rapid,       // 3.0
+    Reckless,    // 6.0
+}
+
+#[allow(dead_code)]
+#[derive(Component, Debug)]
+enum Stance {
+    Grappling, // other
+    Clinch,    // other
+    OnGuard,
+    Standing,
+    Flatfooted,
+    Unbalanced,
+    Falling,
+    Prone,
+    Kneeling,
+    Jumping,
+    Climbing,
+}
+
+#[allow(dead_code)]
+#[derive(Component, Debug, Copy, Clone)]
+enum Direction {
+    Up,
+    UpRight,
+    Right,
+    DownRight,
+    Down,
+    DownLeft,
+    Left,
+    UpLeft,
+}
+
+impl Direction {
+    fn as_xy(self) -> (i32, i32) {
+        match self {
+            Self::Up => (0, 1),
+            Self::UpRight => (1, 1),
+            Self::Right => (1, 0),
+            Self::DownRight => (1, -1),
+            Self::Down => (0, -1),
+            Self::DownLeft => (-1, -1),
+            Self::Left => (-1, 0),
+            Self::UpLeft => (-1, 1),
+        }
+    }
+}
+
+#[derive(Event, Debug)]
+struct PlayerMovementEvent {
+    direction: Direction,
+}
+
+// #[derive(Component, Debug)]
+// enum CurrentAction<T> {
+//     None,
+//     Some(T),
+// }
+
+// enum MacroGameState {
+//     Loading,
+// }
+
+// enum GameUIMode {
+//     Game,
+//     Inventory,
+// }
+
 #[derive(Bundle)]
 struct PlayerBundle {
     player: Player,
     attributes: Attributes,
-    derived_attributes: DerivedAttributes,
 }
 
 impl PlayerBundle {
     fn new() -> Self {
-        let attributes = random_attributes();
-        let derived_attributes: DerivedAttributes = DerivedAttributes::new(&attributes);
-        println!("attributes: {:?} {:?}", attributes, derived_attributes);
         PlayerBundle {
             player: Player,
-            attributes,
-            derived_attributes,
+            attributes: Attributes::new(),
         }
     }
 }
 
-const D10_VALUES: [u8; 10] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+fn keybindings(mut ev_player_move: EventWriter<PlayerMovementEvent>, keys: Res<Input<KeyCode>>) {
+    let shifted: bool = keys.any_pressed([KeyCode::ShiftLeft, KeyCode::ShiftRight]);
 
-// fn rand_parabolic_d10() -> u8 {
-//     let rand = Rng::new();
-//     *rand.sample(&D10_VALUES).unwrap()
-// }
+    if keys.just_pressed(KeyCode::Up) {
+        ev_player_move.send(PlayerMovementEvent {
+            direction: if shifted {
+                Direction::UpLeft
+            } else {
+                Direction::Up
+            },
+        })
+    }
 
-fn random_attributes() -> Attributes {
-    let rand = Rng::new();
-    let d10 = || -> u8 { *rand.sample(&D10_VALUES).unwrap() };
-    Attributes {
-        dexterity: d10(),
-        agility: d10(),
-        resilience: d10(),
-        speed: d10(),
-        power: d10(),
-        will: d10(),
-        intuition: d10(),
-        magnetism: d10(),
-        perception: d10(),
-        acuity: d10(),
-        // > Endurance (Resilience, Power)
-        // > Reflex (Speed, Instinct)
-        // > Composure (Will, Magnetism)
+    if keys.just_pressed(KeyCode::Down) {
+        ev_player_move.send(PlayerMovementEvent {
+            direction: if shifted {
+                Direction::DownRight
+            } else {
+                Direction::Down
+            },
+        })
+    }
+
+    if keys.just_pressed(KeyCode::Left) {
+        ev_player_move.send(PlayerMovementEvent {
+            direction: if shifted {
+                Direction::DownLeft
+            } else {
+                Direction::Left
+            },
+        })
+    }
+
+    if keys.just_pressed(KeyCode::Right) {
+        ev_player_move.send(PlayerMovementEvent {
+            direction: if shifted {
+                Direction::UpRight
+            } else {
+                Direction::Right
+            },
+        })
     }
 }
 
-fn player_movement(mut query: Query<(&mut Player, &mut TilePos)>, keys: Res<Input<KeyCode>>) {
-    for (_player, mut pos) in query.iter_mut() {
-        // FIXME proper bounds checking
-        // TODO action points
-        if keys.just_pressed(KeyCode::Up) && pos.y < 32 {
-            pos.y += 1;
-        }
+#[allow(dead_code, unused_mut, unused_variables)]
+fn commands_general(
+    mut commands: Commands,
+    mut query: Query<(&mut Player, &mut TilePos, &TilemapId)>,
+) {
+}
 
-        if keys.just_pressed(KeyCode::Down) && pos.y > 0 {
-            pos.y -= 1;
-        }
+// TODO collision detection
+fn move_to<'a, 'b>(
+    &pos: &'a TilePos,
+    dir: &'b Direction,
+    map_size: &TilemapSize,
+) -> Result<TilePos, &'b str> {
+    let mut dest = TilePos { x: pos.x, y: pos.y };
 
-        if keys.just_pressed(KeyCode::Left) && pos.x > 0 {
-            pos.x -= 1;
-        }
+    let result = (|| -> Result<TilePos, &str> {
+        let (x, y) = dir.as_xy();
+        dest.x = (dest.x as i32 + x) as u32;
+        dest.y = (dest.y as i32 + y) as u32;
+        Ok(dest)
+    })()?;
 
-        if keys.just_pressed(KeyCode::Right) && pos.x < 32 {
-            pos.x += 1;
+    if result.within_map_bounds(map_size) {
+        Ok(dest)
+    } else {
+        // TODO send invalid command notification
+        // println!("Out of bounds! {:?}", dest)
+        Err(&"out of bounds")
+    }
+}
+
+fn player_movement(
+    mut ev_player_move: EventReader<PlayerMovementEvent>,
+    mut pos_query: Query<(&mut Player, &mut TilePos)>,
+    map_size_query: Query<&TilemapSize>,
+) {
+    let (_player, mut pos) = pos_query.single_mut();
+    // FIXME find the TilemapSize through a sensible reference
+    let map_size: &TilemapSize = map_size_query.iter().find(|_x| -> bool { true }).unwrap();
+
+    for e in ev_player_move.iter() {
+        if let Ok(to) = move_to(&pos, &e.direction, map_size) {
+            TilePos { x: pos.x, y: pos.y } = to;
+        } else {
+            // invalid command
         }
     }
 }
+
+#[allow(dead_code, unused_mut, unused_variables)]
+fn commands_actions(mut commands: Commands, mut query: Query<(&mut Player, &mut TilePos)>) {}
 
 fn main() {
     App::new()
@@ -151,7 +330,11 @@ fn main() {
         .add_plugins(TilemapPlugin)
         .add_systems(Startup, startup)
         .add_systems(Update, (tick, bevy::window::close_on_esc))
+        .add_systems(Update, keybindings)
+        // .add_systems(Update, commands_stance)
         .add_systems(Update, player_movement)
+        .add_systems(Update, commands_actions)
+        .add_event::<PlayerMovementEvent>()
         .run();
 }
 
@@ -225,6 +408,8 @@ fn startup(
     let texture_handle: Handle<Image> = asset_server.load("16x16_char.png");
     let mob_tile_storage: TileStorage = TileStorage::empty(map_size);
 
+    // create a second, sparse tileamp at a higher z for mobs:
+    //
     let tilemap_entity = commands.spawn_empty().id();
     commands.entity(tilemap_entity).insert(TilemapBundle {
         grid_size,
