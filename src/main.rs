@@ -70,7 +70,7 @@ fn startup(
 ) {
     commands.spawn(Camera2dBundle::default());
 
-    let texture_handle: Handle<Image> = asset_server.load("16x16_diag.png");
+    let texture_handle: Handle<Image> = asset_server.load("16x16_gr.png");
     let window_res = default_res();
     let tile_size = TilemapTileSize { x: 16.0, y: 16.0 };
     let map_size = get_tilemap_size(&window_res, &tile_size);
@@ -113,7 +113,7 @@ fn startup(
         ..Default::default()
     });
 
-    let texture_handle: Handle<Image> = asset_server.load("16x16_char.png");
+    let texture_handle: Handle<Image> = asset_server.load("16x16_thief.png");
     let mob_tile_storage: TileStorage = TileStorage::empty(map_size);
 
     // create a second, sparse tileamp at a higher z for mobs:

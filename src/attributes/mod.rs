@@ -1,6 +1,7 @@
-use super::action::{Direction, *};
-use super::dice::Dice;
-use bevy::prelude::*;
+use crate::action::{Pace, Stance};
+use crate::dice::Dice;
+use crate::map::SquareDirection;
+use bevy::prelude::Component;
 
 #[derive(Component, Debug, Clone)]
 #[allow(dead_code)]
@@ -64,8 +65,8 @@ pub struct Attributes {
     secondary: Secondary,
     stance: Stance,
     pace: Pace,
-    facing: Direction,
-    moving: Option<Direction>,
+    facing: SquareDirection,
+    moving: Option<SquareDirection>,
     inventory: (),
     conditions: (),
     needs: (),
@@ -82,7 +83,7 @@ impl Attributes {
             secondary,
             stance: Stance::Standing,
             pace: Pace::Relaxed,
-            facing: Direction::Up,
+            facing: SquareDirection::North,
             moving: None,
             inventory: (),
             conditions: (),

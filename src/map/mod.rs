@@ -1,5 +1,8 @@
 use bevy::window::WindowResolution;
-use bevy_ecs_tilemap::prelude::*;
+
+// #[doc(inline)]
+pub use bevy_ecs_tilemap::helpers::square_grid::neighbors::SquareDirection;
+pub use bevy_ecs_tilemap::prelude::*;
 
 pub fn get_tilemap_size(resolution: &WindowResolution, tile_size: &TilemapTileSize) -> TilemapSize {
     let w: u32 = resolution.width() as u32;
