@@ -1,8 +1,7 @@
-use bevy::{
-    // app::AppError,
-    prelude::*,
-    window::{PresentMode, WindowResolution, WindowTheme},
-};
+// CRATES
+
+use bevy::prelude::*;
+use bevy::window::{PresentMode, WindowTheme};
 
 use bevy_ecs_tilemap::prelude::*;
 
@@ -17,58 +16,15 @@ mod sys {
     pub mod player_movement;
 }
 
-// use action::Direction;
+// MODULES
+
 use attributes::*;
 use config::*;
 use sys::player_movement::*;
 
-// use map::*;
+use map::*;
 
-#[derive(Component, Debug)]
-struct Creature;
-
-#[derive(Component, Debug)]
-pub struct Player;
-
-// #[derive(Component, Debug)]
-// enum CurrentAction<T> {
-//     None,
-//     Some(T),
-// }
-
-// enum MacroGameState {
-//     Loading,
-// }
-
-// enum GameUIMode {
-//     Game,
-//     Inventory,
-// }
-
-#[derive(Bundle)]
-struct PlayerBundle {
-    player: Player,
-    attributes: Attributes,
-}
-
-impl PlayerBundle {
-    fn new() -> Self {
-        PlayerBundle {
-            player: Player,
-            attributes: Attributes::new(),
-        }
-    }
-}
-
-#[allow(dead_code, unused_mut, unused_variables)]
-fn commands_general(
-    mut commands: Commands,
-    mut query: Query<(&mut Player, &mut TilePos, &TilemapId)>,
-) {
-}
-
-#[allow(dead_code, unused_mut, unused_variables)]
-fn commands_actions(mut commands: Commands, mut query: Query<(&mut Player, &mut TilePos)>) {}
+// MAIN
 
 fn main() {
     App::new()
@@ -103,14 +59,7 @@ fn main() {
         .run();
 }
 
-fn get_tilemap_size(resolution: &WindowResolution, tile_size: &TilemapTileSize) -> TilemapSize {
-    let w: u32 = resolution.width() as u32;
-    let h: u32 = resolution.height() as u32;
-
-    let x: u32 = w / tile_size.x as u32;
-    let y: u32 = h / tile_size.y as u32;
-    TilemapSize { x, y }
-}
+// STARTUP
 
 fn startup(
     mut commands: Commands,
@@ -123,16 +72,9 @@ fn startup(
 
     let texture_handle: Handle<Image> = asset_server.load("16x16_diag.png");
     let window_res = default_res();
-
     let tile_size = TilemapTileSize { x: 16.0, y: 16.0 };
-
     let map_size = get_tilemap_size(&window_res, &tile_size);
 
-    // Create a tilemap entity a little early.
-    // We want this entity early because we need to tell each tile which tilemap entity
-    // it is associated with. This is done with the TilemapId component on each tile.
-    // Eventually, we will insert the `TilemapBundle` bundle on the entity, which
-    // will contain various necessary components, such as `TileStorage`.
     let tilemap_entity = commands.spawn_empty().id();
 
     // To begin creating the map we will need a `TileStorage` component.
@@ -157,11 +99,8 @@ fn startup(
         }
     }
 
-    // let's try adding another tilemap for a second layer
-    //
     let grid_size = tile_size.into();
     let map_type = TilemapType::default();
-    // let tilemap_transform =  get_tilemap_center_transform(&map_size, &grid_size, &map_type, 0.0y),
 
     commands.entity(tilemap_entity).insert(TilemapBundle {
         grid_size,
@@ -202,6 +141,41 @@ fn startup(
         })
         .insert(PlayerBundle::new());
 }
+
+// COMPONENTS
+
+#[derive(Component, Debug)]
+struct Creature;
+
+#[derive(Component, Debug)]
+pub struct Player;
+
+#[derive(Bundle)]
+struct PlayerBundle {
+    player: Player,
+    attributes: Attributes,
+}
+
+impl PlayerBundle {
+    fn new() -> Self {
+        PlayerBundle {
+            player: Player,
+            attributes: Attributes::new(),
+        }
+    }
+}
+
+// SYSTEMS
+
+#[allow(dead_code, unused_mut, unused_variables)]
+fn commands_general(
+    mut commands: Commands,
+    mut query: Query<(&mut Player, &mut TilePos, &TilemapId)>,
+) {
+}
+
+#[allow(dead_code, unused_mut, unused_variables)]
+fn commands_actions(mut commands: Commands, mut query: Query<(&mut Player, &mut TilePos)>) {}
 
 fn tick(_commands: Commands, mut query: Query<&mut Transform>) {
     query.for_each_mut(|x| println!("-> {:?}", x))
