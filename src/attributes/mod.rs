@@ -1,9 +1,15 @@
-use crate::action::{Pace, Stance};
+use crate::action::Stance;
+use crate::action::Tempo;
+use crate::action::TEMPOS;
+// use crate::anatomy::parts::*;
+// use crate::anatomy::Condition;
+// use crate::anatomy::Injury;
+// use crate::anatomy::Need;
 use crate::dice::Dice;
-use crate::map::SquareDirection;
+use crate::map::Direction;
 use bevy::prelude::Component;
 
-#[derive(Component, Debug, Clone)]
+#[derive(Component, Debug, Clone, Copy)]
 #[allow(dead_code)]
 pub struct Primary {
     dexterity: u8,
@@ -35,14 +41,14 @@ impl Primary {
     }
 }
 
-#[derive(Component, Debug)]
+#[derive(Component, Debug, Clone, Copy)]
 #[allow(dead_code)]
 pub struct Secondary {
     stamina: u8,
     reflexes: u8,
     composure: u8,
-    stride: f32,   // square per tick at Relaxed pace
-    recovery: f32, // stamina per tick at rest
+    stride: f64,   // square per tick at Relaxed pace
+    recovery: f64, // stamina per tick at rest
 }
 
 impl Secondary {
@@ -54,42 +60,48 @@ impl Secondary {
             recovery: 1.0,
             stride: 1.0,
         }
-        //
     }
 }
 
+#[derive(Component, Debug, Clone)]
 #[allow(dead_code)]
-#[derive(Component, Debug)]
 pub struct Attributes {
     primary: Primary,
     secondary: Secondary,
     stance: Stance,
-    pace: Pace,
-    facing: SquareDirection,
-    moving: Option<SquareDirection>,
-    inventory: (),
-    conditions: (),
+    facing: Direction,
+    tempo: Tempo,
+    current_action: (),
+    actions_queued: (),
     needs: (),
-    thoughts: (),
-    wounds: (),
+    conditions: (),
+    injuries: (),
+    wearing: (),
+    carrying: (),
+    anatomy: (),
+    // thoughts: (),
 }
 
 impl Attributes {
     pub fn new() -> Attributes {
         let primary = Primary::random();
         let secondary = Secondary::new(&(primary.clone()));
+        let tempo = TEMPOS[0].clone();
+
         Attributes {
             primary,
             secondary,
             stance: Stance::Standing,
-            pace: Pace::Relaxed,
-            facing: SquareDirection::North,
-            moving: None,
-            inventory: (),
-            conditions: (),
+            facing: Direction::North,
+            tempo,
+            current_action: (),
+            actions_queued: (),
             needs: (),
-            thoughts: (),
-            wounds: (),
+            conditions: (),
+            injuries: (),
+            wearing: (),
+            carrying: (),
+            anatomy: (),
         }
     }
 }

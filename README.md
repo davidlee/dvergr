@@ -146,3 +146,11 @@ DIFFICULTY	BASELINE	TN/MOD
  - [x] build a grid using Bevy ECS Tileset
  - [ ] move a little @ player avatar
 
+ - figure out how to marry up these apparently conflicting needs 
+  - 0.12 support
+  - https://crates.io/crates/bevy_tile_atlas Tile Atlas support
+  - https://github.com/MrGVSV/bevy_tileset_map 
+  - https://github.com/MrGVSV/bevy_tileset
+
+ - this PR: https://github.com/StarArawn/bevy_ecs_tilemap/issues/316
+

@@ -1,5 +1,7 @@
-#[allow(dead_code)]
-enum Needs {
+use bevy::prelude::Component;
+
+#[derive(Component, Debug, Clone, Copy)]
+pub enum Need {
     Thirst,
     Hunger,
     Breath,
@@ -10,8 +12,8 @@ enum Needs {
     Medicine,
 }
 
-#[allow(dead_code)]
-enum Conditions {
+#[derive(Component, Debug, Clone, Copy)]
+pub enum Condition {
     Blind,
     Deaf,
     Dumb,
@@ -36,10 +38,11 @@ enum Conditions {
     Nausea,
     Intoxicated,
     Seizure,
+    BloodLoss,
 }
 
-#[allow(dead_code)]
-enum Injuries {
+#[derive(Component, Debug, Clone, Copy)]
+pub enum Injury {
     Shattered,
     Pulverised,
     Broken,
@@ -55,8 +58,7 @@ enum Injuries {
     CardiacArrest,
 }
 
-#[allow(dead_code)]
-mod parts {
+pub mod parts {
     trait Skull {}
     trait Brain {}
     trait Face {}

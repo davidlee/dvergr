@@ -1,28 +1,73 @@
 // CRATES
 
+use bevy::asset::LoadedFolder;
 use bevy::prelude::*;
 use bevy::window::{PresentMode, WindowTheme};
 
 use bevy_ecs_tilemap::prelude::*;
-
-mod action;
-mod anatomy;
-mod attributes;
-mod config;
-mod damage;
-mod dice;
-mod map;
-mod sys {
-    pub mod player_movement;
-}
+use bevy_pancam::PanCamPlugin;
 
 // MODULES
 
+pub mod action;
+pub mod anatomy;
+pub mod attributes;
+pub mod config;
+pub mod damage;
+pub mod dice;
+pub mod map;
+pub mod ui;
+pub mod sys {
+    pub mod player_movement;
+}
+pub mod time;
+
 use attributes::*;
 use config::*;
-use sys::player_movement::*;
-
+#[allow(unused_imports)]
 use map::*;
+use sys::player_movement::*;
+use time::TimePlugin;
+
+// #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, States)]
+// #[allow(dead_code)]
+// enum AppState {
+//     #[default]
+//     SetupLogicalMap,
+//     // LoadTextures,
+//     // DrawUI,
+//     // CreateCharacter,
+//     // Prepare,
+//     // BuildWorld,
+//     // PopulateMap,
+//     // Embark,
+//     Playing,
+//     // GameOver,
+// }
+
+// atlas setup
+// per https://github.com/bevyengine/bevy/blob/main/examples/2d/texture_atlas.rs
+
+#[derive(Resource, Default)]
+struct RpgSpriteFolder(Handle<LoadedFolder>);
+
+// fn load_textures(mut commands: Commands, asset_server: Res<AssetServer>) {
+//     // load multiple, individual sprites from a folder
+//     commands.insert_resource(RpgSpriteFolder(asset_server.load_folder("assets/rd/16x16")));
+// }
+
+// fn check_textures(
+//     mut next_state: ResMut<NextState<AppState>>,
+//     rpg_sprite_folder: ResMut<RpgSpriteFolder>,
+//     mut events: EventReader<AssetEvent<LoadedFolder>>,
+// ) {
+//     // Advance the `AppState` once all sprite handles have been loaded by the `AssetServer`
+//     for event in events.read() {
+//         if event.is_loaded_with_dependencies(&rpg_sprite_folder.0) {
+//             next_state.set(AppState::DrawUI);
+//         }
+//     }
+// }
 
 // MAIN
 
@@ -43,108 +88,35 @@ fn main() {
                 }),
                 ..default()
             })
-            .set(
-                ImagePlugin::default_nearest(),
-                // LogDiagnosticsPlugin::default(),
-                // FrameTimeDiagnosticsPlugin,
-            ),))
+            .set(ImagePlugin::default_nearest()),)) // no blurry sprites
+        .add_plugins(PanCamPlugin::default())
+        .add_plugins(TimePlugin::default())
+        // .add_state::<AppState>()
         .add_plugins(TilemapPlugin)
-        .add_systems(Startup, startup)
-        .add_systems(Update, (tick, bevy::window::close_on_esc))
+        // .add_systems(OnEnter(AppState::LoadTextures), load_textures)
+        // .add_systems(OnEnter(AppState::DrawUI), spawn_layout)
+        // .add_systems(
+        // Update,
+        // check_textures.run_if(in_state(AppState::LoadTextures)),
+        // )
+        // .add_systems(OnEnter(AppState::CreateCharacter), create_character)
+        // .add_systems(Startup, startup)
+        .add_systems(Startup, ui::spawn_layout)
+        .add_systems(Update, bevy::window::close_on_esc)
         .add_systems(Update, keybindings)
-        // .add_systems(Update, commands_stance)
-        .add_systems(Update, player_movement)
-        .add_systems(Update, commands_actions)
+        // .add_systems(Update, player_movement)
+        // .add_systems(Update, commands_actions)
         .add_event::<PlayerMovementEvent>()
         .run();
 }
 
 // STARTUP
 
-fn startup(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    #[cfg(all(not(feature = "atlas"), feature = "render"))] array_texture_loader: Res<
-        ArrayTextureLoader,
-    >,
-) {
-    commands.spawn(Camera2dBundle::default());
-
-    let texture_handle: Handle<Image> = asset_server.load("16x16_gr.png");
-    let window_res = default_res();
-    let tile_size = TilemapTileSize { x: 16.0, y: 16.0 };
-    let map_size = get_tilemap_size(&window_res, &tile_size);
-
-    let tilemap_entity = commands.spawn_empty().id();
-
-    // To begin creating the map we will need a `TileStorage` component.
-    // This component is a grid of tile entities and is used to help keep track of individual
-    // tiles in the world. If you have multiple layers of tiles you would have a tilemap entity
-    // per layer, each with their own `TileStorage` component.
-    let mut tile_storage = TileStorage::empty(map_size);
-
-    // Spawn the elements of the tilemap.
-    // Alternatively, you can use helpers::filling::fill_tilemap.
-    for x in 0..map_size.x {
-        for y in 0..map_size.y {
-            let tile_pos = TilePos { x, y };
-            let tile_entity = commands
-                .spawn(TileBundle {
-                    position: tile_pos,
-                    tilemap_id: TilemapId(tilemap_entity),
-                    ..Default::default()
-                })
-                .id();
-            tile_storage.set(&tile_pos, tile_entity);
-        }
-    }
-
-    let grid_size = tile_size.into();
-    let map_type = TilemapType::default();
-
-    commands.entity(tilemap_entity).insert(TilemapBundle {
-        grid_size,
-        map_type,
-        size: map_size,
-        storage: tile_storage,
-        texture: TilemapTexture::Single(texture_handle),
-        tile_size,
-        transform: get_tilemap_center_transform(&map_size, &grid_size, &map_type, 0.0),
-        ..Default::default()
-    });
-
-    let texture_handle: Handle<Image> = asset_server.load("16x16_thief.png");
-    let mob_tile_storage: TileStorage = TileStorage::empty(map_size);
-
-    // create a second, sparse tileamp at a higher z for mobs:
-    //
-    let tilemap_entity = commands.spawn_empty().id();
-    commands.entity(tilemap_entity).insert(TilemapBundle {
-        grid_size,
-        map_type,
-        size: map_size,
-        storage: mob_tile_storage,
-        texture: TilemapTexture::Single(texture_handle),
-        tile_size,
-        transform: get_tilemap_center_transform(&map_size, &grid_size, &map_type, 1.0),
-        ..Default::default()
-    });
-
-    let tile_pos: TilePos = TilePos { x: 1, y: 1 };
-
-    // insert a single tile
-    commands
-        .spawn(TileBundle {
-            position: tile_pos,
-            tilemap_id: TilemapId(tilemap_entity),
-            ..Default::default()
-        })
-        .insert(PlayerBundle::new());
-}
+// pub fn build_logical_map(commands: Commands, res)
 
 // COMPONENTS
 
-#[derive(Component, Debug)]
+#[derive(Component, Debug, Clone, Copy)]
 struct Creature;
 
 #[derive(Component, Debug)]
@@ -156,6 +128,7 @@ struct PlayerBundle {
     attributes: Attributes,
 }
 
+#[allow(dead_code)]
 impl PlayerBundle {
     fn new() -> Self {
         PlayerBundle {
@@ -168,16 +141,4 @@ impl PlayerBundle {
 // SYSTEMS
 
 #[allow(dead_code, unused_mut, unused_variables)]
-fn commands_general(
-    mut commands: Commands,
-    mut query: Query<(&mut Player, &mut TilePos, &TilemapId)>,
-) {
-}
-
-#[allow(dead_code, unused_mut, unused_variables)]
 fn commands_actions(mut commands: Commands, mut query: Query<(&mut Player, &mut TilePos)>) {}
-
-fn tick(_commands: Commands, mut query: Query<&mut Transform>) {
-    query.for_each_mut(|x| println!("-> {:?}", x))
-    // println!("tick");
-}

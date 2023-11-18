@@ -1,12 +1,11 @@
-use crate::map::{SquareDirection, TilePos, TilemapSize};
+use crate::map::{Direction, TilePos, TilemapSize};
 use crate::Player;
 use bevy::prelude::*;
-
+//.................................................................................................
 #[derive(Event, Debug)]
 pub struct PlayerMovementEvent {
-    direction: SquareDirection,
+    direction: Direction,
 }
-
 pub fn player_movement(
     mut ev_player_move: EventReader<PlayerMovementEvent>,
     mut pos_query: Query<(&mut Player, &mut TilePos)>,
@@ -15,7 +14,7 @@ pub fn player_movement(
     let (_player, mut pos) = pos_query.single_mut();
     let map_size: &TilemapSize = map_size_query.iter().find(|_x| -> bool { true }).unwrap();
 
-    for e in ev_player_move.iter() {
+    for e in ev_player_move.read() {
         if let Some(to) = pos.square_offset(&e.direction, &map_size) {
             TilePos { x: pos.x, y: pos.y } = to;
         }
@@ -31,9 +30,9 @@ pub fn keybindings(
     if keys.just_pressed(KeyCode::Up) {
         ev_player_move.send(PlayerMovementEvent {
             direction: if shifted {
-                SquareDirection::NorthWest
+                Direction::NorthWest
             } else {
-                SquareDirection::North
+                Direction::North
             },
         })
     }
@@ -41,9 +40,9 @@ pub fn keybindings(
     if keys.just_pressed(KeyCode::Down) {
         ev_player_move.send(PlayerMovementEvent {
             direction: if shifted {
-                SquareDirection::SouthEast
+                Direction::SouthEast
             } else {
-                SquareDirection::South
+                Direction::South
             },
         })
     }
@@ -51,9 +50,9 @@ pub fn keybindings(
     if keys.just_pressed(KeyCode::Left) {
         ev_player_move.send(PlayerMovementEvent {
             direction: if shifted {
-                SquareDirection::SouthWest
+                Direction::SouthWest
             } else {
-                SquareDirection::West
+                Direction::West
             },
         })
     }
@@ -61,9 +60,9 @@ pub fn keybindings(
     if keys.just_pressed(KeyCode::Right) {
         ev_player_move.send(PlayerMovementEvent {
             direction: if shifted {
-                SquareDirection::NorthEast
+                Direction::NorthEast
             } else {
-                SquareDirection::East
+                Direction::East
             },
         })
     }

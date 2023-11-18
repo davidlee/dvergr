@@ -1,0 +1,13 @@
+# TODO
+
+- Maps:
+  - [x] find temp graphics
+  - [?] git submodules  / .gitignore for commercial assets?
+  - [ ]
+  - enable atlas feature
+  - configure atlas
+  - use proper sprites
+  - room gen
+  - collision
+  - line of sight
+  - lighting
