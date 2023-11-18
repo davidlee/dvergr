@@ -1,12 +1,5 @@
-use crate::action::Stance;
-use crate::action::Tempo;
-use crate::action::TEMPOS;
-// use crate::anatomy::parts::*;
-// use crate::anatomy::Condition;
-// use crate::anatomy::Injury;
-// use crate::anatomy::Need;
 use crate::dice::Dice;
-use crate::map::Direction;
+
 use bevy::prelude::Component;
 
 #[derive(Component, Debug, Clone, Copy)]
@@ -68,17 +61,18 @@ impl Secondary {
 pub struct Attributes {
     primary: Primary,
     secondary: Secondary,
-    stance: Stance,
-    facing: Direction,
-    tempo: Tempo,
-    current_action: (),
-    actions_queued: (),
-    needs: (),
-    conditions: (),
-    injuries: (),
-    wearing: (),
-    carrying: (),
-    anatomy: (),
+    // all this shit should be part of PlayerBundle, right?
+    // stance: Stance,
+    // facing: Direction,
+    // tempo: Tempo,
+    // current_action: (),
+    // actions_queued: (),
+    // needs: (),
+    // conditions: (),
+    // injuries: (),
+    // wearing: (),
+    // carrying: (),
+    // anatomy: (),
     // thoughts: (),
 }
 
@@ -86,22 +80,22 @@ impl Attributes {
     pub fn new() -> Attributes {
         let primary = Primary::random();
         let secondary = Secondary::new(&(primary.clone()));
-        let tempo = TEMPOS[0].clone();
+        // let tempo = TEMPOS[0].clone();
 
         Attributes {
             primary,
             secondary,
-            stance: Stance::Standing,
-            facing: Direction::North,
-            tempo,
-            current_action: (),
-            actions_queued: (),
-            needs: (),
-            conditions: (),
-            injuries: (),
-            wearing: (),
-            carrying: (),
-            anatomy: (),
+            // stance: Stance::Standing,
+            // facing: Direction::North,
+            // tempo,
+            // current_action: (),
+            // actions_queued: (),
+            // needs: (),
+            // conditions: (),
+            // injuries: (),
+            // wearing: (),
+            // carrying: (),
+            // anatomy: (),
         }
     }
 }

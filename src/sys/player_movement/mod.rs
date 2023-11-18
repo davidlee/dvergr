@@ -1,7 +1,8 @@
 use crate::map::{Direction, TilePos, TilemapSize};
-use crate::Player;
-use bevy::prelude::*;
-//.................................................................................................
+// use crate::Player;
+use crate::player::Player;
+use bevy::prelude::{Event, EventReader, EventWriter, Input, KeyCode, Query, Res};
+
 #[derive(Event, Debug)]
 pub struct PlayerMovementEvent {
     direction: Direction,

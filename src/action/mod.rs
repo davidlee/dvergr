@@ -1,13 +1,14 @@
 use bevy::prelude::*;
 
 mod id {
-    #[derive(Clone, Copy, Debug)]
+    #[derive(Clone, Copy, Debug, Default)]
     pub enum TempoId {
         Immobile,
         Interminable,
         Slow,
         Careful,
         Deliberate,
+        #[default]
         Relaxed,
         Brisk,
         Rapid,
@@ -88,9 +89,10 @@ pub static TEMPOS: [Tempo; 9] = [
 ];
 
 // should be a state machine??
-#[derive(Component, Debug, Clone, Copy)]
+#[derive(Component, Debug, Clone, Copy, Default)]
 pub enum Stance {
     Dynamic,
+    #[default]
     Standing,
     Crouching,
     Kneeling,

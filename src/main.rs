@@ -20,12 +20,16 @@ pub mod ui;
 pub mod sys {
     pub mod player_movement;
 }
+pub mod player;
 pub mod time;
 
-use attributes::*;
 use config::*;
+
 #[allow(unused_imports)]
 use map::*;
+
+// use player::{Player, PlayerBundle};
+
 use sys::player_movement::*;
 use time::TimePlugin;
 
@@ -91,6 +95,7 @@ fn main() {
             .set(ImagePlugin::default_nearest()),)) // no blurry sprites
         .add_plugins(PanCamPlugin::default())
         .add_plugins(TimePlugin::default())
+        .add_plugins(MapPlugin {})
         // .add_state::<AppState>()
         .add_plugins(TilemapPlugin)
         // .add_systems(OnEnter(AppState::LoadTextures), load_textures)
@@ -116,29 +121,7 @@ fn main() {
 
 // COMPONENTS
 
-#[derive(Component, Debug, Clone, Copy)]
-struct Creature;
-
-#[derive(Component, Debug)]
-pub struct Player;
-
-#[derive(Bundle)]
-struct PlayerBundle {
-    player: Player,
-    attributes: Attributes,
-}
-
-#[allow(dead_code)]
-impl PlayerBundle {
-    fn new() -> Self {
-        PlayerBundle {
-            player: Player,
-            attributes: Attributes::new(),
-        }
-    }
-}
-
 // SYSTEMS
 
-#[allow(dead_code, unused_mut, unused_variables)]
-fn commands_actions(mut commands: Commands, mut query: Query<(&mut Player, &mut TilePos)>) {}
+// #[allow(dead_code, unused_mut, unused_variables)]
+// fn commands_actions(mut commands: Commands, mut query: Query<(&mut Player, &mut TilePos)>) {}

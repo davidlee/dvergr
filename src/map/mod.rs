@@ -27,7 +27,7 @@ const DIAG_MOVEMENT_COST: f64 = 1.4;
 use bevy::prelude::Plugin;
 use bevy::prelude::Resource;
 
-struct MapPlugin {}
+pub struct MapPlugin {}
 
 impl Plugin for MapPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
@@ -41,20 +41,20 @@ impl Plugin for MapPlugin {
 #[derive(Resource)]
 #[allow(dead_code)]
 struct GameMap {
-    grid: logical::Grid,
-    size: logical::Size,
+    grid: Grid,
+    size: Size,
 }
 
 impl GameMap {
     pub fn new(size: logical::Size) -> Self {
         Self {
-            grid: logical::Grid::new(size),
+            grid: Grid::new(size),
             size,
         }
     }
 
     pub fn default() -> Self {
-        GameMap::new(logical::Size { x: 64, y: 64 })
+        GameMap::new(Size { x: 64, y: 64 })
     }
 }
 //
