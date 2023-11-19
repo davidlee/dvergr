@@ -1,8 +1,22 @@
 use bevy::prelude::*;
 use bevy_pancam::PanCam;
 
-// use std::fmt::Alignment;
+/*
 
+006466
+065A60
+0B525B
+144552
+1B3A4B
+
+212F45
+272640
+312244
+3E1F47
+4D194D
+
+
+*/
 pub fn spawn_layout(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands
         .spawn(Camera2dBundle::default())
@@ -31,7 +45,7 @@ pub fn spawn_layout(mut commands: Commands, asset_server: Res<AssetServer>) {
                 flex_direction: FlexDirection::Column,
                 ..default()
             },
-            background_color: BackgroundColor(Color::DARK_GREEN),
+            background_color: BackgroundColor(Color::hex("272640").unwrap()),
             ..Default::default()
         })
         .with_children(|parent| {
@@ -46,7 +60,7 @@ pub fn spawn_layout(mut commands: Commands, asset_server: Res<AssetServer>) {
                         justify_content: JustifyContent::Center,
                         ..default()
                     },
-                    background_color: BackgroundColor(Color::rgb(0.1, 0.1, 0.15)),
+                    background_color: BackgroundColor(Color::hex("1B3A4B").unwrap()),
                     // border_color: Color::RED.into(),
                     ..Default::default()
                 })
@@ -77,7 +91,7 @@ pub fn spawn_layout(mut commands: Commands, asset_server: Res<AssetServer>) {
                                 justify_content: JustifyContent::Center,
                                 ..default()
                             },
-                            background_color: BackgroundColor(Color::rgb(0.05, 0.0, 0.0)),
+                            background_color: BackgroundColor(Color::hex("144552").unwrap()),
                             ..Default::default()
                         })
                         .with_children(|parent| {
@@ -97,7 +111,7 @@ pub fn spawn_layout(mut commands: Commands, asset_server: Res<AssetServer>) {
                                 justify_content: JustifyContent::Center,
                                 ..default()
                             },
-                            background_color: BackgroundColor(Color::rgb(0.05, 0.05, 0.10)),
+                            background_color: BackgroundColor(Color::hex("000000").unwrap()),
                             ..Default::default()
                         })
                         .with_children(|parent| {
@@ -117,12 +131,16 @@ pub fn spawn_layout(mut commands: Commands, asset_server: Res<AssetServer>) {
                                         justify_content: JustifyContent::Center,
                                         ..default()
                                     },
-                                    background_color: BackgroundColor(Color::rgb(0.05, 0.05, 0.10)),
+                                    background_color: BackgroundColor(
+                                        Color::hex("212F45").unwrap(),
+                                    ),
                                     ..Default::default()
                                 })
                                 .with_children(|parent| {
+                                    // TODO _ this is where we wanna drap a text representation of
+                                    // the map ... do we wanna stash a reference? drop an entity?
                                     parent.spawn(TextBundle::from_section(
-                                        "Map Area",
+                                        "ASCII Map Goes Here",
                                         text_style.clone(),
                                     ));
                                 });
@@ -139,7 +157,9 @@ pub fn spawn_layout(mut commands: Commands, asset_server: Res<AssetServer>) {
                                         // justify_content: JustifyContent::Center,
                                         ..default()
                                     },
-                                    background_color: BackgroundColor(Color::rgb(0.0, 0.0, 0.0)),
+                                    background_color: BackgroundColor(
+                                        Color::hex("272640").unwrap(),
+                                    ),
                                     ..Default::default()
                                 })
                                 .with_children(|parent| {
@@ -162,7 +182,7 @@ pub fn spawn_layout(mut commands: Commands, asset_server: Res<AssetServer>) {
                         justify_content: JustifyContent::Center,
                         ..Default::default()
                     },
-                    background_color: BackgroundColor(Color::rgb(0.1, 0.1, 0.15)),
+                    background_color: BackgroundColor(Color::hex("1B3A4B").unwrap()),
                     ..Default::default()
                 })
                 .with_children(|parent| {

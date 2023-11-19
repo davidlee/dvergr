@@ -8,6 +8,9 @@ pub use bevy_ecs_tilemap::prelude::*;
 pub use bevy_ecs_tilemap::tiles::TilePos;
 pub use logical::*;
 
+pub mod init;
+pub mod render;
+
 // pub fn get_tilemap_size(resolution: &WindowResolution, tile_size: &TilemapTileSize) -> TilemapSize {
 //     let w: u32 = resolution.width() as u32;
 //     let h: u32 = resolution.height() as u32;
@@ -17,12 +20,12 @@ pub use logical::*;
 //     TilemapSize { x, y }
 // }
 
+#[allow(dead_code)]
 // note:
 // we can solve the diagonal movement cost issue with square grids:
 // just have them cost more (in terms of time / stamina)
-
-#[allow(dead_code)]
-const DIAG_MOVEMENT_COST: f64 = 1.4;
+// although this belongs elsewhere
+const DIAG_MOVEMENT_COST: f64 = 1.4; // sqrt(2)
 
 use bevy::prelude::Plugin;
 use bevy::prelude::Resource;
@@ -34,27 +37,51 @@ impl Plugin for MapPlugin {
         // app.add_systems(Update, )
         // app.add_state()
         // app.add_event()
-        app.insert_resource(GameMap::default());
+
+        // I think we want to establish a link from GameMap.grid.tilemap to the (equivalent)
+        // Bevy_ECS_Tilemap.
+        //
+        // A few things to think about:
+        // - how to support layers
+        // - how to support different local maps, and lifecycle of both Grid and TileMap when we
+        //   move between local maps
+        // - how to sync changes from Grid to TileMap
+        // - procedural generation - both implementing it, and where it should live
+        // - appropriate lifecycle hooks (systems) to set up all the moving parts
+        // - we should probably do very little in this plugin build function
+
+        let mut game_map = GameMap::default();
+
+        game_map
+            .grid
+            // create a map with all tiles the same
+            .clone_cell_to_rect(&Cell::default(), CellPos { x: 0, y: 0 }, game_map.size);
+
+        println!("MapPlugin: generated logical map");
+        // println!("{:?}", game_map);
+
+        app.insert_resource(game_map);
     }
 }
 
-#[derive(Resource)]
+#[derive(Resource, Debug, Clone)]
 #[allow(dead_code)]
 struct GameMap {
     grid: Grid,
     size: Size,
+    // tilemap_entity: Entity,
 }
 
 impl GameMap {
     pub fn new(size: logical::Size) -> Self {
         Self {
-            grid: Grid::new(size),
+            grid: Grid::empty(size),
             size,
         }
     }
 
     pub fn default() -> Self {
-        GameMap::new(Size { x: 64, y: 64 })
+        GameMap::new(Size { x: 64, y: 32 })
     }
 }
 //
@@ -75,18 +102,25 @@ pub mod logical {
     pub type Size = bevy_ecs_tilemap::map::TilemapSize;
     pub type CellPos = bevy_ecs_tilemap::tiles::TilePos;
 
-    #[derive(Clone, Copy, Debug)]
+    #[derive(Clone, Copy, Debug, Default)]
     pub struct CellContents {
-        // impl trait Container
+        items: Option<()>,
+    }
+    impl CellContents {
+        fn default() -> Self {
+            CellContents { items: None }
+        }
     }
 
-    #[derive(Clone, Copy, Debug)]
+    #[derive(Clone, Copy, Debug, Default)]
     pub enum Terrain {
+        #[default]
         Floor,
         Pillar,
         Wall(Facing),
         Feature(Entity),
     }
+
     #[derive(Clone, Copy, Debug)]
     pub enum Structure {
         Door(Facing),
@@ -96,8 +130,10 @@ pub mod logical {
         Statue(Facing),
     }
 
-    #[derive(Clone, Copy, Debug)]
+    #[derive(Clone, Copy, Debug, Default)]
     pub enum Material {
+        #[default]
+        Stone,
         Sand,
         Dirt,
         Sandstone,
@@ -107,8 +143,9 @@ pub mod logical {
         Quartz,
     }
 
-    #[derive(Clone, Copy, Debug)]
+    #[derive(Clone, Copy, Debug, Default)]
     pub enum Fluid {
+        #[default]
         Water,
         Brine,
         Muck,
@@ -120,7 +157,7 @@ pub mod logical {
     //     Normal,
     // }
 
-    #[derive(Clone, Copy, Debug)]
+    #[derive(Clone, Copy, Debug, Default)]
     pub struct Cell {
         position: CellPos, // is this wise?
         terrain: Terrain,
@@ -130,6 +167,19 @@ pub mod logical {
         fluid: Option<(Fluid, u8)>,
         trap: Option<Entity>,
     }
+    impl Cell {
+        fn default() -> Self {
+            Cell {
+                position: CellPos { x: 0, y: 0 },
+                terrain: Terrain::Floor,
+                contents: CellContents::default(),
+                creature: None,
+                material: None,
+                fluid: None,
+                trap: None,
+            }
+        }
+    }
 
     #[derive(Clone, Debug)]
     pub struct Grid {
@@ -138,7 +188,7 @@ pub mod logical {
     }
 
     impl Grid {
-        pub fn new(size: Size) -> Self {
+        pub fn empty(size: Size) -> Self {
             let storage = Storage::empty(size);
             Grid { size, storage }
         }

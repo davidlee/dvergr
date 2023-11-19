@@ -2,20 +2,17 @@
 
 use bevy::asset::LoadedFolder;
 use bevy::prelude::*;
-use bevy::window::{PresentMode, WindowTheme};
-
-use bevy_ecs_tilemap::prelude::*;
-use bevy_pancam::PanCamPlugin;
+use bevy::window::{PresentMode, WindowResolution, WindowTheme};
+// use bevy_pancam::PanCamPlugin;
 
 // MODULES
 
 pub mod action;
 pub mod anatomy;
 pub mod attributes;
-pub mod config;
+pub mod board;
 pub mod damage;
 pub mod dice;
-pub mod map;
 pub mod ui;
 pub mod sys {
     pub mod player_movement;
@@ -23,31 +20,29 @@ pub mod sys {
 pub mod player;
 pub mod time;
 
-use config::*;
+// imports
 
-#[allow(unused_imports)]
-use map::*;
-
-// use player::{Player, PlayerBundle};
-
+use board::*;
 use sys::player_movement::*;
 use time::TimePlugin;
 
-// #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, States)]
-// #[allow(dead_code)]
-// enum AppState {
-//     #[default]
-//     SetupLogicalMap,
-//     // LoadTextures,
-//     // DrawUI,
-//     // CreateCharacter,
-//     // Prepare,
-//     // BuildWorld,
-//     // PopulateMap,
-//     // Embark,
-//     Playing,
-//     // GameOver,
-// }
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, States)]
+#[allow(dead_code)]
+enum AppState {
+    #[default]
+    LoadAssets,
+    Game,
+    // PrepareBoard,
+    // SetupLogicalMap,
+    // LoadTextures,
+    // DrawUI,
+    // CreateCharacter,
+    // Prepare,
+    // BuildWorld,
+    // PopulateMap,
+    // Embark,
+    // GameOver,
+}
 
 // atlas setup
 // per https://github.com/bevyengine/bevy/blob/main/examples/2d/texture_atlas.rs
@@ -81,7 +76,7 @@ fn main() {
             .set(WindowPlugin {
                 primary_window: Some(Window {
                     title: "One day I will be a roguelike".into(),
-                    resolution: default_res(),
+                    resolution: WindowResolution::new(2800.0, 1400.0),
                     present_mode: PresentMode::AutoVsync,
                     // Tells wasm to resize the window according to the available canvas
                     fit_canvas_to_parent: true,
@@ -93,11 +88,13 @@ fn main() {
                 ..default()
             })
             .set(ImagePlugin::default_nearest()),)) // no blurry sprites
-        .add_plugins(PanCamPlugin::default())
+        // .add_plugins(PanCamPlugin::default())
         .add_plugins(TimePlugin::default())
-        .add_plugins(MapPlugin {})
-        // .add_state::<AppState>()
-        .add_plugins(TilemapPlugin)
+        // .add_plugins(MapPlugin {})
+        .add_plugins(BoardPlugin)
+        .add_state::<AppState>()
+        // .add_state::<states::MainState>()
+        // .add_plugins(TilemapPlugin)
         // .add_systems(OnEnter(AppState::LoadTextures), load_textures)
         // .add_systems(OnEnter(AppState::DrawUI), spawn_layout)
         // .add_systems(

@@ -1,4 +1,4 @@
-use crate::map::{Direction, TilePos, TilemapSize};
+use crate::board::{Direction, Pos};
 // use crate::Player;
 use crate::player::Player;
 use bevy::prelude::{Event, EventReader, EventWriter, Input, KeyCode, Query, Res};
@@ -9,16 +9,16 @@ pub struct PlayerMovementEvent {
 }
 pub fn player_movement(
     mut ev_player_move: EventReader<PlayerMovementEvent>,
-    mut pos_query: Query<(&mut Player, &mut TilePos)>,
-    map_size_query: Query<&TilemapSize>,
+    mut pos_query: Query<(&mut Player, &mut Pos)>,
+    // current_board: Res<CurrentBoard>,
+    // map_size_query: Query<&Size>,
 ) {
-    let (_player, mut pos) = pos_query.single_mut();
-    let map_size: &TilemapSize = map_size_query.iter().find(|_x| -> bool { true }).unwrap();
+    let (_player, pos) = pos_query.single_mut();
+    // let map_size: &Size = current_board.size();
 
     for e in ev_player_move.read() {
-        if let Some(to) = pos.square_offset(&e.direction, &map_size) {
-            TilePos { x: pos.x, y: pos.y } = to;
-        }
+        let _to = pos.adjacent(e.direction);
+        // ...
     }
 }
 
