@@ -1,4 +1,4 @@
-use crate::board::{Direction, Pos};
+use crate::board::{Direction, Pos3d};
 // use crate::Player;
 use crate::player::Player;
 use bevy::prelude::{Event, EventReader, EventWriter, Input, KeyCode, Query, Res};
@@ -9,7 +9,7 @@ pub struct PlayerMovementEvent {
 }
 pub fn player_movement(
     mut ev_player_move: EventReader<PlayerMovementEvent>,
-    mut pos_query: Query<(&mut Player, &mut Pos)>,
+    mut pos_query: Query<(&mut Player, &mut Pos3d)>,
     // current_board: Res<CurrentBoard>,
     // map_size_query: Query<&Size>,
 ) {

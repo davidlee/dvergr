@@ -103,7 +103,8 @@ fn main() {
         // )
         // .add_systems(OnEnter(AppState::CreateCharacter), create_character)
         // .add_systems(Startup, startup)
-        .add_systems(Startup, ui::spawn_layout)
+        // .add_systems(Startup, ui::spawn_layout)
+        .add_systems(Startup, load_sprites)
         .add_systems(Update, bevy::window::close_on_esc)
         .add_systems(Update, keybindings)
         // .add_systems(Update, player_movement)
@@ -114,7 +115,31 @@ fn main() {
 
 // STARTUP
 
-// pub fn build_logical_map(commands: Commands, res)
+fn load_sprites(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+) {
+    let texture_handle = asset_server.load("img/or16w_t.png");
+    let texture_atlas = TextureAtlas::from_grid(
+        texture_handle,
+        Vec2::new(24.0, 24.0),
+        56,
+        2,
+        None,
+        Some(Vec2 { x: 24.0, y: 24.0 }),
+    );
+    let texture_atlas_handle = texture_atlases.add(texture_atlas);
+
+    commands.spawn(Camera2dBundle::default());
+
+    commands.spawn((SpriteSheetBundle {
+        texture_atlas: texture_atlas_handle,
+        sprite: TextureAtlasSprite::new(52),
+        transform: Transform::from_scale(Vec3::splat(6.0)),
+        ..default()
+    },));
+}
 
 // COMPONENTS
 

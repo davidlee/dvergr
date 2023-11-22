@@ -1,7 +1,7 @@
 use crate::action::Stance;
 use crate::action::Tempo;
 use crate::board::Direction;
-use crate::board::Pos;
+use crate::board::Pos3d;
 use bevy::sprite::Anchor;
 
 use crate::attributes::Attributes;
@@ -136,7 +136,7 @@ impl CreatureCondition {
 #[derive(Component, Debug, Clone)]
 #[allow(dead_code)]
 pub struct Creature {
-    position: Pos,
+    position: Pos3d,
     anchor: Anchor,
     stance: Stance,
     facing: Direction,
@@ -156,7 +156,7 @@ pub struct Creature {
 }
 
 impl Creature {
-    pub fn human(position: Pos) -> Self {
+    pub fn human(position: Pos3d) -> Self {
         Creature {
             position,
             anchor: Anchor::default(),
