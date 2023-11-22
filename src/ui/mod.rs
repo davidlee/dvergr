@@ -1,27 +1,29 @@
+use crate::AppState;
 use bevy::prelude::*;
 use bevy_pancam::PanCam;
 
 /*
+pallette:
 
-006466
-065A60
-0B525B
-144552
-1B3A4B
-
-212F45
-272640
-312244
-3E1F47
-4D194D
-
-
+006466 065A60 0B525B 144552 1B3A4B
+212F45 272640 312244 3E1F47 4D194D
 */
-pub fn spawn_layout(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands
-        .spawn(Camera2dBundle::default())
-        .insert(PanCam::default());
 
+#[derive(Component, Debug)]
+pub struct MapViewPanel;
+
+#[allow(dead_code, unused_variables, unreachable_code)]
+
+pub fn spawn_layout(
+    commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut next_state: ResMut<NextState<AppState>>,
+) {
+    println!("Draw UI");
+
+    next_state.set(AppState::Game);
+
+    return;
     let heading_style = TextStyle {
         font: asset_server.load("font/BigBlueTerminalPlus.ttf"),
         font_size: 22.0,
@@ -98,7 +100,7 @@ pub fn spawn_layout(mut commands: Commands, asset_server: Res<AssetServer>) {
                             parent
                                 .spawn(TextBundle::from_section("Sidebar", heading_style.clone()));
                         });
-                    // Main Content Area
+                    // Main Content Container
                     parent
                         .spawn(NodeBundle {
                             style: Style {
@@ -120,22 +122,25 @@ pub fn spawn_layout(mut commands: Commands, asset_server: Res<AssetServer>) {
                             //     heading_style.clone(),
                             // ));
                             parent
-                                .spawn(NodeBundle {
-                                    /// Map Area
-                                    style: Style {
-                                        // width: Val::Percent(100.),
-                                        flex_grow: 100.,
-                                        height: Val::Percent(70.),
-                                        // for contained text
-                                        // align_items: AlignItems::Center,
-                                        justify_content: JustifyContent::Center,
-                                        ..default()
+                                .spawn((
+                                    MapViewPanel,
+                                    NodeBundle {
+                                        /// Map Area
+                                        style: Style {
+                                            // width: Val::Percent(100.),
+                                            flex_grow: 100.,
+                                            height: Val::Percent(70.),
+                                            // for contained text
+                                            // align_items: AlignItems::Center,
+                                            justify_content: JustifyContent::Center,
+                                            ..default()
+                                        },
+                                        background_color: BackgroundColor(
+                                            Color::hex("212F45").unwrap(),
+                                        ),
+                                        ..Default::default()
                                     },
-                                    background_color: BackgroundColor(
-                                        Color::hex("212F45").unwrap(),
-                                    ),
-                                    ..Default::default()
-                                })
+                                ))
                                 .with_children(|parent| {
                                     // TODO _ this is where we wanna drap a text representation of
                                     // the map ... do we wanna stash a reference? drop an entity?
@@ -189,4 +194,13 @@ pub fn spawn_layout(mut commands: Commands, asset_server: Res<AssetServer>) {
                     parent.spawn(TextBundle::from_section("Footer", heading_style.clone()));
                 });
         });
+    next_state.set(AppState::Game);
+}
+
+pub fn spawn_camera(mut commands: Commands) {
+    commands.spawn(Camera2dBundle::default()).insert(PanCam {
+        min_scale: 0.1,
+        max_scale: Some(2.),
+        ..default()
+    });
 }

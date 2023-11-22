@@ -11,7 +11,7 @@ pub mod u32 {
     pub const SECONDS_PER_DAY: u32 = 86400;
 }
 
-pub struct TimePlugin {}
+pub struct TimePlugin;
 
 impl Plugin for TimePlugin {
     fn build(&self, _app: &mut App) {
@@ -20,11 +20,11 @@ impl Plugin for TimePlugin {
 }
 impl TimePlugin {
     pub fn default() -> Self {
-        TimePlugin {}
+        TimePlugin
     }
 }
 
-pub struct Seconds {}
+pub struct Seconds;
 
 impl Seconds {
     pub fn to_minutes(seconds: f64) -> f64 {
