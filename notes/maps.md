@@ -51,3 +51,50 @@
 RES.grid.cells[ (x y z )] -> Cell { kind, }
     
    
+
+// pub struct MaterialAttrs {
+//     hardness: i32,
+//     digs_into: Option<Material>,
+// }
+//
+// #[derive(Default, Resource, Eq, PartialEq, Clone, Debug, PartialOrd, Ord)]
+// pub enum CellMaterial {
+//     #[default]
+//     Empty,
+//     Solid(Material), // ...
+// }
+
+// #[derive(Default, Resource, Eq, PartialEq, Clone, Debug, PartialOrd, Ord)]
+// pub enum CellFloor {
+//     #[default]
+//     None,
+//     Solid(Material),
+// }
+
+// #[derive(Default, Resource, Eq, PartialEq, Clone, Debug, PartialOrd, Ord)]
+// pub enum CellItems {
+//     #[default]
+//     Empty,
+//     List(Vec<Entity>),
+// }
+// #[derive(Clone, Copy, Debug, Default)]
+// pub enum Material {
+//     #[default]
+//     Stone,
+//     Sand,
+//     Dirt,
+//     Sandstone,
+//     Limestone,
+//     Granite,
+//     Marble,
+//     Quartz,
+// }
+
+// #[derive(Clone, Copy, Debug, Default)]
+// pub enum Fluid {
+//     #[default]
+//     Water,
+//     Brine,
+//     Muck,
+//     Blood,
+// }

@@ -1,5 +1,6 @@
 use crate::AppState;
 use bevy::prelude::*;
+// use bevy_turborand::prelude::GlobalRng;
 use std::collections::HashMap;
 use std::ops::Add;
 
@@ -10,14 +11,14 @@ const CELL_SIZE_METRES: f32 = 2.0;
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug, Hash, Component)]
 pub struct Pos2d {
-    x: i32,
-    y: i32,
+    pub x: i32,
+    pub y: i32,
 }
 #[derive(Eq, PartialEq, Copy, Clone, Debug, Hash, Component)]
 pub struct Pos3d {
-    x: i32,
-    y: i32,
-    z: i32,
+    pub x: i32,
+    pub y: i32,
+    pub z: i32,
 }
 
 impl Pos2d {
@@ -34,7 +35,7 @@ impl Pos3d {
         Self { x, y, z }
     }
 
-    pub fn origin() -> Self {
+    pub fn zero() -> Self {
         Self { x: 0, y: 0, z: 0 }
     }
 
@@ -66,27 +67,27 @@ impl From<(i32, i32, i32)> for Pos3d {
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug, Default)]
 pub struct Size2d {
-    width: i32,
-    height: i32,
+    pub width: i32,
+    pub height: i32,
 }
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug, Default)]
 pub struct Size3d {
-    width: i32,
-    height: i32,
-    depth: i32,
+    pub width: i32,
+    pub height: i32,
+    pub depth: i32,
 }
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]
 pub struct Rect {
-    origin: Pos2d,
-    size: Size2d,
+    pub origin: Pos2d,
+    pub size: Size2d,
 }
 
 #[allow(dead_code)]
 pub struct RectPrism {
-    origin: Pos3d,
-    size: Size3d,
+    pub origin: Pos3d,
+    pub size: Size3d,
 }
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug, Ord, PartialOrd)]
@@ -161,7 +162,7 @@ pub enum Orientation {
 // ......
 
 #[derive(Eq, PartialEq, Clone, Debug, Default)]
-struct Board {
+pub struct Board {
     pub size: Size3d,
     pub store: CellStore,
 }
@@ -197,30 +198,66 @@ impl Board {
 
     // private
 
-    fn fill(&mut self, source_cell: &Cell, origin: Pos3d, size: Size3d) {
+    // fn fill(&mut self, source_cell: &Cell, origin: Pos3d, size: Size3d) {
+    //     for x in origin.x..(size.width + origin.x) {
+    //         for y in origin.y..(size.height + origin.y) {
+    //             for z in origin.z..(size.depth + origin.z) {
+    //                 let cell = source_cell.clone();
+    //                 let pos = Pos3d { x, y, z };
+    //                 self.store.cells.insert(pos, cell);
+    //             }
+    //         }
+    //     }
+    // }
+
+    // fn fill_empty(&mut self, origin: Pos3d, size: Size3d) {
+    //     for x in origin.x..(size.width + origin.x) {
+    //         for y in origin.y..(size.height + origin.y) {
+    //             for z in origin.z..(size.depth + origin.z) {
+    //                 self.store.cells.insert(Pos3d { x, y, z }, Cell::empty());
+    //             }
+    //         }
+    //     }
+    // }
+
+    // fn fill_all(&mut self, source_cell: &Cell) {
+    //     self.fill(&source_cell, Pos3d::origin(), self.size)
+    // }
+
+    // fn fill_with(&mut self, f: fn(i32, i32, i32) -> Option<Cell>) {
+    //     for x in 0..self.size.width {
+    //         for y in 0..self.size.height {
+    //             for z in 0..self.size.depth {
+    //                 if let Some(cell) = f(x, y, z) {
+    //                     let pos = Pos3d { x, y, z };
+    //                     self.store.cells.insert(pos, cell);
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
+
+    pub fn fill<F>(&mut self, f: F)
+    where
+        F: Fn(i32, i32, i32) -> Option<Cell>,
+    {
+        self.fill_region(Pos3d::zero(), self.size, f);
+    }
+
+    pub fn fill_region<F>(&mut self, origin: Pos3d, size: Size3d, f: F)
+    where
+        F: Fn(i32, i32, i32) -> Option<Cell>,
+    {
         for x in origin.x..(size.width + origin.x) {
             for y in origin.y..(size.height + origin.y) {
                 for z in origin.z..(size.depth + origin.z) {
-                    let cell = source_cell.clone();
-                    let pos = Pos3d { x, y, z };
-                    self.store.cells.insert(pos, cell);
+                    if let Some(cell) = f(x, y, z) {
+                        let pos = Pos3d { x, y, z };
+                        self.store.cells.insert(pos, cell);
+                    }
                 }
             }
         }
-    }
-
-    fn fill_empty(&mut self, origin: Pos3d, size: Size3d) {
-        for x in origin.x..(size.width + origin.x) {
-            for y in origin.y..(size.height + origin.y) {
-                for z in origin.z..(size.depth + origin.z) {
-                    self.store.cells.insert(Pos3d { x, y, z }, Cell::empty());
-                }
-            }
-        }
-    }
-
-    fn fill_all(&mut self, source_cell: &Cell) {
-        self.fill(&source_cell, Pos3d::origin(), self.size)
     }
 }
 
@@ -243,26 +280,63 @@ pub type CellMaterial = Option<Material>;
 pub type CellFloor = Option<Material>;
 pub type CellItems = Option<Vec<Entity>>;
 
-#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Debug, Default)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Debug)]
 pub struct Cell {
-    material: CellMaterial,
-    floor: CellFloor,
-    feature: Option<Entity>, // door, trap, statue, well, etc
-    creature: Option<Entity>,
-    items: CellItems,
+    pub material: CellMaterial,
+    pub floor: CellFloor,
+    pub feature: Option<Entity>, // door, trap, statue, well, etc
+    pub creature: Option<Entity>,
+    pub items: CellItems,
     // fluids, gases, etc
 }
 
 impl Cell {
     pub fn empty() -> Self {
-        Cell { ..default() }
+        Cell {
+            material: None,
+            floor: None,
+            feature: None,
+            creature: None,
+            items: Some(vec![]),
+        }
+    }
+
+    pub fn passable(&self) -> bool {
+        match self.material {
+            None => true,
+            Some(_) => false,
+        }
     }
 }
 
+impl Default for Cell {
+    // A dirt wall
+    fn default() -> Self {
+        Cell {
+            material: Some(Material::Dirt),
+            floor: None,
+            feature: None,
+            creature: None,
+            items: Some(vec![]),
+        }
+    }
+}
+
+// #[cfg(test)]
+// mod test {
+//     use super::Cell;
+
+//     #[test]
+//     fn test_cell_default() {
+//         println!("{:?}", Cell::default());
+//         assert_ne!(Cell::default(), Cell::empty());
+//     }
+// }
+
 #[derive(Default, Resource, Eq, PartialEq, Clone, Debug, PartialOrd, Ord)]
 pub enum Material {
-    Dirt,
     #[default]
+    Dirt,
     Sandstone,
     Granite,
     Marble,
@@ -270,79 +344,51 @@ pub enum Material {
     Sand,
 }
 
-// pub struct MaterialAttrs {
-//     hardness: i32,
-//     digs_into: Option<Material>,
-// }
-//
-// #[derive(Default, Resource, Eq, PartialEq, Clone, Debug, PartialOrd, Ord)]
-// pub enum CellMaterial {
-//     #[default]
-//     Empty,
-//     Solid(Material), // ...
-// }
-
-// #[derive(Default, Resource, Eq, PartialEq, Clone, Debug, PartialOrd, Ord)]
-// pub enum CellFloor {
-//     #[default]
-//     None,
-//     Solid(Material),
-// }
-
-// #[derive(Default, Resource, Eq, PartialEq, Clone, Debug, PartialOrd, Ord)]
-// pub enum CellItems {
-//     #[default]
-//     Empty,
-//     List(Vec<Entity>),
-// }
-// #[derive(Clone, Copy, Debug, Default)]
-// pub enum Material {
-//     #[default]
-//     Stone,
-//     Sand,
-//     Dirt,
-//     Sandstone,
-//     Limestone,
-//     Granite,
-//     Marble,
-//     Quartz,
-// }
-
-// #[derive(Clone, Copy, Debug, Default)]
-// pub enum Fluid {
-//     #[default]
-//     Water,
-//     Brine,
-//     Muck,
-//     Blood,
-// }
-
 pub struct BoardPlugin;
 
 impl Plugin for BoardPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<CurrentBoard>()
-            // .add_systems(First, update_board)
-            .add_systems(OnEnter(AppState::Game), spawn_map);
+        app.init_resource::<BoardRes>()
+            .add_systems(OnEnter(AppState::LoadAssets), populate_board);
     }
 }
 
-fn spawn_map(mut _commands: Commands, mut current: ResMut<CurrentBoard>) {
-    let size = current.size().clone();
-    current.board.fill_empty(Pos3d::origin(), size);
+fn populate_board(
+    // mut _commands: Commands,
+    mut current: ResMut<BoardRes>,
+    // mut global_rng: ResMut<GlobalRng>,
+) {
+    current.board.fill(|x, y, z| {
+        if (y % 10 == 0 && x % 6 != 0) || (x % 5 == 0 && y % 3 != 0) {
+            Some(Cell::default())
+        } else {
+            Some(Cell::empty())
+        }
+    });
 }
 
-// fn update_board(mut _commands: Commands, mut current: ResMut<CurrentBoard>) {
-//     // ...
-// }
-
-#[derive(Default, Resource)]
-pub struct CurrentBoard {
-    board: Board,
+#[derive(Resource, Debug)]
+pub struct BoardRes {
+    pub board: Board,
 }
 
-impl CurrentBoard {
+impl BoardRes {
     pub fn size(&self) -> &Size3d {
         &self.board.size
+    }
+}
+
+impl Default for BoardRes {
+    fn default() -> Self {
+        BoardRes {
+            board: Board {
+                size: Size3d {
+                    width: 48,
+                    height: 24,
+                    depth: 1,
+                },
+                ..default()
+            },
+        }
     }
 }

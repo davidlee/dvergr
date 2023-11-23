@@ -1,16 +1,17 @@
+use crate::board::{BoardRes, Cell, Pos3d};
 use crate::AppState;
 use bevy::prelude::*;
 
 #[derive(Component, Debug, Copy, Clone)]
 pub struct TileMap {
-    tile_size: TileSize,
-    grid_size: GridSize,
-    dimensions: PixelSize,
-    center_offset: PixelPos,
+    pub tile_size: TileSize,
+    pub grid_size: GridSize,
+    pub dimensions: PixelSize,
+    pub center_offset: PixelPos,
 }
 
 impl TileMap {
-    fn tile_offset(&self, x: usize, y: usize) -> PixelPos {
+    fn tile_offset(&self, x: i32, y: i32) -> PixelPos {
         let x = self.tile_size.width * x as f32;
         let y = self.tile_size.height * y as f32;
         PixelPos { x, y }
@@ -34,22 +35,22 @@ impl TileMap {
 
 #[derive(Component, Debug, Copy, Clone)]
 pub struct PixelSize {
-    width: f32,
-    height: f32,
+    pub width: f32,
+    pub height: f32,
 }
 type TileSize = PixelSize;
 
 #[derive(Component, Debug, Copy, Clone)]
 pub struct GridSize {
-    width: usize,
-    height: usize,
+    pub width: i32,
+    pub height: i32,
 }
 
 #[derive(Component, Debug, Copy, Clone)]
 #[allow(dead_code)]
 pub struct PixelPos {
-    x: f32,
-    y: f32,
+    pub x: f32,
+    pub y: f32,
 }
 ///
 
@@ -80,7 +81,7 @@ pub fn load_tileset(
         texture_handle,
         Vec2::new(24.0, 24.0),
         56,
-        2,
+        42,
         None,
         Some(Vec2 { x: 24.0, y: 24.0 }),
     );
@@ -95,25 +96,37 @@ pub fn load_tileset(
     // let map_entity = commands
 }
 
+const I_FLOOR: usize = 843;
+const I_WALL: usize = 0;
+
+fn texture_index_for_cell(cell: &Cell) -> usize {
+    if cell.passable() {
+        I_FLOOR
+    } else {
+        I_WALL
+    }
+}
+
 pub fn spawn_map(
     mut commands: Commands,
     // asset_server: Res<AssetServer>,
     // mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     tileset: Res<RPGTileset>,
+    br: Res<BoardRes>,
 ) {
-    println!("DRAW MAP");
-
     let tile_map = TileMap::new(
         TileSize {
             width: 24.0,
             height: 24.0,
         },
         GridSize {
-            width: 24,
-            height: 16,
+            width: br.size().width,
+            height: br.size().height,
         },
     );
 
+    println!("SPAWN MAP {:?}", tile_map);
+    println!("from BOARD {:?}", br);
     commands
         .spawn((
             tile_map.clone(),
@@ -127,20 +140,22 @@ pub fn spawn_map(
             },
         ))
         .with_children(|tm| {
-            for iy in 0..16 {
-                for ix in 0..24 {
-                    let PixelPos { x, y } = tile_map.tile_offset(ix, iy);
-
-                    tm.spawn((SpriteSheetBundle {
-                        texture_atlas: tileset.atlas_handle.clone(),
-                        sprite: TextureAtlasSprite::new(0),
-                        transform: Transform {
-                            translation: Vec3::new(x, y, 0.0),
-                            scale: Vec3::splat(1.0),
+            for iy in 0..tile_map.grid_size.height {
+                for ix in 0..tile_map.grid_size.width {
+                    let pos = Pos3d { x: ix, y: iy, z: 0 }; // FIXME z axis
+                    if let Some(cell) = br.board.get(&pos) {
+                        let ti = texture_index_for_cell(cell);
+                        let sprite = TextureAtlasSprite::new(ti);
+                        let PixelPos { x, y } = tile_map.tile_offset(ix, iy);
+                        tm.spawn(SpriteSheetBundle {
+                            texture_atlas: tileset.atlas_handle.clone(),
+                            sprite,
+                            transform: Transform::from_xyz(x, y, 0.0),
                             ..default()
-                        },
-                        ..default()
-                    },));
+                        });
+                    } else {
+                        println!("missing cell: {:?}", pos);
+                    }
                 }
             }
         });

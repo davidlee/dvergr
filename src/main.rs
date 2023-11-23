@@ -16,6 +16,7 @@ pub mod time;
 use bevy::prelude::*;
 use bevy::window::{PresentMode, WindowResolution, WindowTheme};
 use bevy_pancam::PanCamPlugin;
+use bevy_turborand::prelude::RngPlugin;
 use board::*;
 use map::*;
 use state::AppState;
@@ -44,6 +45,7 @@ fn main() {
         .add_plugins(TimePlugin)
         .add_plugins(BoardPlugin)
         .add_plugins(MapPlugin)
+        .add_plugins(RngPlugin::default())
         .add_state::<AppState>()
         .add_systems(Startup, ui::spawn_camera)
         .add_systems(OnEnter(AppState::DrawUI), ui::spawn_layout)
