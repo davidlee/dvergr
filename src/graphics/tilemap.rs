@@ -1,6 +1,5 @@
-use crate::board::{BoardRes, Cell, Pos3d};
-use crate::AppState;
-use bevy::prelude::*;
+use super::*;
+use bevy::prelude::Component;
 
 // Tilemap
 #[derive(Component, Debug, Copy, Clone)]
@@ -34,42 +33,24 @@ impl TileMap {
     }
 }
 
-// components
+// plugin
 
-#[derive(Component, Debug, Copy, Clone)]
-pub struct PixelSize {
-    pub width: f32,
-    pub height: f32,
-}
-type TileSize = PixelSize;
+pub struct TileMapPlugin;
 
-#[derive(Component, Debug, Copy, Clone)]
-pub struct GridSize {
-    pub width: i32,
-    pub height: i32,
+impl Plugin for TileMapPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(OnEnter(AppState::Game), spawn_tile_map)
+            .add_systems(OnEnter(AppState::LoadAssets), load_tileset);
+    }
 }
 
-#[derive(Component, Debug, Copy, Clone)]
-pub struct PixelPos {
-    pub x: f32,
-    pub y: f32,
-}
+//
+
 // Resource
 
 #[derive(Resource, Debug)]
 pub struct Tileset {
     atlas_handle: Handle<TextureAtlas>,
-}
-
-// Plugin
-
-pub struct MapPlugin;
-
-impl Plugin for MapPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(AppState::Game), spawn_tile_map)
-            .add_systems(OnEnter(AppState::LoadAssets), load_tileset);
-    }
 }
 
 // Functions

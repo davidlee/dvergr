@@ -8,7 +8,7 @@ pub mod ui;
 pub mod sys {
     pub mod player_movement;
 }
-pub mod map;
+pub mod graphics;
 pub mod player;
 pub mod state;
 pub mod time;
@@ -18,7 +18,6 @@ use bevy::window::{PresentMode, WindowResolution, WindowTheme};
 use bevy_pancam::PanCamPlugin;
 use bevy_turborand::prelude::RngPlugin;
 use board::*;
-use map::*;
 use state::AppState;
 use sys::player_movement::*;
 use time::TimePlugin;
@@ -44,7 +43,7 @@ fn main() {
         .add_plugins(PanCamPlugin::default())
         .add_plugins(TimePlugin)
         .add_plugins(BoardPlugin)
-        .add_plugins(MapPlugin)
+        .add_plugins(graphics::TileMapPlugin)
         .add_plugins(RngPlugin::default())
         .add_state::<AppState>()
         .add_systems(Startup, ui::spawn_camera)
