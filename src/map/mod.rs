@@ -2,6 +2,7 @@ use crate::board::{BoardRes, Cell, Pos3d};
 use crate::AppState;
 use bevy::prelude::*;
 
+// Tilemap
 #[derive(Component, Debug, Copy, Clone)]
 pub struct TileMap {
     pub tile_size: TileSize,
@@ -33,6 +34,8 @@ impl TileMap {
     }
 }
 
+// components
+
 #[derive(Component, Debug, Copy, Clone)]
 pub struct PixelSize {
     pub width: f32,
@@ -47,28 +50,32 @@ pub struct GridSize {
 }
 
 #[derive(Component, Debug, Copy, Clone)]
-#[allow(dead_code)]
 pub struct PixelPos {
     pub x: f32,
     pub y: f32,
 }
-///
+// Resource
+
+#[derive(Resource, Debug)]
+pub struct Tileset {
+    atlas_handle: Handle<TextureAtlas>,
+}
+
+// Plugin
 
 pub struct MapPlugin;
 
 impl Plugin for MapPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(AppState::Game), spawn_map)
+        app.add_systems(OnEnter(AppState::Game), spawn_tile_map)
             .add_systems(OnEnter(AppState::LoadAssets), load_tileset);
     }
 }
 
-#[derive(Resource, Debug)]
-pub struct RPGTileset {
-    atlas_handle: Handle<TextureAtlas>,
-}
+// Functions
 
-///
+const TILE_SIZE_W: f32 = 24.0;
+const TILE_SIZE_H: f32 = 24.0;
 
 pub fn load_tileset(
     mut commands: Commands,
@@ -79,15 +86,18 @@ pub fn load_tileset(
     let texture_handle: Handle<Image> = asset_server.load("img/or16w_t.png");
     let texture_atlas = TextureAtlas::from_grid(
         texture_handle,
-        Vec2::new(24.0, 24.0),
+        Vec2::new(TILE_SIZE_W, TILE_SIZE_H),
         56,
         42,
         None,
-        Some(Vec2 { x: 24.0, y: 24.0 }),
+        Some(Vec2 {
+            x: TILE_SIZE_W,
+            y: TILE_SIZE_H,
+        }),
     );
     let texture_atlas_handle: Handle<TextureAtlas> = texture_atlases.add(texture_atlas);
 
-    commands.insert_resource(RPGTileset {
+    commands.insert_resource(Tileset {
         atlas_handle: texture_atlas_handle,
     });
 
@@ -107,17 +117,13 @@ fn texture_index_for_cell(cell: &Cell) -> usize {
     }
 }
 
-pub fn spawn_map(
-    mut commands: Commands,
-    // asset_server: Res<AssetServer>,
-    // mut texture_atlases: ResMut<Assets<TextureAtlas>>,
-    tileset: Res<RPGTileset>,
-    br: Res<BoardRes>,
-) {
+// systems
+
+pub fn spawn_tile_map(mut commands: Commands, tileset: Res<Tileset>, br: Res<BoardRes>) {
     let tile_map = TileMap::new(
         TileSize {
-            width: 24.0,
-            height: 24.0,
+            width: TILE_SIZE_W,
+            height: TILE_SIZE_H,
         },
         GridSize {
             width: br.size().width,
@@ -125,8 +131,9 @@ pub fn spawn_map(
         },
     );
 
-    println!("SPAWN MAP {:?}", tile_map);
-    println!("from BOARD {:?}", br);
+    // println!("SPAWN MAP {:?}", tile_map);
+    // println!("from BOARD {:?}", br);
+
     commands
         .spawn((
             tile_map.clone(),
