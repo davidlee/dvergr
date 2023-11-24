@@ -1,4 +1,6 @@
+use super::TILEMAP_ASSET_PATH;
 use super::*;
+
 use bevy::prelude::Component;
 
 // Tilemap
@@ -39,8 +41,7 @@ pub struct TileMapPlugin;
 
 impl Plugin for TileMapPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(AppState::Game), spawn_tile_map)
-            .add_systems(OnEnter(AppState::LoadAssets), load_tileset);
+        app.add_systems(OnEnter(AppState::Game), spawn_tile_map);
     }
 }
 
@@ -61,30 +62,28 @@ const TILE_SIZE_H: f32 = 24.0;
 pub fn load_tileset(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    mut next_state: ResMut<NextState<AppState>>,
+    mut state: ResMut<NextState<AppState>>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+    mut loading: ResMut<AssetsLoading>,
 ) {
-    let texture_handle: Handle<Image> = asset_server.load("img/or16w_t.png");
-    let texture_atlas = TextureAtlas::from_grid(
-        texture_handle,
-        Vec2::new(TILE_SIZE_W, TILE_SIZE_H),
-        56,
-        42,
-        None,
-        Some(Vec2 {
-            x: TILE_SIZE_W,
-            y: TILE_SIZE_H,
-        }),
-    );
+    let vec2 = Vec2::new(TILE_SIZE_W, TILE_SIZE_H);
+    let texture_handle: Handle<Image> = asset_server.load(TILEMAP_ASSET_PATH);
+    let texture_atlas =
+        TextureAtlas::from_grid(texture_handle.clone(), vec2, 56, 42, None, Some(vec2));
     let texture_atlas_handle: Handle<TextureAtlas> = texture_atlases.add(texture_atlas);
 
     commands.insert_resource(Tileset {
         atlas_handle: texture_atlas_handle,
     });
 
-    next_state.set(AppState::DrawUI);
-
-    // let map_entity = commands
+    // TODO
+    // this is a bit janky and not very DRY
+    // improve the asset loading strategy
+    loading.assets.push(texture_handle);
+    loading.count += 1;
+    if loading.init_done() {
+        state.set(AppState::LoadAssets);
+    }
 }
 
 const I_FLOOR: usize = 843;
@@ -112,9 +111,6 @@ pub fn spawn_tile_map(mut commands: Commands, tileset: Res<Tileset>, br: Res<Boa
         },
     );
 
-    // println!("SPAWN MAP {:?}", tile_map);
-    // println!("from BOARD {:?}", br);
-
     commands
         .spawn((
             tile_map.clone(),
@@ -132,13 +128,14 @@ pub fn spawn_tile_map(mut commands: Commands, tileset: Res<Tileset>, br: Res<Boa
                 for ix in 0..tile_map.grid_size.width {
                     let pos = Pos3d { x: ix, y: iy, z: 0 }; // FIXME z axis
                     if let Some(cell) = br.board.get(&pos) {
-                        let ti = texture_index_for_cell(cell);
-                        let sprite = TextureAtlasSprite::new(ti);
                         let PixelPos { x, y } = tile_map.tile_offset(ix, iy);
+                        let sprite = TextureAtlasSprite::new(texture_index_for_cell(cell));
+                        let transform = Transform::from_xyz(x, y, 0.0);
+
                         tm.spawn(SpriteSheetBundle {
                             texture_atlas: tileset.atlas_handle.clone(),
                             sprite,
-                            transform: Transform::from_xyz(x, y, 0.0),
+                            transform,
                             ..default()
                         });
                     } else {

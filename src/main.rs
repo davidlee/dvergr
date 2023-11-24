@@ -18,6 +18,7 @@ use bevy::window::{PresentMode, WindowResolution, WindowTheme};
 use bevy_pancam::PanCamPlugin;
 use bevy_turborand::prelude::RngPlugin;
 use board::*;
+// use graphics::m;
 use state::AppState;
 use sys::player_movement::*;
 use time::TimePlugin;
@@ -43,6 +44,7 @@ fn main() {
         .add_plugins(PanCamPlugin::default())
         .add_plugins(TimePlugin)
         .add_plugins(BoardPlugin)
+        .add_plugins(graphics::AssetLoadingPlugin)
         .add_plugins(graphics::TileMapPlugin)
         .add_plugins(RngPlugin::default())
         .add_state::<AppState>()
