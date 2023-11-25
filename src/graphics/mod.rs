@@ -1,4 +1,4 @@
-use crate::board::{BoardRes, Cell, Pos3d};
+use crate::board::{Board, Cell, Pos3d};
 use crate::AppState;
 use bevy::prelude::*;
 

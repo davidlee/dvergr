@@ -54,7 +54,7 @@ impl Creature {
 #[derive(Bundle, Debug, Clone)]
 pub struct CreatureBundle {}
 
-#[derive(Component, Debug, Clone, Default)]
+#[derive(Component, Debug, Clone, Default, Eq, PartialEq, Ord, PartialOrd)]
 pub enum CreatureSize {
     Insect,
     Tiny,  // kitten
@@ -66,7 +66,7 @@ pub enum CreatureSize {
     Leviathan(), // show me map tiles
 }
 
-#[derive(Component, Debug, Clone, Default)]
+#[derive(Component, Debug, Clone, Default, Eq, PartialEq)]
 #[allow(dead_code)]
 pub struct CreatureCondition {
     needs: (),
@@ -122,7 +122,7 @@ impl Species {
     }
 }
 
-#[derive(Component, Debug, Clone, Default)]
+#[derive(Component, Debug, Clone, Default, Eq, PartialEq)]
 #[allow(dead_code)]
 pub struct Phenotype {
     species: Species,
@@ -156,7 +156,7 @@ impl Phenotype {
     }
 }
 
-#[derive(Component, Debug, Clone, Default)]
+#[derive(Component, Debug, Clone, Default, Eq, PartialEq)]
 #[allow(dead_code)]
 pub struct Equipment {
     worn_armour: (),

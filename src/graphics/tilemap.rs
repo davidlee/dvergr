@@ -102,7 +102,7 @@ fn texture_index_for_cell(cell: &Cell) -> usize {
 pub fn spawn_tile_map(
     mut commands: Commands,
     tileset: Res<Tileset>,
-    br: Res<BoardRes>,
+    board: Res<Board>,
     mut next_state: ResMut<NextState<AppState>>,
     state: Res<State<AppState>>,
     mut stage_query: Query<(Entity, &Stage)>,
@@ -113,8 +113,8 @@ pub fn spawn_tile_map(
             height: TILE_SIZE_H,
         },
         GridSize {
-            width: br.size().width,
-            height: br.size().height,
+            width: board.size.width,
+            height: board.size.height,
         },
     );
 
@@ -143,7 +143,7 @@ pub fn spawn_tile_map(
                     for iy in 0..tile_map.grid_size.height {
                         for ix in 0..tile_map.grid_size.width {
                             let pos = Pos3d { x: ix, y: iy, z: 0 }; // FIXME z axis
-                            if let Some(cell) = br.board.get(&pos) {
+                            if let Some(cell) = board.cells.get(&pos) {
                                 let PixelPos { x, y } = tile_map.tile_offset(ix, iy);
                                 let sprite = TextureAtlasSprite::new(texture_index_for_cell(cell));
                                 let transform = Transform::from_xyz(x, y, 0.0);

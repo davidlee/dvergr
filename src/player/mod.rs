@@ -1,5 +1,5 @@
 use crate::attributes::Attributes;
-use crate::board::BoardRes;
+use crate::board::Board;
 use crate::board::Direction;
 use crate::board::Pos3d;
 use crate::creature::*;
@@ -41,21 +41,19 @@ impl Plugin for PlayerPlugin {
 
 fn spawn_player_bundle(
     mut commands: Commands,
-    mut br: ResMut<BoardRes>,
+    mut board: ResMut<Board>,
     state: Res<State<AppState>>,
     mut next_state: ResMut<NextState<AppState>>,
 ) {
     println!("[AppState::InitPlayer] spawn_player");
+
     let player_default_position = Pos3d { x: 0, y: 0, z: 0 };
-    let mut cell = br.board.get(&player_default_position).unwrap().clone();
-    println!("CELL: {:?}", cell);
     let player_entity = commands.spawn(PlayerBundle::default()).id();
 
-    cell.set_creature(player_entity)
-        // FIXME better error handling
-        .expect("welp, that didn't work");
-
-    br.board.set(player_default_position, cell);
+    board
+        .creatures
+        .add(player_entity, vec![player_default_position])
+        .unwrap();
 
     match state.get() {
         AppState::InitPlayer => next_state.set(AppState::InitStage),
@@ -71,18 +69,34 @@ pub struct PlayerMovementEvent {
 pub fn player_movement(
     mut ev_player_move: EventReader<PlayerMovementEvent>,
     mut player_query: Query<(&mut Player, &mut Creature)>,
-    br: ResMut<BoardRes>,
+    board: ResMut<Board>,
 ) {
     if let Ok(q) = player_query.get_single_mut() {
         let (_, creature) = q;
         let pos = creature.position;
 
         for e in ev_player_move.read() {
-            let _to = pos.adjacent(e.direction);
-            println!("we want to move Player to: {:?}", _to);
-            let cell = br.board.get(&_to);
+            let new_pos = pos.adjacent(e.direction);
+            // println!("we want to move Player to: {:?}", to);
+            // let cell = board.cells.get(&pos.adjacent(e.direction));
+            match board.cells.get(&new_pos) {
+                Some(cell) => {
+                    if cell.passable() {
+                        println!("Player is moving ...");
+                        // make the change to the logical player position ...
+                        // creature.position = new_pos;
+                        // br.
+                    } else {
+                        println!("invalid move to {:?}", cell);
+                    }
+                }
+                None => println!("OUT OF BOUNDS"),
+            }
+            // if cell.unwrap().passable() {
+            //     // TODO other checks ..
+            // }
             // check the board to see if that move's legal ...
-            println!("that'd be into this cell: {:?}", cell);
+            // println!("that'd be into this cell: {:?}", cell);
             // ...
         }
     }
