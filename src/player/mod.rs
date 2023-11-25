@@ -1,198 +1,89 @@
-use crate::action::Stance;
-use crate::action::Tempo;
+use crate::attributes::Attributes;
+use crate::board::BoardRes;
 use crate::board::Direction;
 use crate::board::Pos3d;
-use bevy::sprite::Anchor;
-
-use crate::attributes::Attributes;
-use bevy::prelude::{Bundle, Component};
+use crate::creature::*;
+use crate::state::AppState;
+use bevy::prelude::*;
 
 #[derive(Component, Debug, Clone, Copy)]
 pub struct Player;
 
-#[derive(Component, Debug, Clone, Default)]
-pub enum CreatureSize {
-    Insect,
-    Tiny,  // kitten
-    Small, // Human child; fox
-    #[default]
-    Medium, // Human adult
-    Large, // horse; ogre
-    Giant, // two story humanoid; war elephant
-    Leviathan(), // show me map tiles
-}
-
-#[derive(Component, Debug, Clone)]
-#[allow(dead_code)]
-pub struct Actor {
-    current_action: (),
-    action_queue: (),
-    behaviour_tree: Option<()>,
-}
-
-#[derive(Component, Debug, Clone, Eq, Ord, PartialEq, PartialOrd, Default)]
-#[allow(dead_code)]
-pub struct Species {
-    name: String,
-    anatomy_template: (),
-    subtype: Option<()>,
-}
-
-impl Species {
-    fn default() -> Self {
-        Species {
-            name: String::from("human"),
-            anatomy_template: (),
-            subtype: None,
-        }
-    }
-
-    pub fn humanoid(name: &str) -> Self {
-        Species {
-            name: String::from(name),
-            anatomy_template: (),
-            subtype: None,
-        }
-    }
-
-    pub fn human() -> Self {
-        Species::humanoid("human")
-    }
-}
-
-#[derive(Component, Debug, Clone, Default)]
-#[allow(dead_code)]
-pub struct Phenotype {
-    species: Species,
-    size: CreatureSize,
-    anatomy_template: (),
-
-    natural_weapons: (),
-    natural_armour: (),
-    natural_inventory: (),
-
-    innate_abilities: (),
-    traits: (),
-    // metabolism
-    // needs
-    // thoughts ..
-}
-
-impl Phenotype {
-    fn default() -> Self {
-        Phenotype {
-            species: Species::default(),
-            size: CreatureSize::default(),
-            anatomy_template: (),
-
-            natural_weapons: (),
-            natural_armour: (),
-            natural_inventory: (),
-            innate_abilities: (),
-            traits: (),
-        }
-    }
-}
-
-#[derive(Component, Debug, Clone, Default)]
-#[allow(dead_code)]
-pub struct Equipment {
-    worn_armour: (),
-    equipped: (),
-    wearing: (),
-    carrying: (),
-}
-
-#[allow(dead_code)]
-impl Equipment {
-    fn default() -> Self {
-        Equipment {
-            worn_armour: (),
-            equipped: (),
-            wearing: (),
-            carrying: (),
-        }
-    }
-}
-
-#[derive(Component, Debug, Clone, Default)]
-#[allow(dead_code)]
-pub struct CreatureCondition {
-    needs: (),
-    conditions: (),
-    injuries: (),
-}
-
-impl CreatureCondition {
-    fn default() -> Self {
-        CreatureCondition {
-            needs: (),
-            conditions: (),
-            injuries: (),
-        }
-    }
-}
-
-#[derive(Component, Debug, Clone)]
-#[allow(dead_code)]
-pub struct Creature {
-    position: Pos3d,
-    anchor: Anchor,
-    stance: Stance,
-    facing: Direction,
-    tempo: Tempo,
-
-    species: Species,
-    phenotype: Phenotype,
-    // age, disease, subspecies, careers, etc
-    // a geriatric leprous veteran undead wood-elf pirate
-    // a deranged adolescent amputee ex-slave sprite
-    templates: (),
-    // gear: Equipment,
-    // attributes
-    condition: CreatureCondition,
-    abilities: (),
-    traits: (),
-}
-
-impl Creature {
-    pub fn human(position: Pos3d) -> Self {
-        Creature {
-            position,
-            anchor: Anchor::default(),
-            stance: Stance::default(),
-            facing: Direction::North,
-            tempo: crate::action::TEMPOS[0].clone(),
-            species: Species::human(),
-            phenotype: Phenotype::default(),
-            templates: (),
-            // gear: Equipment::default(),
-            condition: CreatureCondition::default(),
-            abilities: (),
-            traits: (),
-        }
-    }
-}
-
-#[derive(Bundle, Debug, Clone)]
-pub struct CreatureBundle {}
-
 #[derive(Bundle, Debug, Clone)]
 pub struct PlayerBundle {
     player: Player,
+    creature: Creature,
     attributes: Attributes,
 }
 
-#[allow(dead_code)]
-impl PlayerBundle {
-    fn new() -> Self {
-        PlayerBundle::default()
-    }
-
+impl Default for PlayerBundle {
     fn default() -> Self {
         PlayerBundle {
             player: Player,
+            creature: Creature::human(Pos3d { x: 0, y: 0, z: 0 }),
             attributes: Attributes::new(),
+        }
+    }
+}
+
+pub struct PlayerPlugin;
+
+impl Plugin for PlayerPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(OnEnter(AppState::InitPlayer), spawn_player_bundle)
+            .add_systems(
+                Update,
+                player_movement.run_if(state_exists_and_equals(AppState::Game)),
+            )
+            .add_event::<PlayerMovementEvent>();
+    }
+}
+
+fn spawn_player_bundle(
+    mut commands: Commands,
+    mut br: ResMut<BoardRes>,
+    state: Res<State<AppState>>,
+    mut next_state: ResMut<NextState<AppState>>,
+) {
+    println!("[AppState::InitPlayer] spawn_player");
+    let player_default_position = Pos3d { x: 0, y: 0, z: 0 };
+    let mut cell = br.board.get(&player_default_position).unwrap().clone();
+    println!("CELL: {:?}", cell);
+    let player_entity = commands.spawn(PlayerBundle::default()).id();
+
+    cell.set_creature(player_entity)
+        // FIXME better error handling
+        .expect("welp, that didn't work");
+
+    br.board.set(player_default_position, cell);
+
+    match state.get() {
+        AppState::InitPlayer => next_state.set(AppState::InitStage),
+        s => panic!("illegal state: {:?}", s),
+    }
+}
+
+#[derive(Event, Debug)]
+pub struct PlayerMovementEvent {
+    pub direction: Direction,
+}
+
+pub fn player_movement(
+    mut ev_player_move: EventReader<PlayerMovementEvent>,
+    mut player_query: Query<(&mut Player, &mut Creature)>,
+    br: ResMut<BoardRes>,
+) {
+    if let Ok(q) = player_query.get_single_mut() {
+        let (_, creature) = q;
+        let pos = creature.position;
+
+        for e in ev_player_move.read() {
+            let _to = pos.adjacent(e.direction);
+            println!("we want to move Player to: {:?}", _to);
+            let cell = br.board.get(&_to);
+            // check the board to see if that move's legal ...
+            println!("that'd be into this cell: {:?}", cell);
+            // ...
         }
     }
 }

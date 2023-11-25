@@ -12,7 +12,7 @@ pub struct MobsPlugin;
 
 impl Plugin for MobsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(AppState::Game), spawn_player_sprite);
+        app.add_systems(OnEnter(AppState::InitMobs), spawn_player_sprite);
     }
 }
 
@@ -26,9 +26,12 @@ pub fn load_spritesheet(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut loading: ResMut<AssetsLoading>,
-    mut state: ResMut<NextState<AppState>>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+    mut next_state: ResMut<NextState<AppState>>,
+    state: Res<State<AppState>>,
 ) {
+    println!("load SPRITESHEET");
+
     let texture_handle: Handle<Image> = asset_server.load(SPRITESHEET_ASSET_PATH);
     let vec2 = Vec2::new(TILE_SIZE_W, TILE_SIZE_H);
     let texture_atlas =
@@ -45,8 +48,10 @@ pub fn load_spritesheet(
     // improve the asset loading strategy
     loading.assets.push(texture_handle);
     loading.count += 1;
-    if loading.init_done() {
-        state.set(AppState::LoadAssets);
+
+    match state.get() {
+        AppState::InitAssets => next_state.set(AppState::InitBoard),
+        s => panic!("illegal state: {:?}", s),
     }
 }
 
@@ -62,6 +67,8 @@ pub fn spawn_player_sprite(
     mut commands: Commands,
     sprites: Res<DwarfSpritesheet>,
     // board: Res<BoardRes>,
+    mut next_state: ResMut<NextState<AppState>>,
+    state: Res<State<AppState>>,
     mut stage_query: Query<(Entity, &Stage)>,
 ) {
     // TODO we need to spawn -- and perhaps, to separately maintain -- a logical Player
@@ -86,4 +93,9 @@ pub fn spawn_player_sprite(
             },
         ));
     });
+
+    match state.get() {
+        AppState::InitMobs => next_state.set(AppState::Game),
+        s => panic!("illegal state: {:?}", s),
+    }
 }

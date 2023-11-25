@@ -52,12 +52,26 @@ pub struct StagePlugin;
 
 impl Plugin for StagePlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, spawn_stage);
+        app.add_systems(
+            Update,
+            spawn_stage.run_if(state_exists_and_equals(AppState::InitStage)),
+        );
     }
 }
 
-fn spawn_stage(mut commands: Commands) {
+fn spawn_stage(
+    mut commands: Commands,
+    mut next_state: ResMut<NextState<AppState>>,
+
+    state: Res<State<AppState>>,
+) {
+    println!("[AppState::InitStage] spawn_stage");
     commands.spawn((StageBundle::default(), SpatialBundle::default()));
+
+    match state.get() {
+        AppState::InitStage => next_state.set(AppState::LoadAssets),
+        s => panic!("illegal state: {:?}", s),
+    }
 }
 
 pub const TILEMAP_ASSET_PATH: &str = "img/or16w_t.png";
@@ -71,8 +85,13 @@ impl Plugin for AssetLoadingPlugin {
             assets: vec![],
             count: 0,
         })
-        .add_systems(Startup, mobs::load_spritesheet)
-        .add_systems(Startup, tilemap::load_tileset)
+        .add_systems(
+            OnEnter(AppState::InitAssets),
+            (
+                tilemap::load_tileset,
+                mobs::load_spritesheet.after(tilemap::load_tileset),
+            ),
+        )
         .add_systems(
             PostUpdate,
             ensure_assets_loaded.run_if(state_exists_and_equals(AppState::LoadAssets)),
@@ -80,28 +99,38 @@ impl Plugin for AssetLoadingPlugin {
     }
 }
 
+// fuckit, let's use someone else's asset loader, this is boring
+
+// pub fn ensure_assets_loaded(
+//     mut commands: Commands,
+//     mut state: ResMut<NextState<AppState>>,
+//     mut ev_asset: EventReader<AssetEvent<Image>>,
+//     mut loading: ResMut<AssetsLoading>,
+// ) {
+//     for ev in ev_asset.read() {
+//         match ev {
+//             AssetEvent::LoadedWithDependencies { id } => {
+//                 println!("Asset Loaded .. {:?} -- {}", loading, id);
+//                 loading.count -= 1;
+//                 if loading.count == 0 {
+//                     println!("Assets loaded, next state ... ");
+//                     commands.remove_resource::<AssetsLoading>();
+//                     state.set(AppState::InitUI);
+//                 }
+//             }
+//             other => println!("Assed Event: {:?}", other),
+//         }
+//     }
+// }
+
+// TODO actually check asset loading
 pub fn ensure_assets_loaded(
-    mut commands: Commands,
-    mut state: ResMut<NextState<AppState>>,
-    mut ev_asset: EventReader<AssetEvent<Image>>,
-    mut loading: ResMut<AssetsLoading>,
+    mut _commands: Commands,
+    mut next_state: ResMut<NextState<AppState>>,
+    state: Res<State<AppState>>,
 ) {
-    for ev in ev_asset.read() {
-        match ev {
-            AssetEvent::LoadedWithDependencies { id } => {
-                println!("Asset Loaded .. {:?} -- {}", loading, id);
-                // if loading.count > 0 {
-                loading.count -= 1;
-                if loading.count == 0 {
-                    println!("Assets loaded, next state ... ");
-                    state.set(AppState::DrawUI);
-                    commands.remove_resource::<AssetsLoading>();
-                }
-                // } else {
-                //     println!("stack underflow");
-                // }
-            }
-            _ => (),
-        }
+    match state.get() {
+        AppState::LoadAssets => next_state.set(AppState::InitUI),
+        s => panic!("illegal state: {:?}", s),
     }
 }

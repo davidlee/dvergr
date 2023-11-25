@@ -18,10 +18,15 @@ pub fn spawn_layout(
     commands: Commands,
     asset_server: Res<AssetServer>,
     mut next_state: ResMut<NextState<AppState>>,
+    state: Res<State<AppState>>,
 ) {
-    println!("Draw UI");
+    println!("Draw UI (skipping -> AppState::Game)");
 
-    next_state.set(AppState::Game);
+    // FIXME
+    match state.get() {
+        AppState::InitUI => next_state.set(AppState::InitTileMap),
+        s => panic!("illegal state: {:?}", s),
+    }
 
     return;
     let heading_style = TextStyle {
@@ -194,7 +199,11 @@ pub fn spawn_layout(
                     parent.spawn(TextBundle::from_section("Footer", heading_style.clone()));
                 });
         });
-    next_state.set(AppState::Game);
+
+    match state.get() {
+        AppState::InitUI => next_state.set(AppState::InitTileMap),
+        s => panic!("illegal state: {:?}", s),
+    }
 }
 
 pub fn spawn_camera(mut commands: Commands) {

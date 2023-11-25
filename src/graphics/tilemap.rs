@@ -41,7 +41,7 @@ pub struct TileMapPlugin;
 
 impl Plugin for TileMapPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(AppState::Game), spawn_tile_map);
+        app.add_systems(OnEnter(AppState::InitTileMap), spawn_tile_map);
     }
 }
 
@@ -62,10 +62,13 @@ const TILE_SIZE_H: f32 = 24.0;
 pub fn load_tileset(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    mut state: ResMut<NextState<AppState>>,
+    // mut next_state: ResMut<NextState<AppState>>,
+    // state: Res<State<AppState>>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     mut loading: ResMut<AssetsLoading>,
 ) {
+    println!("LOAD TILESET!");
+
     let vec2 = Vec2::new(TILE_SIZE_W, TILE_SIZE_H);
     let texture_handle: Handle<Image> = asset_server.load(TILEMAP_ASSET_PATH);
     let texture_atlas =
@@ -81,9 +84,6 @@ pub fn load_tileset(
     // improve the asset loading strategy
     loading.assets.push(texture_handle);
     loading.count += 1;
-    if loading.init_done() {
-        state.set(AppState::LoadAssets);
-    }
 }
 
 const I_FLOOR: usize = 843;
@@ -103,6 +103,8 @@ pub fn spawn_tile_map(
     mut commands: Commands,
     tileset: Res<Tileset>,
     br: Res<BoardRes>,
+    mut next_state: ResMut<NextState<AppState>>,
+    state: Res<State<AppState>>,
     mut stage_query: Query<(Entity, &Stage)>,
 ) {
     let tile_map = TileMap::new(
@@ -153,10 +155,15 @@ pub fn spawn_tile_map(
                                     ..default()
                                 });
                             } else {
-                                println!("missing cell: {:?}", pos);
+                                // println!("missing cell: {:?}", pos);
                             }
                         }
                     }
                 });
         });
+
+    match state.get() {
+        AppState::InitTileMap => next_state.set(AppState::InitMobs),
+        s => panic!("illegal state: {:?}", s),
+    }
 }

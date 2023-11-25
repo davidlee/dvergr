@@ -2,33 +2,28 @@ pub mod action;
 pub mod anatomy;
 pub mod attributes;
 pub mod board;
+pub mod creature;
 pub mod damage;
 pub mod dice;
-pub mod ui;
-pub mod sys {
-    pub mod player_movement;
-}
 pub mod graphics;
+pub mod input;
 pub mod player;
 pub mod state;
 pub mod time;
+pub mod ui;
 
 use bevy::prelude::*;
 use bevy::window::{PresentMode, WindowResolution, WindowTheme};
 use bevy_pancam::PanCamPlugin;
 use bevy_turborand::prelude::RngPlugin;
-use board::*;
-// use graphics::m;
 use state::AppState;
-use sys::player_movement::*;
-use time::TimePlugin;
 
 fn main() {
     App::new()
         .add_plugins((DefaultPlugins
             .set(WindowPlugin {
                 primary_window: Some(Window {
-                    title: "One day I will be a roguelike".into(),
+                    title: "~= D V E R G R =~".into(),
                     resolution: WindowResolution::new(2800.0, 1400.0),
                     present_mode: PresentMode::AutoVsync,
                     // Tells wasm to resize the window according to the available canvas
@@ -44,19 +39,19 @@ fn main() {
         .add_state::<AppState>()
         // plugins
         .add_plugins(PanCamPlugin::default())
-        .add_plugins(TimePlugin)
+        .add_plugins(time::TimePlugin)
         .add_plugins(RngPlugin::default())
-        .add_plugins(BoardPlugin)
+        .add_plugins(board::BoardPlugin)
         .add_plugins(graphics::StagePlugin)
         .add_plugins(graphics::AssetLoadingPlugin)
         .add_plugins(graphics::TileMapPlugin)
         .add_plugins(graphics::MobsPlugin)
+        .add_plugins(player::PlayerPlugin)
         // systems
         .add_systems(Startup, ui::spawn_camera)
-        .add_systems(OnEnter(AppState::DrawUI), ui::spawn_layout)
+        .add_systems(OnEnter(AppState::InitUI), ui::spawn_layout)
         .add_systems(Update, bevy::window::close_on_esc)
-        .add_systems(Update, keybindings)
+        .add_systems(Update, input::keybindings)
         // events
-        .add_event::<PlayerMovementEvent>()
         .run();
 }

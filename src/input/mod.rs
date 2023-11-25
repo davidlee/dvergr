@@ -1,26 +1,10 @@
-use crate::board::{Direction, Pos3d};
-// use crate::Player;
-use crate::player::Player;
-use bevy::prelude::{Event, EventReader, EventWriter, Input, KeyCode, Query, Res};
+// use crate::board::Direction;
+use crate::player::PlayerMovementEvent;
 
-#[derive(Event, Debug)]
-pub struct PlayerMovementEvent {
-    direction: Direction,
-}
-pub fn player_movement(
-    mut ev_player_move: EventReader<PlayerMovementEvent>,
-    mut pos_query: Query<(&mut Player, &mut Pos3d)>,
-    // current_board: Res<CurrentBoard>,
-    // map_size_query: Query<&Size>,
-) {
-    let (_player, pos) = pos_query.single_mut();
-    // let map_size: &Size = current_board.size();
+use bevy::prelude::{EventWriter, Input, KeyCode, Res};
 
-    for e in ev_player_move.read() {
-        let _to = pos.adjacent(e.direction);
-        // ...
-    }
-}
+use crate::board::direction::Direction;
+// use crate::board::Direction;
 
 pub fn keybindings(
     mut ev_player_move: EventWriter<PlayerMovementEvent>,

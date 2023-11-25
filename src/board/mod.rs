@@ -1,4 +1,4 @@
-use crate::AppState;
+use crate::state::AppState;
 use bevy::prelude::*;
 use std::collections::HashMap;
 use std::ops::Add;
@@ -169,8 +169,9 @@ impl Default for CellStore {
 
 // Cell
 //
+// a cell is taller than it is wide / deep; about the size a man can stand in.
 #[allow(dead_code)]
-const CELL_SIZE_METRES: f32 = 2.0;
+const CELL_DIMENSIONS_METRES: [f32; 3] = [0.5, 0.5, 2.0];
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Debug)]
 pub struct Cell {
@@ -180,6 +181,21 @@ pub struct Cell {
     pub creature: Option<Entity>,
     pub items: CellItems,
     // fluids, gases, etc
+}
+
+impl Cell {
+    pub fn set_creature(&mut self, creature_entity: Entity) -> Result<Entity, &str> {
+        if !self.passable() {
+            return Err("impassable cell");
+        }
+        match self.creature {
+            Some(_e) => Err("already occupied"),
+            None => {
+                self.creature = Some(creature_entity);
+                return Ok(creature_entity);
+            }
+        }
+    }
 }
 
 // type aliases
