@@ -1,10 +1,19 @@
 use super::AssetsLoading;
 use super::SPRITESHEET_ASSET_PATH;
+use crate::board::BoardRes;
 use crate::state::AppState;
 use bevy::prelude::*;
 
 const TILE_SIZE_W: f32 = 32.0;
 const TILE_SIZE_H: f32 = 32.0;
+
+pub struct MobsPlugin;
+
+impl Plugin for MobsPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(OnEnter(AppState::Game), spawn_player_sprite);
+    }
+}
 
 #[derive(Resource, Debug)]
 pub struct DwarfSpritesheet {
@@ -38,4 +47,15 @@ pub fn load_spritesheet(
     if loading.init_done() {
         state.set(AppState::LoadAssets);
     }
+}
+
+pub fn spawn_player_sprite(
+    mut commands: Commands,
+    sprites: Res<DwarfSpritesheet>,
+    board: Res<BoardRes>,
+) {
+    // find the x,y based on position on the Board
+    // then translate & render above
+
+    // ..
 }

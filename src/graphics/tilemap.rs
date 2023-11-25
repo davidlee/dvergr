@@ -99,7 +99,12 @@ fn texture_index_for_cell(cell: &Cell) -> usize {
 
 // systems
 
-pub fn spawn_tile_map(mut commands: Commands, tileset: Res<Tileset>, br: Res<BoardRes>) {
+pub fn spawn_tile_map(
+    mut commands: Commands,
+    tileset: Res<Tileset>,
+    br: Res<BoardRes>,
+    mut stage_query: Query<(Entity, &Stage)>,
+) {
     let tile_map = TileMap::new(
         TileSize {
             width: TILE_SIZE_W,
@@ -111,37 +116,47 @@ pub fn spawn_tile_map(mut commands: Commands, tileset: Res<Tileset>, br: Res<Boa
         },
     );
 
-    commands
-        .spawn((
-            tile_map.clone(),
-            SpatialBundle {
-                transform: Transform::from_xyz(
-                    tile_map.center_offset.x,
-                    tile_map.center_offset.y,
-                    0.,
-                ),
-                ..default()
-            },
-        ))
-        .with_children(|tm| {
-            for iy in 0..tile_map.grid_size.height {
-                for ix in 0..tile_map.grid_size.width {
-                    let pos = Pos3d { x: ix, y: iy, z: 0 }; // FIXME z axis
-                    if let Some(cell) = br.board.get(&pos) {
-                        let PixelPos { x, y } = tile_map.tile_offset(ix, iy);
-                        let sprite = TextureAtlasSprite::new(texture_index_for_cell(cell));
-                        let transform = Transform::from_xyz(x, y, 0.0);
+    // TODO
+    // get the Stage, and attach the TileMap as a child
+    //
+    let (e, _stage) = stage_query.single_mut();
 
-                        tm.spawn(SpriteSheetBundle {
-                            texture_atlas: tileset.atlas_handle.clone(),
-                            sprite,
-                            transform,
-                            ..default()
-                        });
-                    } else {
-                        println!("missing cell: {:?}", pos);
+    commands
+        .get_entity(e)
+        .unwrap()
+        .with_children(|stage_entity| {
+            stage_entity
+                .spawn((
+                    tile_map.clone(),
+                    SpatialBundle {
+                        transform: Transform::from_xyz(
+                            tile_map.center_offset.x,
+                            tile_map.center_offset.y,
+                            0.,
+                        ),
+                        ..default()
+                    },
+                ))
+                .with_children(|tm| {
+                    for iy in 0..tile_map.grid_size.height {
+                        for ix in 0..tile_map.grid_size.width {
+                            let pos = Pos3d { x: ix, y: iy, z: 0 }; // FIXME z axis
+                            if let Some(cell) = br.board.get(&pos) {
+                                let PixelPos { x, y } = tile_map.tile_offset(ix, iy);
+                                let sprite = TextureAtlasSprite::new(texture_index_for_cell(cell));
+                                let transform = Transform::from_xyz(x, y, 0.0);
+
+                                tm.spawn(SpriteSheetBundle {
+                                    texture_atlas: tileset.atlas_handle.clone(),
+                                    sprite,
+                                    transform,
+                                    ..default()
+                                });
+                            } else {
+                                println!("missing cell: {:?}", pos);
+                            }
+                        }
                     }
-                }
-            }
+                });
         });
 }

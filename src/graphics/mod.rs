@@ -39,6 +39,26 @@ impl AssetsLoading {
     }
 }
 
+#[derive(Component, Debug, Default)]
+pub struct Stage;
+
+#[derive(Bundle, Debug, Default)]
+pub struct StageBundle {
+    stage: Stage,
+}
+
+pub struct StagePlugin;
+
+impl Plugin for StagePlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(Startup, spawn_stage);
+    }
+}
+
+fn spawn_stage(mut commands: Commands) {
+    commands.spawn((StageBundle::default(), SpatialBundle::default()));
+}
+
 pub const TILEMAP_ASSET_PATH: &str = "img/or16w_t.png";
 pub const SPRITESHEET_ASSET_PATH: &str = "vettlingr/dwarves.png";
 

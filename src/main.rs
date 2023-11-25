@@ -41,17 +41,21 @@ fn main() {
                 ..default()
             })
             .set(ImagePlugin::default_nearest()),)) // no blurry sprites
+        .add_state::<AppState>()
+        // plugins
         .add_plugins(PanCamPlugin::default())
         .add_plugins(TimePlugin)
+        .add_plugins(RngPlugin::default())
         .add_plugins(BoardPlugin)
+        .add_plugins(graphics::StagePlugin)
         .add_plugins(graphics::AssetLoadingPlugin)
         .add_plugins(graphics::TileMapPlugin)
-        .add_plugins(RngPlugin::default())
-        .add_state::<AppState>()
+        // systems
         .add_systems(Startup, ui::spawn_camera)
         .add_systems(OnEnter(AppState::DrawUI), ui::spawn_layout)
         .add_systems(Update, bevy::window::close_on_esc)
         .add_systems(Update, keybindings)
+        // events
         .add_event::<PlayerMovementEvent>()
         .run();
 }
