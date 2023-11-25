@@ -1,6 +1,7 @@
 use super::AssetsLoading;
+use super::Stage;
 use super::SPRITESHEET_ASSET_PATH;
-use crate::board::BoardRes;
+// use crate::board::BoardRes;
 use crate::state::AppState;
 use bevy::prelude::*;
 
@@ -49,13 +50,40 @@ pub fn load_spritesheet(
     }
 }
 
+#[derive(Component, Debug, Default)]
+pub struct PlayerAvatar;
+
+#[derive(Bundle, Debug, Default)]
+pub struct PlayerAvatarBundle {
+    avatar: PlayerAvatar,
+}
+
 pub fn spawn_player_sprite(
     mut commands: Commands,
     sprites: Res<DwarfSpritesheet>,
-    board: Res<BoardRes>,
+    // board: Res<BoardRes>,
+    mut stage_query: Query<(Entity, &Stage)>,
 ) {
+    // TODO we need to spawn -- and perhaps, to separately maintain -- a logical Player
+    // distinct from the graphical representation
+    // who should also have a presence in the Board .. probably in the Cell.Creature struct
+
     // find the x,y based on position on the Board
     // then translate & render above
 
     // ..
+    let (e, _stage) = stage_query.single_mut();
+    let mut stage_entity = commands.get_entity(e).unwrap();
+
+    stage_entity.with_children(|s| {
+        s.spawn((
+            PlayerAvatarBundle::default(),
+            SpriteSheetBundle {
+                texture_atlas: sprites.atlas_handle.clone(),
+                sprite: TextureAtlasSprite::new(0),
+                transform: Transform::from_xyz(0., 0., 1.),
+                ..default()
+            },
+        ));
+    });
 }

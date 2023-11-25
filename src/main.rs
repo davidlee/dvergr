@@ -50,6 +50,7 @@ fn main() {
         .add_plugins(graphics::StagePlugin)
         .add_plugins(graphics::AssetLoadingPlugin)
         .add_plugins(graphics::TileMapPlugin)
+        .add_plugins(graphics::MobsPlugin)
         // systems
         .add_systems(Startup, ui::spawn_camera)
         .add_systems(OnEnter(AppState::DrawUI), ui::spawn_layout)

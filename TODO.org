@@ -1,23 +1,16 @@
-# TODO
+* TODO
 
-- Maps:
-  - [x] find temp graphics
-  - [?] git submodules  / .gitignore for commercial assets?
-  - [ ]
-  - enable atlas feature
-  - configure atlas
-  - use proper sprites
-  - room gen
-  - collision
-  - line of sight
-  - lighting
+** Graphics
+*** render map inside UI
+*** player should use logical position translated to tilemap
+*** player movement
 
-## TODO 
+** Logic
+*** Generate Rooms / Map
+*** Collision detection
+*** Line of Sight
+*** Lighting
 
-  - 0.12 support
-  - https://crates.io/crates/bevy_tile_atlas Tile Atlas support
-  - https://github.com/MrGVSV/bevy_tileset_map 
-  - https://github.com/MrGVSV/bevy_tileset
-
- - this PR: https://github.com/StarArawn/bevy_ecs_tilemap/issues/316
+  
+ 
 

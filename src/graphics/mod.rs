@@ -7,6 +7,7 @@ pub use tilemap::{TileMap, TileMapPlugin};
 
 pub mod mobs;
 pub use mobs::DwarfSpritesheet;
+pub use mobs::MobsPlugin;
 
 #[derive(Component, Debug, Copy, Clone)]
 pub struct PixelSize {
