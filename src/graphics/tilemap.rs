@@ -13,7 +13,7 @@ pub struct TileMap {
 }
 
 impl TileMap {
-    fn tile_offset(&self, x: i32, y: i32) -> PixelPos {
+    pub fn tile_offset(&self, x: i32, y: i32) -> PixelPos {
         let x = self.tile_size.width * x as f32;
         let y = self.tile_size.height * y as f32;
         PixelPos { x, y }

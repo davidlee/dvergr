@@ -2,8 +2,12 @@ use super::AssetsLoading;
 use super::Stage;
 use super::SPRITESHEET_ASSET_PATH;
 // use crate::board::BoardRes;
+use super::*;
+use crate::board::*;
+use crate::creature::Creature;
+use crate::player::Player;
 use crate::state::AppState;
-use bevy::prelude::*;
+// use bevy::prelude::*;
 
 const TILE_SIZE_W: f32 = 32.0;
 const TILE_SIZE_H: f32 = 32.0;
@@ -63,6 +67,16 @@ pub struct PlayerAvatarBundle {
     avatar: PlayerAvatar,
 }
 
+pub fn transform_from_tilemap_pos(tile_map: &TileMap, pos: &Pos3d) -> Transform {
+    let p = tile_map.tile_offset(pos.x, pos.y);
+
+    Transform::from_xyz(
+        p.x + tile_map.center_offset.x,
+        p.y + tile_map.center_offset.y,
+        1.0,
+    )
+}
+
 pub fn spawn_player_sprite(
     mut commands: Commands,
     sprites: Res<DwarfSpritesheet>,
@@ -70,29 +84,31 @@ pub fn spawn_player_sprite(
     mut next_state: ResMut<NextState<AppState>>,
     state: Res<State<AppState>>,
     mut stage_query: Query<(Entity, &Stage)>,
+    player_query: Query<(&Player, &Creature)>,
+    tile_map_query: Query<&TileMap>,
 ) {
-    // TODO we need to spawn -- and perhaps, to separately maintain -- a logical Player
-    // distinct from the graphical representation
-    // who should also have a presence in the Board .. probably in the Cell.Creature struct
+    let transform: Transform;
+    {
+        let tile_map = tile_map_query.single();
+        let pos = player_query.single().1.position;
+        transform = transform_from_tilemap_pos(&tile_map, &pos);
+    }
 
-    // find the x,y based on position on the Board
-    // then translate & render above
-
-    // ..
-    let (e, _stage) = stage_query.single_mut();
-    let mut stage_entity = commands.get_entity(e).unwrap();
-
-    stage_entity.with_children(|s| {
-        s.spawn((
-            PlayerAvatarBundle::default(),
-            SpriteSheetBundle {
-                texture_atlas: sprites.atlas_handle.clone(),
-                sprite: TextureAtlasSprite::new(0),
-                transform: Transform::from_xyz(0., 0., 1.),
-                ..default()
-            },
-        ));
-    });
+    commands
+        .get_entity(stage_query.single_mut().0) // Stage entity
+        .unwrap()
+        .with_children(|s| {
+            s.spawn((
+                PlayerAvatarBundle::default(),
+                SpriteSheetBundle {
+                    texture_atlas: sprites.atlas_handle.clone(),
+                    sprite: TextureAtlasSprite::new(0),
+                    // transform: Transform::from_xyz(0., 0., 1.),
+                    transform,
+                    ..default()
+                },
+            ));
+        });
 
     match state.get() {
         AppState::InitMobs => next_state.set(AppState::Game),
