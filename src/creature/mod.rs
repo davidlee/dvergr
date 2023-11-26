@@ -2,16 +2,17 @@ use crate::action::Stance;
 use crate::action::Tempo;
 use crate::board::Direction;
 
-// use crate::attributes::Attributes;
 use bevy::prelude::{Bundle, Component};
 
 pub mod movement {
     // use super::*;
+    use super::Creature;
+    use crate::board::Board;
     use crate::board::Pos3d;
-    use bevy::prelude::{Entity, Event};
-    // use bevy::prelude::{EventReader, EventWriter};
+    use bevy::prelude::{Entity, Event, Query, Res, ResMut};
+    use bevy::prelude::{EventReader, EventWriter};
 
-    // TODO multiple cells
+    // TODO support multiple cells
     #[derive(Event, Debug)]
     pub struct StartMove {
         pub from: Pos3d,
@@ -22,6 +23,13 @@ pub mod movement {
     impl StartMove {
         pub fn single(from: Pos3d, to: Pos3d, entity: Entity) -> Self {
             StartMove { from, to, entity }
+        }
+    }
+
+    pub fn process_movement(mut ev_move: EventReader<StartMove>, mut board: ResMut<Board>) {
+        for e in ev_move.read() {
+            println!("processing movement .. {:?}", e);
+            board.creatures.update_single(e.entity, e.to).unwrap();
         }
     }
 }

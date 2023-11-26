@@ -40,14 +40,27 @@ fn main() {
         .add_event::<creature::movement::StartMove>()
         // plugins
         .add_plugins(PanCamPlugin::default())
-        .add_plugins(time::TimePlugin)
         .add_plugins(RngPlugin::default())
+        .add_plugins(time::TimePlugin)
         .add_plugins(board::BoardPlugin)
         .add_plugins(graphics::StagePlugin)
         .add_plugins(graphics::AssetLoadingPlugin)
         .add_plugins(graphics::TileMapPlugin)
         .add_plugins(graphics::MobsPlugin)
-        .add_plugins(player::PlayerPlugin)
+        .add_systems(OnEnter(AppState::InitPlayer), player::spawn_player_bundle)
+        .add_systems(
+            PreUpdate,
+            creature::movement::process_movement.run_if(state_exists_and_equals(AppState::Game)),
+        )
+        .add_systems(
+            PreUpdate,
+            (player::movement::validate_directional_input
+                .before(creature::movement::process_movement))
+            .run_if(state_exists_and_equals(AppState::Game)),
+        )
+        // .add_systems()
+        .add_event::<player::movement::DirectionalInput>()
+        // .add_plugins(player::PlayerPlugin)
         // systems
         .add_systems(Startup, ui::spawn_camera)
         .add_systems(OnEnter(AppState::InitUI), ui::spawn_layout)

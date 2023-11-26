@@ -25,21 +25,7 @@ impl Default for PlayerBundle {
     }
 }
 
-pub struct PlayerPlugin;
-
-impl Plugin for PlayerPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(AppState::InitPlayer), spawn_player_bundle)
-            .add_systems(
-                Update,
-                movement::validate_directional_input
-                    .run_if(state_exists_and_equals(AppState::Game)),
-            )
-            .add_event::<movement::DirectionalInput>();
-    }
-}
-
-fn spawn_player_bundle(
+pub fn spawn_player_bundle(
     mut commands: Commands,
     mut board: ResMut<Board>,
     state: Res<State<AppState>>,
