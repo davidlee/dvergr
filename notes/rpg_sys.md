@@ -1,4 +1,3 @@
-
 ## RPG game system - design notes
 
 core skill test mechanic: roll under
