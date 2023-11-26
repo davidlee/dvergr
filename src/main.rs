@@ -37,6 +37,7 @@ fn main() {
             })
             .set(ImagePlugin::default_nearest()),)) // no blurry sprites
         .add_state::<AppState>()
+        .add_event::<creature::movement::StartMove>()
         // plugins
         .add_plugins(PanCamPlugin::default())
         .add_plugins(time::TimePlugin)

@@ -1,8 +1,8 @@
 use super::AssetsLoading;
 use super::Stage;
 use super::SPRITESHEET_ASSET_PATH;
-// use crate::board::BoardRes;
 use super::*;
+use crate::board::Board;
 use crate::board::*;
 use crate::creature::Creature;
 use crate::player::Player;
@@ -80,17 +80,19 @@ pub fn transform_from_tilemap_pos(tile_map: &TileMap, pos: &Pos3d) -> Transform 
 pub fn spawn_player_sprite(
     mut commands: Commands,
     sprites: Res<DwarfSpritesheet>,
-    // board: Res<BoardRes>,
+    mut board: ResMut<Board>,
     mut next_state: ResMut<NextState<AppState>>,
     state: Res<State<AppState>>,
     mut stage_query: Query<(Entity, &Stage)>,
-    player_query: Query<(&Player, &Creature)>,
+    player_query: Query<(Entity, &Player, &Creature)>,
     tile_map_query: Query<&TileMap>,
 ) {
     let transform: Transform;
     {
         let tile_map = tile_map_query.single();
-        let pos = player_query.single().1.position;
+        let (entity, ..) = player_query.single();
+        // FIXME this is ugly but :shrug: seems necessary
+        let pos: Pos3d = board.creatures.get_pos_for(&entity).unwrap().to_owned();
         transform = transform_from_tilemap_pos(&tile_map, &pos);
     }
 

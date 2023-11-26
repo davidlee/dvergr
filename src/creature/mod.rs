@@ -1,17 +1,37 @@
 use crate::action::Stance;
 use crate::action::Tempo;
 use crate::board::Direction;
-use crate::board::Pos3d;
 
 // use crate::attributes::Attributes;
 use bevy::prelude::{Bundle, Component};
+
+pub mod movement {
+    // use super::*;
+    use crate::board::Pos3d;
+    use bevy::prelude::{Entity, Event};
+    // use bevy::prelude::{EventReader, EventWriter};
+
+    // TODO multiple cells
+    #[derive(Event, Debug)]
+    pub struct StartMove {
+        pub from: Pos3d,
+        pub to: Pos3d,
+        pub entity: Entity,
+    }
+
+    impl StartMove {
+        pub fn single(from: Pos3d, to: Pos3d, entity: Entity) -> Self {
+            StartMove { from, to, entity }
+        }
+    }
+}
 
 #[derive(Component, Debug, Clone)]
 #[allow(dead_code)]
 pub struct Creature {
     pub species: Species,
     pub phenotype: Phenotype,
-    pub position: Pos3d,
+    // pub position: Pos3d,
     pub size: CreatureSize,
     pub condition: CreatureCondition,
     //
@@ -32,9 +52,9 @@ pub struct Creature {
 }
 
 impl Creature {
-    pub fn human(position: Pos3d) -> Self {
+    pub fn human() -> Self {
         Creature {
-            position,
+            // position,
             phenotype: Phenotype::default(),
             species: Species::human(),
             size: CreatureSize::Medium,

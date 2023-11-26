@@ -1,6 +1,5 @@
 use crate::attributes::Attributes;
 use crate::board::Board;
-use crate::board::Direction;
 use crate::board::Pos3d;
 use crate::creature::*;
 use crate::state::AppState;
@@ -20,7 +19,7 @@ impl Default for PlayerBundle {
     fn default() -> Self {
         PlayerBundle {
             player: Player,
-            creature: Creature::human(Pos3d { x: 0, y: 0, z: 0 }),
+            creature: Creature::human(),
             attributes: Attributes::new(),
         }
     }
@@ -33,9 +32,10 @@ impl Plugin for PlayerPlugin {
         app.add_systems(OnEnter(AppState::InitPlayer), spawn_player_bundle)
             .add_systems(
                 Update,
-                player_movement.run_if(state_exists_and_equals(AppState::Game)),
+                movement::validate_directional_input
+                    .run_if(state_exists_and_equals(AppState::Game)),
             )
-            .add_event::<PlayerMovementEvent>();
+            .add_event::<movement::DirectionalInput>();
     }
 }
 
@@ -52,7 +52,8 @@ fn spawn_player_bundle(
 
     board
         .creatures
-        .add(player_entity, vec![player_default_position])
+        // .add(player_entity, vec![player_default_position])
+        .add_single(player_entity, player_default_position)
         .unwrap();
 
     match state.get() {
@@ -61,43 +62,43 @@ fn spawn_player_bundle(
     }
 }
 
-#[derive(Event, Debug)]
-pub struct PlayerMovementEvent {
-    pub direction: Direction,
-}
+pub mod movement {
+    use super::Player;
+    use crate::board::{Board, Direction};
+    use crate::creature::movement::StartMove;
+    use crate::creature::Creature;
+    use bevy::prelude::{Entity, Event, EventReader, EventWriter, Query, Res};
 
-pub fn player_movement(
-    mut ev_player_move: EventReader<PlayerMovementEvent>,
-    mut player_query: Query<(&mut Player, &mut Creature)>,
-    board: ResMut<Board>,
-) {
-    if let Ok(q) = player_query.get_single_mut() {
-        let (_, creature) = q;
-        let pos = creature.position;
+    #[derive(Event, Debug)]
 
-        for e in ev_player_move.read() {
-            let new_pos = pos.adjacent(e.direction);
-            // println!("we want to move Player to: {:?}", to);
-            // let cell = board.cells.get(&pos.adjacent(e.direction));
-            match board.cells.get(&new_pos) {
-                Some(cell) => {
-                    if cell.passable() {
-                        println!("Player is moving ...");
-                        // make the change to the logical player position ...
-                        // creature.position = new_pos;
-                        // br.
-                    } else {
-                        println!("invalid move to {:?}", cell);
+    pub struct DirectionalInput {
+        pub direction: Direction,
+    }
+
+    pub fn validate_directional_input(
+        mut ev_input: EventReader<DirectionalInput>,
+        mut ev_move: EventWriter<StartMove>,
+        player_query: Query<(Entity, &mut Player, &mut Creature)>,
+        board: Res<Board>,
+    ) {
+        if let Ok(q) = player_query.get_single() {
+            let (entity, ..) = q;
+            let pos = board.creatures.get_pos_for(&entity).unwrap();
+            for e in ev_input.read() {
+                let new_pos = pos.adjacent(e.direction);
+                match board.cells.get(&new_pos) {
+                    Some(cell) => {
+                        if cell.passable() {
+                            let ev = StartMove::single(pos.clone(), new_pos, entity);
+                            println!("Cell unobstructed ... moving Player: {:?}", ev);
+                            ev_move.send(ev);
+                        } else {
+                            println!("invalid move to {:?}", cell);
+                        }
                     }
+                    None => println!("OUT OF BOUNDS"),
                 }
-                None => println!("OUT OF BOUNDS"),
             }
-            // if cell.unwrap().passable() {
-            //     // TODO other checks ..
-            // }
-            // check the board to see if that move's legal ...
-            // println!("that'd be into this cell: {:?}", cell);
-            // ...
         }
     }
 }

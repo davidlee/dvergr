@@ -1,4 +1,3 @@
-// use crate::creature::Creature;
 use crate::state::AppState;
 use bevy::prelude::{Entity, Resource};
 use std::collections::{BTreeMap, HashMap};
@@ -37,8 +36,6 @@ impl Default for Board {
 }
 
 impl Board {
-    // Cells ..
-
     pub fn fill<F>(&mut self, f: F)
     where
         F: Fn(i32, i32, i32) -> Option<Cell>,
@@ -61,55 +58,6 @@ impl Board {
             }
         }
     }
-
-    // Creatures ...
-
-    // pub fn insert_creature_pos<'a>(&mut self, cp: CreaturePos) -> Result<(), &str> {
-    //     // check if cell(s) are valid
-    //     if self.is_valid_creature_pos(&cp) {
-    //         Ok(self.creatures.v.push(cp))
-    //     } else {
-    //         Err("invalid creature position")
-    //     }
-    // }
-
-    // pub fn is_valid_creature_pos(&self, cp: &CreaturePos) -> bool {
-    //     println!("not implemented: is valid cp? {:?}", cp);
-    //     true // FIXME
-    // }
-
-    // pub fn move_creature<'a, 'b>(
-    //     &self,
-    //     // from_pos: &Pos3d,
-    //     // to_pos: &'a Pos3d,
-    // ) -> Result<&'a Creature, &'b str> {
-    //     // let mut from_cell = self.get(from_pos).unwrap();
-    //     // let mut creature: Creature;
-
-    //     // match from_cell.creature {
-    //     //     Some(creature) => println!("got a {:?}", creature),
-    //     //     None => panic!("No creature found"),
-    //     // }
-
-    //     // match self.get(to_pos) {
-    //     //     Some(to_cell) => {
-    //     //         if to_cell.impassable() {
-    //     //             Err("position impassable")
-    //     //         } else if to_cell.occupied() {
-    //     //             Err("position occupied")
-    //     //         } else {
-    //     //             // move the creature and return it
-    //     //             // first remove it from the
-    //     //             from_cell.creature = None;
-    //     //             to_cell.creature = Some(creature);
-    //     //             creature.position = to_pos.clone();
-    //     //             Ok(&creature)
-    //     //         }
-    //     //     }
-    //     //     None => Err("Invalid position"),
-    //     // }
-    //     Err("not implemented")
-    // }
 }
 /*
 // CreatureStore:
@@ -203,6 +151,10 @@ impl CreatureStore {
         }
     }
 
+    pub fn add_single(&mut self, entity: Entity, pos: Pos3d) -> Result<(), &str> {
+        self.add(entity, vec![pos])
+    }
+
     pub fn update(&mut self, entity: Entity, area: Area) -> Result<(), &str> {
         if !self.to_area.contains_key(&entity) {
             Err("expected to already exist, but is missing")
@@ -223,12 +175,29 @@ impl CreatureStore {
         }
     }
 
+    pub fn update_single(&mut self, entity: Entity, pos: Pos3d) -> Result<(), &str> {
+        self.update(entity, vec![pos])
+    }
+
     pub fn get_entity_at(&self, pos: &Pos3d) -> Option<&Entity> {
         self.to_entity.get(pos)
     }
 
     pub fn get_area_for(&self, entity: &Entity) -> Option<&Area> {
         self.to_area.get(entity)
+    }
+
+    pub fn get_pos_for(&self, entity: &Entity) -> Option<&Pos3d> {
+        match self.to_area.get(entity) {
+            Some(vec) => {
+                if vec.len() == 1 {
+                    Some(&vec[0])
+                } else {
+                    panic!("Area was not single pos");
+                }
+            }
+            None => None,
+        }
     }
 }
 
@@ -296,7 +265,6 @@ impl Cell {
             material: None,
             floor: None,
             feature: None,
-            // creature: None,
             items: Some(vec![]),
         }
     }
