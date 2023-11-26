@@ -1,16 +1,24 @@
 * TODO
 
+** Bugs / Refactoring / Questions
+*** shouldn't the tilemap origin be top left?
+
 ** Graphics
 *** render map inside UI
-*** player should use logical position translated to tilemap
-*** player movement
+*** movement: animation & input state machine
+*** 
 
 ** Logic
 *** Generate Rooms / Map
-*** Collision detection
+*** Collision detection (mobs; items; ...)
 *** Line of Sight
 *** Lighting
+*** pathfinding
 
+** Action
+*** Terrain destruction (dig)
+*** action / time cost
+*** enemy mob w. random movement
   
  
 
