@@ -59,7 +59,11 @@ fn main() {
             graphics::mobs::spawn_player_sprite,
         )
         // During run loop
-        .add_systems(First, graphics::mobs::update_changed)
+        .add_systems(Update, graphics::mobs::add_changed_creature_mob_move_anim)
+        .add_systems(
+            Update,
+            graphics::mobs::mob_movement.after(graphics::mobs::add_changed_creature_mob_move_anim),
+        )
         .add_systems(
             PreUpdate,
             creature::movement::process_movement.run_if(state_exists_and_equals(AppState::Game)),

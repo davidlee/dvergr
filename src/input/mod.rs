@@ -1,9 +1,20 @@
 use crate::board::Direction;
+use crate::graphics::mobs::MobMoveAnimation;
 use crate::player::movement::DirectionalInput;
 
-use bevy::prelude::{EventWriter, Input, KeyCode, Res};
+use bevy::prelude::{Entity, EventWriter, Input, KeyCode, Query, Res, Transform};
 
-pub fn keybindings(mut ev_player_move: EventWriter<DirectionalInput>, keys: Res<Input<KeyCode>>) {
+pub fn keybindings(
+    mut ev_player_move: EventWriter<DirectionalInput>,
+    keys: Res<Input<KeyCode>>,
+    sprite_query: Query<(Entity, &MobMoveAnimation, &Transform)>,
+) {
+    if let Ok(_) = sprite_query.get_single() {
+        // ignore any player movement input while animation is in progress
+        // FIXME we probably want a more robust approach to preventing movement issues
+        return ();
+    }
+
     let shifted: bool = keys.any_pressed([KeyCode::ShiftLeft, KeyCode::ShiftRight]);
 
     if keys.just_pressed(KeyCode::Up) {
