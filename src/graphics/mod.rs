@@ -3,7 +3,7 @@ use crate::AppState;
 use bevy::prelude::*;
 
 pub mod tilemap;
-pub use tilemap::{TileMap, TileMapPlugin};
+pub use tilemap::TileMap;
 
 pub mod mobs;
 pub use mobs::DwarfSpritesheet;

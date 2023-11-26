@@ -1,16 +1,22 @@
 use crate::action::Stance;
 use crate::action::Tempo;
+use crate::board::Area3d;
 use crate::board::Direction;
+use crate::board::Pos3d;
+use crate::board::Position;
 
 use bevy::prelude::{Bundle, Component};
 
 pub mod movement {
     // use super::*;
-    // use super::Creature;
+    // use crate::board::Area3d;
     use crate::board::Board;
     use crate::board::Pos3d;
+    use crate::board::Position;
+    use crate::creature::Creature;
+    // use crate::creature::Locus;
     use bevy::prelude::EventReader;
-    use bevy::prelude::{Entity, Event, ResMut};
+    use bevy::prelude::{Entity, Event, Query, ResMut};
 
     // TODO support multiple cells
     #[derive(Event, Debug)]
@@ -26,10 +32,18 @@ pub mod movement {
         }
     }
 
-    pub fn process_movement(mut ev_move: EventReader<StartMove>, mut board: ResMut<Board>) {
+    pub fn process_movement(
+        mut ev_move: EventReader<StartMove>,
+        mut board: ResMut<Board>,
+        mut query: Query<(Entity, &mut Creature)>,
+    ) {
         for e in ev_move.read() {
             println!("processing movement .. {:?}", e);
-            board.creatures.update_single(e.entity, e.to).unwrap();
+            let (entity, mut creature) = query.get_mut(e.entity).unwrap();
+            // first make the changes to the creature
+            creature.locus.position = Position::Point(e.to);
+            // then reflect the changes on the board's creatures mapping
+            board.creatures.update_single(entity, e.to).unwrap();
         }
     }
 }
@@ -39,15 +53,12 @@ pub mod movement {
 pub struct Creature {
     pub species: Species,
     pub phenotype: Phenotype,
-    // pub position: Pos3d,
     pub size: CreatureSize,
+    pub base_weight: f64,
     pub condition: CreatureCondition,
-    //
-    pub facing: Direction,
-    pub stance: Stance,
-    pub tempo: Tempo,
+    pub locus: Locus,
+    pub tempo: Tempo, // tempo? pace?
     pub actions: Actions,
-    //
 
     // age, disease, subspecies, careers, etc
     // a geriatric leprous veteran undead wood-elf pirate
@@ -66,8 +77,8 @@ impl Creature {
             phenotype: Phenotype::default(),
             species: Species::human(),
             size: CreatureSize::Medium,
-            stance: Stance::default(),
-            facing: Direction::North,
+            base_weight: 80.0,
+            locus: Locus::default(),
             tempo: crate::action::TEMPOS[0].clone(),
             templates: (),
             actions: Actions::default(),
@@ -77,11 +88,53 @@ impl Creature {
             traits: (),
         }
     }
+
+    pub fn set_pos(mut self, pos: Pos3d) {
+        self.locus.position = Position::Point(pos);
+    }
 }
 
 #[derive(Bundle, Debug, Clone)]
 pub struct CreatureBundle {}
 
+// Locus
+//
+
+#[derive(Component, Debug, Clone, PartialEq)]
+pub struct Locus {
+    pub position: Position,
+    pub speed: i32,
+    pub direction: Direction,
+    pub facing: Direction,
+    pub stance: Stance,
+    pub weight: f64,
+}
+
+impl Locus {
+    pub fn set_pos(&mut self, pos: Pos3d) {
+        self.position = Position::Point(pos);
+    }
+
+    pub fn set_area(&mut self, area: Area3d) {
+        self.position = Position::Area(area);
+    }
+}
+
+impl Default for Locus {
+    fn default() -> Self {
+        Locus {
+            position: Position::Point(Pos3d::new(0, 0, 0)),
+            speed: 0,
+            direction: Direction::North,
+            facing: Direction::North,
+            stance: Stance::Standing,
+            weight: 80.0,
+        }
+    }
+}
+
+// Size
+//
 #[derive(Component, Debug, Clone, Default, Eq, PartialEq, Ord, PartialOrd)]
 pub enum CreatureSize {
     Insect,
@@ -94,12 +147,15 @@ pub enum CreatureSize {
     Leviathan(), // show me map tiles
 }
 
+// Condition
+//
 #[derive(Component, Debug, Clone, Default, Eq, PartialEq)]
 #[allow(dead_code)]
 pub struct CreatureCondition {
     needs: (),
     conditions: (),
     injuries: (),
+    encumberance: (),
 }
 
 impl CreatureCondition {
@@ -108,10 +164,13 @@ impl CreatureCondition {
             needs: (),
             conditions: (),
             injuries: (),
+            encumberance: (),
         }
     }
 }
 
+// Actions
+//
 #[derive(Component, Debug, Clone, Default)]
 #[allow(dead_code)]
 pub struct Actions {
@@ -120,6 +179,8 @@ pub struct Actions {
     // behaviour_tree: Option<()>,
 }
 
+// Species
+//
 #[derive(Component, Debug, Clone, Eq, Ord, PartialEq, PartialOrd, Default)]
 #[allow(dead_code)]
 pub struct Species {
@@ -150,6 +211,8 @@ impl Species {
     }
 }
 
+// Phenotype
+//
 #[derive(Component, Debug, Clone, Default, Eq, PartialEq)]
 #[allow(dead_code)]
 pub struct Phenotype {
@@ -184,6 +247,8 @@ impl Phenotype {
     }
 }
 
+// Equipment
+//
 #[derive(Component, Debug, Clone, Default, Eq, PartialEq)]
 #[allow(dead_code)]
 pub struct Equipment {

@@ -1,5 +1,5 @@
 use crate::state::AppState;
-use bevy::prelude::{Entity, Resource};
+use bevy::prelude::{Component, Entity, Resource};
 use std::collections::{BTreeMap, HashMap};
 
 pub mod direction;
@@ -59,61 +59,17 @@ impl Board {
         }
     }
 }
-/*
-// CreatureStore:
 
- - allow querying of Board position(s) to find any Creature(s) there
- - allow finding the Board position(s) occupied by a particular Creature
- - allow Creatures to also exist in vanilla ECS (i.e not holding references exclusively here)
-   - this implies storing Entities, and using `query.get` to return the Creature components
-   - for now, a (logical) Creature's Entity doesn't need to have a parent Entity
- - support a Creature occupying 1 or any number of cells, depending on
-   size, stance, actions, etc
-   - a human warrior might occupy 1, 2 or 4 cells
-   - a swarm might occupy many non-exclusively, may be irregular and non-contiguous
-   - but _usually_ a combatant will exclusively occupy a cell
+// Position
+//
+#[derive(Component, Debug, Clone, Eq, PartialEq)]
+pub enum Position {
+    Area(Area3d),
+    Point(Pos3d),
+}
 
-# data structure options:
-## 1. BTreeMap<Pos3d, Entity>
-
-+ allows one Creature to occupy arbitrary cells (multiple entries)
-+ iterate over cells will remain sorted
-+ sparse set, good perf
-
-+ easy to find Creature for given cell
-- easy to accidentally remove Creature from all cells
-- hard to find all cells for a given Creature
-
-## 2. Vec<(Entity, Vec<Pos3d>)>:
-
-+ easy to get all cells for entity
-+ simple
-+ easy to validate correct # of cells / avoid orphans
-+ perf likely fine
-
-- hard to find whether a given cell is occupied
-
-## 3. Composite Data Structure
-### a. BTreeMap<Pos3d, CreaturePos> + component CreaturePos { entity, Vec<Pos3d> }
-
-where we have multiple refs in the BTree pointing to one struct with the canonical list of cells,
-and the entity.
-
-+ easy to get the list of cells / locations given the entity
-+ easy to get / check for the entity given a cell / location
-+ supports multiple cells per creature
-
-- more complex
-- more than one copy of the data, requires keeping in sync (although CreaturePos is the SoT)
-- may be a pain having to access via a Query
-
-### b. CreatureStore { to_entity, to_pos }
-
-+ most of the above
-+ it seems simpler
-+ one struct should be able to keep itself in sync
-
-*/
+// CreatureStore
+//
 
 #[derive(Resource, Clone, Debug)]
 #[allow(dead_code)]
@@ -133,11 +89,11 @@ impl Default for CreatureStore {
     }
 }
 
-type Area = Vec<Pos3d>;
+pub type Area3d = Vec<Pos3d>;
 
 #[allow(dead_code)]
 impl CreatureStore {
-    pub fn add(&mut self, entity: Entity, area: Area) -> Result<(), &str> {
+    pub fn add(&mut self, entity: Entity, area: Area3d) -> Result<(), &str> {
         if self.to_area.contains_key(&entity) {
             Err("already exists")
         } else {
@@ -155,7 +111,7 @@ impl CreatureStore {
         self.add(entity, vec![pos])
     }
 
-    pub fn update(&mut self, entity: Entity, area: Area) -> Result<(), &str> {
+    pub fn update(&mut self, entity: Entity, area: Area3d) -> Result<(), &str> {
         if !self.to_area.contains_key(&entity) {
             Err("expected to already exist, but is missing")
         } else {
@@ -183,7 +139,7 @@ impl CreatureStore {
         self.to_entity.get(pos)
     }
 
-    pub fn get_area_for(&self, entity: &Entity) -> Option<&Area> {
+    pub fn get_area_for(&self, entity: &Entity) -> Option<&Area3d> {
         self.to_area.get(entity)
     }
 

@@ -89,7 +89,7 @@ pub static TEMPOS: [Tempo; 9] = [
 ];
 
 // should be a state machine??
-#[derive(Component, Debug, Clone, Copy, Default)]
+#[derive(Component, Debug, Clone, Copy, Default, Eq, PartialEq)]
 pub enum Stance {
     Dynamic,
     #[default]

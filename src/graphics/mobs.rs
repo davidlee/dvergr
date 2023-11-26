@@ -59,6 +59,9 @@ pub struct PlayerAvatarBundle {
     avatar: PlayerAvatar,
 }
 
+#[derive(Component, Debug)]
+pub struct CreatureEntityRef(Entity);
+
 pub fn transform_from_tilemap_pos(tile_map: &TileMap, pos: &Pos3d) -> Transform {
     let p = tile_map.tile_offset(pos.x, pos.y);
 
@@ -80,10 +83,9 @@ pub fn spawn_player_sprite(
     tile_map_query: Query<&TileMap>,
 ) {
     let transform: Transform;
+    let (entity, ..) = player_query.single();
     {
         let tile_map = tile_map_query.single();
-        let (entity, ..) = player_query.single();
-        // FIXME this is ugly but :shrug: seems necessary
         let pos: Pos3d = board.creatures.get_pos_for(&entity).unwrap().to_owned();
         transform = transform_from_tilemap_pos(&tile_map, &pos);
     }
@@ -94,10 +96,10 @@ pub fn spawn_player_sprite(
         .with_children(|s| {
             s.spawn((
                 PlayerAvatarBundle::default(),
+                CreatureEntityRef(entity),
                 SpriteSheetBundle {
                     texture_atlas: sprites.atlas_handle.clone(),
                     sprite: TextureAtlasSprite::new(0),
-                    // transform: Transform::from_xyz(0., 0., 1.),
                     transform,
                     ..default()
                 },
@@ -110,4 +112,29 @@ pub fn spawn_player_sprite(
     }
 }
 
-pub fn update_changed() {}
+#[allow(dead_code)]
+pub fn update_changed(
+    // sprites: Res<DwarfSpritesheet>,
+    // board: Res<Board>,
+    // mut mut_board: ResMut<Board>,
+    // mut stage_query: Query<(Entity, &Stage)>,
+    // player_query: Query<(Entity, &Player, &Creature)>,
+    tile_map_query: Query<&TileMap>,
+    mut sprite_query: Query<(Entity, &CreatureEntityRef, &mut Transform)>,
+    changed_query: Query<(Entity, &Creature), Changed<Creature>>,
+) {
+    for (_sprite_entity, CreatureEntityRef(entity), mut transform) in sprite_query.iter_mut() {
+        if changed_query.contains(*entity) {
+            let tile_map = tile_map_query.get_single().unwrap();
+            let (_, creature) = changed_query.get(*entity).unwrap();
+            match creature.locus.position {
+                Position::Point(pos) => {
+                    let to = transform_from_tilemap_pos(tile_map, &pos);
+                    transform.translation = to.translation;
+                }
+                _ => panic!("doesn't support area yet"),
+            }
+            println!("CH CH CH CHANGES .. {:?}", creature);
+        }
+    }
+}
