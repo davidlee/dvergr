@@ -12,14 +12,6 @@ use crate::state::AppState;
 const TILE_SIZE_W: f32 = 32.0;
 const TILE_SIZE_H: f32 = 32.0;
 
-pub struct MobsPlugin;
-
-impl Plugin for MobsPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(AppState::InitMobs), spawn_player_sprite);
-    }
-}
-
 #[derive(Resource, Debug)]
 pub struct DwarfSpritesheet {
     #[allow(dead_code)]
@@ -80,7 +72,7 @@ pub fn transform_from_tilemap_pos(tile_map: &TileMap, pos: &Pos3d) -> Transform 
 pub fn spawn_player_sprite(
     mut commands: Commands,
     sprites: Res<DwarfSpritesheet>,
-    mut board: ResMut<Board>,
+    board: Res<Board>,
     mut next_state: ResMut<NextState<AppState>>,
     state: Res<State<AppState>>,
     mut stage_query: Query<(Entity, &Stage)>,
@@ -117,3 +109,5 @@ pub fn spawn_player_sprite(
         s => panic!("illegal state: {:?}", s),
     }
 }
+
+pub fn update_changed() {}

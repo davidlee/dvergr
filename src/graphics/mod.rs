@@ -7,7 +7,6 @@ pub use tilemap::{TileMap, TileMapPlugin};
 
 pub mod mobs;
 pub use mobs::DwarfSpritesheet;
-pub use mobs::MobsPlugin;
 
 #[derive(Component, Debug, Copy, Clone)]
 pub struct PixelSize {
@@ -48,18 +47,7 @@ pub struct StageBundle {
     stage: Stage,
 }
 
-pub struct StagePlugin;
-
-impl Plugin for StagePlugin {
-    fn build(&self, app: &mut App) {
-        app.add_systems(
-            Update,
-            spawn_stage.run_if(state_exists_and_equals(AppState::InitStage)),
-        );
-    }
-}
-
-fn spawn_stage(
+pub fn spawn_stage(
     mut commands: Commands,
     mut next_state: ResMut<NextState<AppState>>,
 
@@ -98,30 +86,6 @@ impl Plugin for AssetLoadingPlugin {
         );
     }
 }
-
-// fuckit, let's use someone else's asset loader, this is boring
-
-// pub fn ensure_assets_loaded(
-//     mut commands: Commands,
-//     mut state: ResMut<NextState<AppState>>,
-//     mut ev_asset: EventReader<AssetEvent<Image>>,
-//     mut loading: ResMut<AssetsLoading>,
-// ) {
-//     for ev in ev_asset.read() {
-//         match ev {
-//             AssetEvent::LoadedWithDependencies { id } => {
-//                 println!("Asset Loaded .. {:?} -- {}", loading, id);
-//                 loading.count -= 1;
-//                 if loading.count == 0 {
-//                     println!("Assets loaded, next state ... ");
-//                     commands.remove_resource::<AssetsLoading>();
-//                     state.set(AppState::InitUI);
-//                 }
-//             }
-//             other => println!("Assed Event: {:?}", other),
-//         }
-//     }
-// }
 
 // TODO actually check asset loading
 pub fn ensure_assets_loaded(

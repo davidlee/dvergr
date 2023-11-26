@@ -6,11 +6,11 @@ use bevy::prelude::{Bundle, Component};
 
 pub mod movement {
     // use super::*;
-    use super::Creature;
+    // use super::Creature;
     use crate::board::Board;
     use crate::board::Pos3d;
-    use bevy::prelude::{Entity, Event, Query, Res, ResMut};
-    use bevy::prelude::{EventReader, EventWriter};
+    use bevy::prelude::EventReader;
+    use bevy::prelude::{Entity, Event, ResMut};
 
     // TODO support multiple cells
     #[derive(Event, Debug)]

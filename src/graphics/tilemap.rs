@@ -35,18 +35,6 @@ impl TileMap {
     }
 }
 
-// plugin
-
-pub struct TileMapPlugin;
-
-impl Plugin for TileMapPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(AppState::InitTileMap), spawn_tile_map);
-    }
-}
-
-//
-
 // Resource
 
 #[derive(Resource, Debug)]

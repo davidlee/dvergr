@@ -43,11 +43,23 @@ fn main() {
         .add_plugins(RngPlugin::default())
         .add_plugins(time::TimePlugin)
         .add_plugins(board::BoardPlugin)
-        .add_plugins(graphics::StagePlugin)
         .add_plugins(graphics::AssetLoadingPlugin)
-        .add_plugins(graphics::TileMapPlugin)
-        .add_plugins(graphics::MobsPlugin)
+        // During init
+        .add_systems(
+            Update,
+            graphics::spawn_stage.run_if(state_exists_and_equals(AppState::InitStage)),
+        )
+        .add_systems(
+            OnEnter(AppState::InitTileMap),
+            graphics::tilemap::spawn_tile_map,
+        )
         .add_systems(OnEnter(AppState::InitPlayer), player::spawn_player_bundle)
+        .add_systems(
+            OnEnter(AppState::InitMobs),
+            graphics::mobs::spawn_player_sprite,
+        )
+        // During run loop
+        .add_systems(First, graphics::mobs::update_changed)
         .add_systems(
             PreUpdate,
             creature::movement::process_movement.run_if(state_exists_and_equals(AppState::Game)),
