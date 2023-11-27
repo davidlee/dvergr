@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::prelude::{App, Plugin, Resource};
 
 pub mod f64 {
     pub const SECONDS_PER_MINUTE: f64 = 60.0;

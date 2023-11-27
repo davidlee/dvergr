@@ -1,6 +1,4 @@
-use crate::board::{Board, Cell, Pos3d};
-use crate::AppState;
-use bevy::prelude::*;
+use crate::typical::*;
 
 pub mod tilemap;
 pub use tilemap::TileMap;
@@ -8,12 +6,25 @@ pub use tilemap::TileMap;
 pub mod mobs;
 pub use mobs::DwarfSpritesheet;
 
+pub mod typical {
+    pub use crate::graphics::mobs::PlayerAvatar;
+    pub use crate::graphics::{
+        AssetsLoading, GridSize, PixelPos, PixelSize, Stage, TileMap, TileSize,
+    };
+    // pub use bevy::prelude::get_entity;
+    pub use bevy::prelude::{
+        AssetServer, Assets, Color, Handle, Image, SpatialBundle, Sprite, SpriteBundle,
+        SpriteSheetBundle, TextureAtlas, TextureAtlasBuilder, TextureAtlasSprite, Transform,
+    };
+}
+use typical::*;
+
 #[derive(Component, Debug, Copy, Clone)]
 pub struct PixelSize {
     pub width: f32,
     pub height: f32,
 }
-type TileSize = PixelSize;
+pub type TileSize = PixelSize;
 
 #[derive(Component, Debug, Copy, Clone)]
 pub struct GridSize {

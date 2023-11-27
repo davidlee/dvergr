@@ -12,11 +12,29 @@ pub mod state;
 pub mod time;
 pub mod ui;
 
-use bevy::prelude::*;
-use bevy::window::{PresentMode, WindowResolution, WindowTheme};
+pub mod typical {
+    pub use crate::attributes::Attributes;
+    pub use crate::board::{Board, Cell, CellVisibility, Direction, Pos3d, Position};
+    pub use crate::creature::{Creature, Locus, Species};
+    pub use crate::player::Player;
+    pub use crate::state::AppState;
+    pub use bevy::prelude::{
+        default, on_event, state_exists, state_exists_and_equals, App, BuildChildren, Bundle,
+        Changed, Commands, Component, Deref, DerefMut, Entity, Event, EventReader, EventWriter,
+        Has, IntoSystemConfigs, NextState, Plugin, Query, Res, ResMut, Resource, State, Vec2, Vec3,
+        With, Without,
+    };
+    pub use bevy::prelude::{
+        First, Last, OnEnter, OnExit, OnTransition, PostUpdate, PreUpdate, Startup, Update,
+    };
+}
+
+use typical::*;
+
+use bevy::prelude::{DefaultPlugins, ImagePlugin, PluginGroup};
+use bevy::window::{PresentMode, Window, WindowPlugin, WindowResolution, WindowTheme};
 use bevy_pancam::PanCamPlugin;
 use bevy_turborand::prelude::RngPlugin;
-use state::AppState;
 
 fn main() {
     App::new()
@@ -65,6 +83,15 @@ fn main() {
             graphics::mobs::mob_movement.after(graphics::mobs::add_changed_creature_mob_move_anim),
         )
         .add_systems(
+            Update,
+            player::visibility::mark_player_visible_cells.after(graphics::mobs::mob_movement),
+        )
+        .add_systems(
+            Update,
+            graphics::tilemap::render_darkmap_changes
+                .after(player::visibility::mark_player_visible_cells),
+        )
+        .add_systems(
             PreUpdate,
             creature::movement::process_movement.run_if(state_exists_and_equals(AppState::Game)),
         )
@@ -74,9 +101,7 @@ fn main() {
                 .before(creature::movement::process_movement))
             .run_if(state_exists_and_equals(AppState::Game)),
         )
-        // .add_systems()
         .add_event::<player::movement::DirectionalInput>()
-        // .add_plugins(player::PlayerPlugin)
         // systems
         .add_systems(Startup, ui::spawn_camera)
         .add_systems(OnEnter(AppState::InitUI), ui::spawn_layout)

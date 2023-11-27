@@ -1,5 +1,4 @@
-use super::*;
-use bevy::prelude::{App, NextState, OnEnter, Plugin, ResMut};
+use crate::typical::*;
 
 // Plugin & Resource
 //

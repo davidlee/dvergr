@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use crate::typical::*;
 
 mod id {
     #[derive(Clone, Copy, Debug, Default)]

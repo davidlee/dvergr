@@ -130,7 +130,7 @@ pub fn spawn_layout(
                                 .spawn((
                                     MapViewPanel,
                                     NodeBundle {
-                                        /// Map Area
+                                        // Map Area
                                         style: Style {
                                             // width: Val::Percent(100.),
                                             flex_grow: 100.,

@@ -1,4 +1,3 @@
-use crate::state::AppState;
 use bevy::prelude::{Component, Entity, Resource};
 use std::collections::{BTreeMap, HashMap};
 
@@ -10,6 +9,7 @@ pub use plugin::BoardPlugin;
 
 pub mod primitives;
 pub use primitives::*;
+
 // Board
 //
 #[derive(Clone, Debug, Resource)]
@@ -200,12 +200,13 @@ impl CellStore {
 #[allow(dead_code)]
 const CELL_DIMENSIONS_METRES: [f32; 3] = [0.5, 0.5, 2.0];
 
-#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Debug)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Debug, Component)]
 pub struct Cell {
     pub material: CellMaterial,
     pub floor: CellFloor,
     pub feature: Option<Entity>, // door, trap, statue, well, etc
     pub items: CellItems,
+    pub visibility: CellVisibility, // to the player: a pragmatic choice
 }
 
 impl Cell {}
@@ -222,6 +223,7 @@ impl Cell {
             floor: None,
             feature: None,
             items: Some(vec![]),
+            visibility: CellVisibility::Obscured,
         }
     }
 
@@ -235,18 +237,6 @@ impl Cell {
     pub fn impassable(&self) -> bool {
         !self.passable()
     }
-
-    // pub fn occupied(&self) -> bool {
-    //     false
-    //     // match self.creature {
-    //     //     None => false,
-    //     //     Some(_) => true,
-    //     // }
-    // }
-
-    // pub fn unoccupied(&self) -> bool {
-    //     !self.occupied()
-    // }
 }
 
 impl Default for Cell {
@@ -257,6 +247,7 @@ impl Default for Cell {
             floor: None,
             feature: None,
             items: Some(vec![]),
+            visibility: CellVisibility::Obscured,
         }
     }
 }
@@ -272,4 +263,22 @@ pub enum Material {
     Marble,
     Quartz,
     Sand,
+}
+
+// CellVisibility
+//
+#[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq)]
+pub enum CellVisibility {
+    Obscured,
+    Seen,
+    Visible,
+}
+
+// CellVisibilityMap
+//
+#[allow(dead_code)]
+#[derive(Component, Clone, Debug)]
+pub struct CellVisibilityMap {
+    // entity: Entity,
+    data: BTreeMap<Pos3d, CellVisibility>,
 }

@@ -1,13 +1,7 @@
-use super::AssetsLoading;
-use super::Stage;
+use super::typical::*;
 use super::SPRITESHEET_ASSET_PATH;
-use super::*;
-use crate::board::Board;
-use crate::board::*;
-use crate::creature::Creature;
-use crate::player::Player;
-use crate::state::AppState;
-// use bevy::prelude::*;
+
+use crate::typical::*;
 
 const TILE_SIZE_W: f32 = 32.0;
 const TILE_SIZE_H: f32 = 32.0;
@@ -142,6 +136,7 @@ pub fn add_changed_creature_mob_move_anim(
 ) {
     for (_sprite_entity, CreatureEntityRef(entity), transform) in sprite_query.iter_mut() {
         if changed_query.contains(*entity) {
+            println!("giving out ANIMATION");
             let tile_map = tile_map_query.get_single().unwrap();
             let (_, creature) = changed_query.get(*entity).unwrap();
             match creature.locus.position {
@@ -167,6 +162,7 @@ pub fn mob_movement(
     mut sprite_query: Query<(Entity, &mut MobMoveAnimation, &mut Transform)>,
 ) {
     for (sprite_entity, mut anim, mut transform) in sprite_query.iter_mut() {
+        println!("{:?}", anim);
         if anim.frames == 1 {
             transform.translation = anim.target;
             transform.scale = Vec3::new(1.0, 1.0, 1.0);
