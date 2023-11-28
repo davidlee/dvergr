@@ -80,7 +80,11 @@ pub fn spawn_player_sprite(
     let (entity, ..) = player_query.single();
     {
         let tile_map = tile_map_query.single();
-        let pos: UVec3 = board.creatures.get_pos_for(&entity).unwrap().to_owned();
+        let pos: UVec3 = board
+            .creature_entities
+            .get_pos_for(&entity)
+            .unwrap()
+            .to_owned();
         transform = transform_from_tilemap_pos(&tile_map, &pos);
     }
 

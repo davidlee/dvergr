@@ -132,6 +132,7 @@ pub fn spawn_tile_map(
     mut next_state: ResMut<NextState<AppState>>,
     state: Res<State<AppState>>,
     mut stage_query: Query<(Entity, &Stage)>,
+    cells_query: Query<(Entity, &mut Cell)>,
 ) {
     let tile_map = TileMap::new(
         TileSize {
@@ -156,7 +157,7 @@ pub fn spawn_tile_map(
                 Transform::from_xyz(tile_map.center_offset.x, tile_map.center_offset.y, 0.);
             stage_entity
                 .spawn((
-                    tile_map.clone(),
+                    tile_map,
                     SpatialBundle {
                         transform,
                         ..default()
@@ -171,17 +172,21 @@ pub fn spawn_tile_map(
                                 z: TILE_MAP_Z,
                             };
 
-                            if let Some(cell) = board.cells.get(&pos) {
+                            if let Some(cell_entity) = board.cell_entities.get(&pos) {
                                 let PixelPos { x, y } = tile_map.tile_offset(ix, iy);
                                 let transform = Transform::from_xyz(x, y, TILE_MAP_Z as f32);
-                                let sprite = TextureAtlasSprite::new(texture_index_for_cell(cell));
+                                // is this terrible?
+                                if let Ok(cell) = cells_query.get_component::<Cell>(*cell_entity) {
+                                    let texture_index = texture_index_for_cell(cell);
+                                    let sprite = TextureAtlasSprite::new(texture_index);
 
-                                tiles.spawn(SpriteSheetBundle {
-                                    texture_atlas: tileset.atlas_handle.clone(),
-                                    sprite,
-                                    transform,
-                                    ..default()
-                                });
+                                    tiles.spawn(SpriteSheetBundle {
+                                        texture_atlas: tileset.atlas_handle.clone(),
+                                        sprite,
+                                        transform,
+                                        ..default()
+                                    });
+                                }
                             } else {
                                 println!("missing cell: {:?}", pos);
                                 panic!("!!");

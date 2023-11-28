@@ -16,7 +16,7 @@ pub use geometry::*;
 
 const BOARD_SIZE_W: u32 = 48;
 const BOARD_SIZE_H: u32 = 24;
-const BOARD_SIZE_Z: u32 = 48;
+const BOARD_SIZE_Z: u32 = 1;
 
 const BOARD_SIZE_W_USIZE: usize = BOARD_SIZE_W as usize;
 const BOARD_SIZE_H_USIZE: usize = BOARD_SIZE_H as usize;
@@ -28,8 +28,8 @@ const BOARD_SIZE_Z_USIZE: usize = BOARD_SIZE_Z as usize;
 #[allow(dead_code)]
 pub struct Board {
     pub size: Size3d,
-    pub cells: CellStore,
-    pub creatures: CreatureStore,
+    pub cell_entities: CellStore,
+    pub creature_entities: CreatureStore,
 }
 
 impl Default for Board {
@@ -40,34 +40,48 @@ impl Default for Board {
                 height: BOARD_SIZE_H,
                 depth: 1,
             },
-            cells: CellStore::default(),
-            creatures: CreatureStore::default(),
+            cell_entities: CellStore::default(),
+            creature_entities: CreatureStore::default(),
         }
     }
 }
 impl Board {
-    pub fn fill<F>(&mut self, f: F)
-    where
-        F: Fn(u32, u32, u32) -> Option<Cell>,
-    {
-        self.fill_region(UVec3::new(0, 0, 0), self.size, f);
-    }
-
-    pub fn fill_region<F>(&mut self, origin: UVec3, size: Size3d, f: F)
-    where
-        F: Fn(u32, u32, u32) -> Option<Cell>,
-    {
-        for x in origin.x..(size.width + origin.x) {
-            for y in origin.y..(size.height + origin.y) {
-                for z in origin.z..(size.depth + origin.z) {
-                    if let Some(cell) = f(x, y, z) {
-                        let pos = UVec3 { x, y, z };
-                        self.cells.set(pos, cell);
-                    }
+    pub fn coords(&self) -> Vec<UVec3> {
+        let mut cv = vec![];
+        for z in 0..BOARD_SIZE_Z {
+            for y in 0..BOARD_SIZE_H {
+                for x in 0..BOARD_SIZE_W {
+                    cv.push(UVec3::new(x, y, z));
                 }
             }
         }
+        cv
     }
+
+    // pub fn fill<F>(&mut self, f: F)
+    // where
+    //     F: Fn(u32, u32, u32) -> Option<Entity>,
+    // {
+    //     self.fill_region(UVec3::new(0, 0, 0), self.size, f);
+    // }
+
+    // pub fn fill_region<F>(&mut self, origin: UVec3, size: Size3d, f: F)
+    // where
+    //     F: Fn(u32, u32, u32) -> Option<Entity>,
+    // {
+    //     for x in origin.x..(size.width + origin.x) {
+    //         for y in origin.y..(size.height + origin.y) {
+    //             for z in origin.z..(size.depth + origin.z) {
+    //                 if let Some(cell) = f(x, y, z) {
+    //                     let pos = UVec3 { x, y, z };
+    //                     if let Some(entity) = f(x, y, z) {
+    //                         self.cells.set(pos, entity);
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 
     pub fn apply_direction(&self, pos: &UVec3, direction: &Direction) -> Result<UVec3, &str> {
         let [x, y, z] = pos.to_array();
@@ -84,6 +98,44 @@ impl Board {
                 Ok(UVec3::new(x as u32, y as u32, z as u32))
             }
         }
+    }
+}
+
+// CellStore
+//
+#[derive(Resource, Eq, PartialEq, Clone, Debug)]
+pub struct CellStore {
+    // TODO make this UVec3, Entity
+    cells: HashMap<UVec3, Entity>,
+}
+
+impl Default for CellStore {
+    fn default() -> Self {
+        CellStore {
+            cells: HashMap::new(),
+        }
+    }
+}
+
+impl CellStore {
+    pub fn set(&mut self, pos: UVec3, entity: Entity) -> Option<Entity> {
+        self.cells.insert(pos, entity)
+    }
+
+    pub fn get(&self, pos: &UVec3) -> Option<&Entity> {
+        self.cells.get(pos)
+    }
+
+    pub fn remove(&mut self, pos: &UVec3) -> Option<Entity> {
+        self.cells.remove(pos)
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = (&UVec3, &Entity)> {
+        self.cells.iter()
+    }
+
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = (&UVec3, &mut Entity)> {
+        self.cells.iter_mut()
     }
 }
 
@@ -180,7 +232,7 @@ impl CreatureStore {
     }
 }
 
-// CellStore
+// CellEntityStore
 //
 
 type CellEntityRow = [Option<Entity>; BOARD_SIZE_W_USIZE];
@@ -251,42 +303,6 @@ impl CellEntityStore {
     // }
 }
 
-#[derive(Resource, Eq, PartialEq, Clone, Debug)]
-pub struct CellStore {
-    // TODO make this UVec3, Entity
-    cells: HashMap<UVec3, Cell>,
-}
-
-impl Default for CellStore {
-    fn default() -> Self {
-        CellStore {
-            cells: HashMap::new(),
-        }
-    }
-}
-
-impl CellStore {
-    pub fn set(&mut self, pos: UVec3, cell: Cell) -> Option<Cell> {
-        self.cells.insert(pos, cell)
-    }
-
-    pub fn get(&self, pos: &UVec3) -> Option<&Cell> {
-        self.cells.get(pos)
-    }
-
-    pub fn remove(&mut self, pos: &UVec3) -> Option<Cell> {
-        self.cells.remove(pos)
-    }
-
-    pub fn iter(&self) -> impl Iterator<Item = (&UVec3, &Cell)> {
-        self.cells.iter()
-    }
-
-    pub fn iter_mut(&mut self) -> impl Iterator<Item = (&UVec3, &mut Cell)> {
-        self.cells.iter_mut()
-    }
-}
-
 // Cell
 //
 // a cell is taller than it is wide / deep; about the size a man can stand in.
@@ -321,10 +337,7 @@ impl Cell {
     }
 
     pub fn passable(&self) -> bool {
-        match self.material {
-            None => true,
-            Some(_) => false,
-        }
+        self.material.is_none()
     }
 
     pub fn impassable(&self) -> bool {

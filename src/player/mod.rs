@@ -34,7 +34,7 @@ pub fn spawn_player_bundle(
     let player_entity = commands.spawn(PlayerBundle::default()).id();
 
     board
-        .creatures
+        .creature_entities
         .add_single(player_entity, player_default_position)
         .unwrap();
 
@@ -56,22 +56,25 @@ pub mod movement {
     pub fn validate_directional_input(
         mut ev_input: EventReader<DirectionalInput>,
         mut ev_move: EventWriter<StartMove>,
+        cell_query: Query<&Cell>,
         player_query: Query<(Entity, &mut Player, &mut Creature)>,
         board: Res<Board>,
     ) {
         if let Ok(q) = player_query.get_single() {
             let (entity, ..) = q;
-            let pos = board.creatures.get_pos_for(&entity).unwrap();
+            let pos = board.creature_entities.get_pos_for(&entity).unwrap();
             for e in ev_input.read() {
                 match board.apply_direction(pos, &e.direction) {
-                    Ok(new_pos) => match board.cells.get(&new_pos) {
-                        Some(cell) => {
-                            if cell.passable() {
-                                let ev = StartMove::single(pos.clone(), new_pos, entity);
-                                println!("Cell unobstructed ... moving Player: {:?}", ev);
-                                ev_move.send(ev);
-                            } else {
-                                println!("invalid move to {:?}", cell);
+                    Ok(new_pos) => match board.cell_entities.get(&new_pos) {
+                        Some(cell_entity) => {
+                            if let Ok(cell) = cell_query.get_component::<Cell>(*cell_entity) {
+                                if cell.passable() {
+                                    let ev = StartMove::single(*pos, new_pos, entity);
+                                    println!("Cell unobstructed ... moving Player: {:?}", ev);
+                                    ev_move.send(ev);
+                                } else {
+                                    println!("invalid move to {:?}", cell);
+                                }
                             }
                         }
                         None => println!("OUT OF BOUNDS"),
@@ -89,18 +92,25 @@ pub mod visibility {
     use crate::typical::*;
 
     pub fn mark_player_visible_cells(
-        mut board_mut: ResMut<Board>,
+        mut commands: Commands,
+        board_mut: Res<Board>,
+        cell_query: Query<&Cell>,
         player_query: Query<(Entity, &Player, &Creature)>,
     ) {
         if let Ok((_entity, _, creature)) = player_query.get_single() {
             match creature.locus.position {
                 Position::Point(pos) => {
                     for v in circle(pos, 6) {
-                        match board_mut.cells.get(&v) {
-                            Some(cell) => {
-                                let mut cell = cell.clone();
-                                cell.visibility = CellVisibility::Visible;
-                                board_mut.cells.set(pos, cell);
+                        match board_mut.cell_entities.get(&v) {
+                            Some(cell_entity) => {
+                                if let Ok(cell) = cell_query.get(*cell_entity) {
+                                    //
+                                    // FIXME is this shuffle really necessary ??
+                                    //
+                                    let mut cell = cell.clone();
+                                    cell.visibility = CellVisibility::Visible;
+                                    commands.entity(*cell_entity).insert(cell);
+                                }
                             }
                             None => println!("circle has missing cells"),
                         }

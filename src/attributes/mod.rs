@@ -18,7 +18,7 @@ pub struct Primary {
 }
 impl Primary {
     fn random() -> Primary {
-        let d = Dice::new();
+        let d = Dice::default();
         Primary {
             dexterity: *d.d10(),
             agility: *d.d10(),

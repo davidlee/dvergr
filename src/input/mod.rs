@@ -9,10 +9,10 @@ pub fn keybindings(
     keys: Res<Input<KeyCode>>,
     sprite_query: Query<(Entity, &MobMoveAnimation, &Transform)>,
 ) {
-    if let Ok(_) = sprite_query.get_single() {
+    if sprite_query.get_single().is_ok() {
         // ignore any player movement input while animation is in progress
         // FIXME we probably want a more robust approach to preventing movement issues
-        return ();
+        return;
     }
 
     let shifted: bool = keys.any_pressed([KeyCode::ShiftLeft, KeyCode::ShiftRight]);

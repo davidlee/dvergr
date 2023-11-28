@@ -6,10 +6,13 @@ pub struct Dice {
     rng: Rng,
 }
 
-impl Dice {
-    pub fn new() -> Self {
+impl Default for Dice {
+    fn default() -> Self {
         Self { rng: Rng::new() }
     }
+}
+
+impl Dice {
     pub fn d10(&self) -> &u8 {
         self.rng.sample(&D10_VALUES).unwrap()
     }

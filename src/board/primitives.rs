@@ -14,6 +14,6 @@ pub struct Size3d {
 // Size2d
 #[derive(Eq, PartialEq, Copy, Clone, Debug, Default)]
 pub struct Size2d {
-    pub width: i32,
-    pub height: i32,
+    pub width: u32,
+    pub height: u32,
 }

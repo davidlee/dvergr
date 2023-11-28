@@ -42,7 +42,7 @@ pub mod movement {
             // first make the changes to the creature
             creature.locus.position = Position::Point(e.to);
             // then reflect the changes on the board's creatures mapping
-            board.creatures.update_single(entity, e.to).unwrap();
+            board.creature_entities.update_single(entity, e.to).unwrap();
         }
     }
 }

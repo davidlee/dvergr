@@ -11,16 +11,12 @@ pub mod u32 {
     pub const SECONDS_PER_DAY: u32 = 86400;
 }
 
+#[derive(Default)]
 pub struct TimePlugin;
 
 impl Plugin for TimePlugin {
     fn build(&self, _app: &mut App) {
         //
-    }
-}
-impl TimePlugin {
-    pub fn default() -> Self {
-        TimePlugin
     }
 }
 
@@ -66,14 +62,16 @@ pub struct Clock {
     paused: bool,
 }
 
-impl Clock {
-    pub fn new() -> Self {
+impl Default for Clock {
+    fn default() -> Self {
         Clock {
             seconds: 0.,
             paused: true,
         }
     }
+}
 
+impl Clock {
     pub fn next_frame(&mut self) {
         self.seconds += 0.1;
     }
@@ -102,9 +100,7 @@ impl Clock {
 // events
 
 impl Plugin for Clock {
-    fn build(&self, _app: &mut App) {
-        //
-    }
+    fn build(&self, _app: &mut App) {}
 }
 
 #[allow(dead_code)]
