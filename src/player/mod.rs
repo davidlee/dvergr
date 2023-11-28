@@ -28,9 +28,9 @@ pub fn spawn_player_bundle(
 ) {
     println!("[AppState::InitPlayer] spawn_player");
 
-    println!("WARNING: this should be a Position::Point(Pos3d) in spawn_player_bundle");
+    println!("WARNING: this should be a Position::Point(UVec3) in spawn_player_bundle");
 
-    let player_default_position = Pos3d { x: 0, y: 0, z: 0 };
+    let player_default_position = UVec3 { x: 0, y: 0, z: 0 };
     let player_entity = commands.spawn(PlayerBundle::default()).id();
 
     board
@@ -63,28 +63,29 @@ pub mod movement {
             let (entity, ..) = q;
             let pos = board.creatures.get_pos_for(&entity).unwrap();
             for e in ev_input.read() {
-                let new_pos = pos.adjacent(e.direction);
-                match board.cells.get(&new_pos) {
-                    Some(cell) => {
-                        if cell.passable() {
-                            let ev = StartMove::single(pos.clone(), new_pos, entity);
-                            println!("Cell unobstructed ... moving Player: {:?}", ev);
-                            ev_move.send(ev);
-                        } else {
-                            println!("invalid move to {:?}", cell);
+                match board.apply_direction(pos, &e.direction) {
+                    Ok(new_pos) => match board.cells.get(&new_pos) {
+                        Some(cell) => {
+                            if cell.passable() {
+                                let ev = StartMove::single(pos.clone(), new_pos, entity);
+                                println!("Cell unobstructed ... moving Player: {:?}", ev);
+                                ev_move.send(ev);
+                            } else {
+                                println!("invalid move to {:?}", cell);
+                            }
                         }
-                    }
-                    None => println!("OUT OF BOUNDS"),
+                        None => println!("OUT OF BOUNDS"),
+                    },
+                    Err(_str) => println!("Out of bounds."),
                 }
             }
         }
     }
 }
 
-// https://www.redblobgames.com/grids/circle-drawing/
-//
 pub mod visibility {
-    use crate::graphics::tilemap::DARK_MAP_Z;
+    use crate::board::geometry::circle;
+    // use crate::graphics::tilemap::DARK_MAP_Z;
     use crate::typical::*;
 
     pub fn mark_player_visible_cells(
@@ -93,26 +94,15 @@ pub mod visibility {
     ) {
         if let Ok((_entity, _, creature)) = player_query.get_single() {
             match creature.locus.position {
-                Position::Point(centre) => {
-                    let r: i32 = 6;
-                    let top = centre.y - r;
-                    let bot = centre.y + r;
-
-                    for y in top..bot {
-                        let dy: i32 = y - centre.y;
-                        let dx: f32 = f32::sqrt((r * r - dy * dy) as f32);
-                        let left: i32 = f32::ceil(centre.x as f32 - dx) as i32;
-                        let right: i32 = f32::floor(centre.x as f32 + dx) as i32;
-
-                        for x in left..right {
-                            let pos = Pos3d::new(x, y, DARK_MAP_Z);
-                            println!("pos light:  {:?}", pos);
-                            if let Some(cell) = board_mut.cells.get(&pos) {
+                Position::Point(pos) => {
+                    for v in circle(pos, 6) {
+                        match board_mut.cells.get(&v) {
+                            Some(cell) => {
                                 let mut cell = cell.clone();
                                 cell.visibility = CellVisibility::Visible;
                                 board_mut.cells.set(pos, cell);
                             }
-                            // pew pew
+                            None => println!("circle has missing cells"),
                         }
                     }
                 }

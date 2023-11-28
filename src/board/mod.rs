@@ -1,3 +1,4 @@
+use bevy::math::UVec3;
 use bevy::prelude::{Component, Entity, Resource};
 use std::collections::{BTreeMap, HashMap};
 
@@ -9,6 +10,17 @@ pub use plugin::BoardPlugin;
 
 pub mod primitives;
 pub use primitives::*;
+
+pub mod geometry;
+pub use geometry::*;
+
+const BOARD_SIZE_W: u32 = 48;
+const BOARD_SIZE_H: u32 = 24;
+const BOARD_SIZE_Z: u32 = 48;
+
+const BOARD_SIZE_W_USIZE: usize = BOARD_SIZE_W as usize;
+const BOARD_SIZE_H_USIZE: usize = BOARD_SIZE_H as usize;
+const BOARD_SIZE_Z_USIZE: usize = BOARD_SIZE_Z as usize;
 
 // Board
 //
@@ -24,37 +36,52 @@ impl Default for Board {
     fn default() -> Self {
         Board {
             size: Size3d {
-                width: 48,
-                height: 24,
+                width: BOARD_SIZE_W,
+                height: BOARD_SIZE_H,
                 depth: 1,
             },
             cells: CellStore::default(),
             creatures: CreatureStore::default(),
-            // ..default()
         }
     }
 }
-
 impl Board {
     pub fn fill<F>(&mut self, f: F)
     where
-        F: Fn(i32, i32, i32) -> Option<Cell>,
+        F: Fn(u32, u32, u32) -> Option<Cell>,
     {
-        self.fill_region(Pos3d::zero(), self.size, f);
+        self.fill_region(UVec3::new(0, 0, 0), self.size, f);
     }
 
-    pub fn fill_region<F>(&mut self, origin: Pos3d, size: Size3d, f: F)
+    pub fn fill_region<F>(&mut self, origin: UVec3, size: Size3d, f: F)
     where
-        F: Fn(i32, i32, i32) -> Option<Cell>,
+        F: Fn(u32, u32, u32) -> Option<Cell>,
     {
         for x in origin.x..(size.width + origin.x) {
             for y in origin.y..(size.height + origin.y) {
                 for z in origin.z..(size.depth + origin.z) {
                     if let Some(cell) = f(x, y, z) {
-                        let pos = Pos3d { x, y, z };
+                        let pos = UVec3 { x, y, z };
                         self.cells.set(pos, cell);
                     }
                 }
+            }
+        }
+    }
+
+    pub fn apply_direction(&self, pos: &UVec3, direction: &Direction) -> Result<UVec3, &str> {
+        let [x, y, z] = pos.to_array();
+        let [ix, iy, iz] = [x as i32, y as i32, z as i32];
+        let [dx, dy, dz] = direction.offset().to_array();
+        let [x, y, z] = [ix + dx, iy + dy, iz + dz];
+        if x < 0 || y < 0 || z < 0 {
+            Err("Out of bounds")
+        } else {
+            let (x, y, z) = (x as u32, y as u32, z as u32);
+            if x > self.size.width || y > self.size.height || z > self.size.depth {
+                Err("Out of bounds")
+            } else {
+                Ok(UVec3::new(x as u32, y as u32, z as u32))
             }
         }
     }
@@ -65,7 +92,7 @@ impl Board {
 #[derive(Component, Debug, Clone, Eq, PartialEq)]
 pub enum Position {
     Area(Area3d),
-    Point(Pos3d),
+    Point(UVec3),
 }
 
 // CreatureStore
@@ -74,24 +101,20 @@ pub enum Position {
 #[derive(Resource, Clone, Debug)]
 #[allow(dead_code)]
 pub struct CreatureStore {
-    // use a BTreeMap here so iter() is ordered by Z,Y,X coordinates
-    to_entity: BTreeMap<Pos3d, Entity>,
-    // this is the source of truth for the previous mapping
-    to_area: HashMap<Entity, Vec<Pos3d>>,
+    to_entity: HashMap<UVec3, Entity>,
+    // this is the source of truth for #to_entity
+    to_area: HashMap<Entity, Vec<UVec3>>,
 }
 
 impl Default for CreatureStore {
     fn default() -> Self {
         CreatureStore {
-            to_entity: BTreeMap::new(),
+            to_entity: HashMap::new(),
             to_area: HashMap::new(),
         }
     }
 }
 
-pub type Area3d = Vec<Pos3d>;
-
-#[allow(dead_code)]
 impl CreatureStore {
     pub fn add(&mut self, entity: Entity, area: Area3d) -> Result<(), &str> {
         if self.to_area.contains_key(&entity) {
@@ -107,7 +130,7 @@ impl CreatureStore {
         }
     }
 
-    pub fn add_single(&mut self, entity: Entity, pos: Pos3d) -> Result<(), &str> {
+    pub fn add_single(&mut self, entity: Entity, pos: UVec3) -> Result<(), &str> {
         self.add(entity, vec![pos])
     }
 
@@ -131,11 +154,11 @@ impl CreatureStore {
         }
     }
 
-    pub fn update_single(&mut self, entity: Entity, pos: Pos3d) -> Result<(), &str> {
+    pub fn update_single(&mut self, entity: Entity, pos: UVec3) -> Result<(), &str> {
         self.update(entity, vec![pos])
     }
 
-    pub fn get_entity_at(&self, pos: &Pos3d) -> Option<&Entity> {
+    pub fn get_entity_at(&self, pos: &UVec3) -> Option<&Entity> {
         self.to_entity.get(pos)
     }
 
@@ -143,7 +166,7 @@ impl CreatureStore {
         self.to_area.get(entity)
     }
 
-    pub fn get_pos_for(&self, entity: &Entity) -> Option<&Pos3d> {
+    pub fn get_pos_for(&self, entity: &Entity) -> Option<&UVec3> {
         match self.to_area.get(entity) {
             Some(vec) => {
                 if vec.len() == 1 {
@@ -159,9 +182,79 @@ impl CreatureStore {
 
 // CellStore
 //
+
+type CellEntityRow = [Option<Entity>; BOARD_SIZE_W_USIZE];
+type CellEntityCol = [Option<Entity>; BOARD_SIZE_H_USIZE];
+
+type Cell2DEntityCol = [CellEntityRow; BOARD_SIZE_H_USIZE];
+type Cell2DEntityRow = [CellEntityCol; BOARD_SIZE_W_USIZE];
+
+type Cell3DEntityZYX = [Cell2DEntityCol; BOARD_SIZE_Z_USIZE];
+type Cell3DEntityZXY = [Cell2DEntityRow; BOARD_SIZE_Z_USIZE];
+
+#[derive(Resource, Eq, PartialEq, Clone, Debug, Ord, PartialOrd)]
+pub struct CellEntityStore {
+    zyx: Cell3DEntityZYX,
+    zxy: Cell3DEntityZXY,
+}
+
+impl Default for CellEntityStore {
+    fn default() -> Self {
+        CellEntityStore {
+            zyx: [[[None; BOARD_SIZE_W_USIZE]; BOARD_SIZE_H_USIZE]; BOARD_SIZE_Z_USIZE],
+            zxy: [[[None; BOARD_SIZE_H_USIZE]; BOARD_SIZE_W_USIZE]; BOARD_SIZE_Z_USIZE],
+        }
+    }
+}
+
+impl CellEntityStore {
+    fn indices_from_vec(vec: UVec3) -> (usize, usize, usize) {
+        let [x, y, z] = vec.to_array();
+        (x as usize, y as usize, z as usize)
+    }
+
+    pub fn set(&mut self, vec: UVec3, entity: Entity) {
+        let (x, y, z) = Self::indices_from_vec(vec);
+
+        self.zyx[z][y][x] = Some(entity);
+        self.zxy[z][x][y] = Some(entity);
+    }
+
+    pub fn unset(&mut self, vec: UVec3) {
+        let (x, y, z) = Self::indices_from_vec(vec);
+
+        self.zyx[z][y][x] = None;
+        self.zxy[z][x][y] = None;
+    }
+
+    pub fn get(&self, vec: UVec3) -> Option<Entity> {
+        let (x, y, z) = Self::indices_from_vec(vec);
+        self.zxy[z][x][y]
+    }
+
+    pub fn iter_zyx(&self) -> impl Iterator<Item = &Cell2DEntityCol> {
+        self.zyx.iter()
+    }
+
+    pub fn iter_zxy(&self) -> impl Iterator<Item = &Cell2DEntityRow> {
+        self.zxy.iter()
+    }
+
+    // can't allow mutation
+
+    // pub fn iter_mut_zyx(&mut self) -> impl Iterator<Item = &mut Cell2DEntityCol> {
+    //     self.zyx.iter_mut()
+    // }
+
+    // pub fn iter_mut_zxy(&mut self) -> impl Iterator<Item = &mut Cell2DEntityRow> {
+    //     self.zxy.iter_mut()
+    // }
+}
+
 #[derive(Resource, Eq, PartialEq, Clone, Debug)]
 pub struct CellStore {
-    cells: HashMap<Pos3d, Cell>,
+    // TODO make this UVec3, Entity
+    cells: HashMap<UVec3, Cell>,
 }
 
 impl Default for CellStore {
@@ -173,23 +266,23 @@ impl Default for CellStore {
 }
 
 impl CellStore {
-    pub fn set(&mut self, pos: Pos3d, cell: Cell) -> Option<Cell> {
+    pub fn set(&mut self, pos: UVec3, cell: Cell) -> Option<Cell> {
         self.cells.insert(pos, cell)
     }
 
-    pub fn get(&self, pos: &Pos3d) -> Option<&Cell> {
+    pub fn get(&self, pos: &UVec3) -> Option<&Cell> {
         self.cells.get(pos)
     }
 
-    pub fn remove(&mut self, pos: &Pos3d) -> Option<Cell> {
+    pub fn remove(&mut self, pos: &UVec3) -> Option<Cell> {
         self.cells.remove(pos)
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = (&Pos3d, &Cell)> {
+    pub fn iter(&self) -> impl Iterator<Item = (&UVec3, &Cell)> {
         self.cells.iter()
     }
 
-    pub fn iter_mut(&mut self) -> impl Iterator<Item = (&Pos3d, &mut Cell)> {
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = (&UVec3, &mut Cell)> {
         self.cells.iter_mut()
     }
 }
@@ -280,5 +373,5 @@ pub enum CellVisibility {
 #[derive(Component, Clone, Debug)]
 pub struct CellVisibilityMap {
     // entity: Entity,
-    data: BTreeMap<Pos3d, CellVisibility>,
+    data: BTreeMap<UVec3, CellVisibility>,
 }

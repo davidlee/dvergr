@@ -14,10 +14,11 @@ pub mod ui;
 
 pub mod typical {
     pub use crate::attributes::Attributes;
-    pub use crate::board::{Board, Cell, CellVisibility, Direction, Pos3d, Position};
+    pub use crate::board::{Board, Cell, CellVisibility, Direction, Position};
     pub use crate::creature::{Creature, Locus, Species};
     pub use crate::player::Player;
     pub use crate::state::AppState;
+    pub use bevy::math::{IVec2, IVec3, UVec2, UVec3};
     pub use bevy::prelude::{
         default, on_event, state_exists, state_exists_and_equals, App, BuildChildren, Bundle,
         Changed, Commands, Component, Deref, DerefMut, Entity, Event, EventReader, EventWriter,

@@ -1,4 +1,4 @@
-use super::Pos3d;
+use bevy::math::IVec3;
 
 // Direction
 //
@@ -17,7 +17,7 @@ pub enum Direction {
 }
 
 impl Direction {
-    pub fn offset(self) -> Pos3d {
+    pub fn offset(self) -> IVec3 {
         DIRECTION_OFFSETS[self as usize]
     }
 }
@@ -42,17 +42,17 @@ pub const CARDINAL_DIRECTIONS: [Direction; 4] = [
     Direction::West,
 ];
 
-pub const DIRECTION_OFFSETS: [Pos3d; 10] = [
-    Pos3d { x: 0, y: 1, z: 0 },
-    Pos3d { x: 1, y: 1, z: 0 },
-    Pos3d { x: 1, y: 0, z: 0 },
-    Pos3d { x: 1, y: -1, z: 0 },
-    Pos3d { x: 0, y: -1, z: 0 },
-    Pos3d { x: -1, y: -1, z: 0 },
-    Pos3d { x: -1, y: 0, z: 0 },
-    Pos3d { x: -1, y: 1, z: 0 },
-    Pos3d { x: 0, y: 0, z: 1 },
-    Pos3d { x: 0, y: 0, z: -1 },
+pub const DIRECTION_OFFSETS: [IVec3; 10] = [
+    IVec3 { x: 0, y: 1, z: 0 },
+    IVec3 { x: 1, y: 1, z: 0 },
+    IVec3 { x: 1, y: 0, z: 0 },
+    IVec3 { x: 1, y: -1, z: 0 },
+    IVec3 { x: 0, y: -1, z: 0 },
+    IVec3 { x: -1, y: -1, z: 0 },
+    IVec3 { x: -1, y: 0, z: 0 },
+    IVec3 { x: -1, y: 1, z: 0 },
+    IVec3 { x: 0, y: 0, z: 1 },
+    IVec3 { x: 0, y: 0, z: -1 },
 ];
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]

@@ -56,7 +56,7 @@ pub struct PlayerAvatarBundle {
 #[derive(Component, Debug)]
 pub struct CreatureEntityRef(Entity);
 
-pub fn transform_from_tilemap_pos(tile_map: &TileMap, pos: &Pos3d) -> Transform {
+pub fn transform_from_tilemap_pos(tile_map: &TileMap, pos: &UVec3) -> Transform {
     let p = tile_map.tile_offset(pos.x, pos.y);
 
     Transform::from_xyz(
@@ -80,7 +80,7 @@ pub fn spawn_player_sprite(
     let (entity, ..) = player_query.single();
     {
         let tile_map = tile_map_query.single();
-        let pos: Pos3d = board.creatures.get_pos_for(&entity).unwrap().to_owned();
+        let pos: UVec3 = board.creatures.get_pos_for(&entity).unwrap().to_owned();
         transform = transform_from_tilemap_pos(&tile_map, &pos);
     }
 

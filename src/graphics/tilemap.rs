@@ -4,8 +4,8 @@ use crate::typical::*;
 
 const BACKGROUND_COLOR: Color = Color::rgb(0.07, 0.12, 0.18);
 
-pub const TILE_MAP_Z: i32 = 0;
-pub const DARK_MAP_Z: i32 = 0;
+pub const TILE_MAP_Z: u32 = 0;
+pub const DARK_MAP_Z: u32 = 0;
 
 pub const TILE_SIZE_W: f32 = 24.0;
 pub const TILE_SIZE_H: f32 = 24.0;
@@ -20,7 +20,7 @@ pub struct TileMap {
 }
 
 impl TileMap {
-    pub fn tile_offset(&self, x: i32, y: i32) -> PixelPos {
+    pub fn tile_offset(&self, x: u32, y: u32) -> PixelPos {
         let x = self.tile_size.width * x as f32;
         let y = self.tile_size.height * y as f32;
         PixelPos { x, y }
@@ -165,7 +165,7 @@ pub fn spawn_tile_map(
                 .with_children(|tiles| {
                     for iy in 0..tile_map.grid_size.height {
                         for ix in 0..tile_map.grid_size.width {
-                            let pos = Pos3d {
+                            let pos = UVec3 {
                                 x: ix,
                                 y: iy,
                                 z: TILE_MAP_Z,

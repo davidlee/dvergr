@@ -2,8 +2,8 @@ use crate::action::Stance;
 use crate::action::Tempo;
 use crate::board::Area3d;
 use crate::board::Direction;
-use crate::board::Pos3d;
 use crate::board::Position;
+use bevy::math::UVec3;
 
 use bevy::prelude::{Bundle, Component};
 
@@ -11,23 +11,22 @@ pub mod movement {
     // use super::*;
     // use crate::board::Area3d;
     use crate::board::Board;
-    use crate::board::Pos3d;
     use crate::board::Position;
     use crate::creature::Creature;
-    // use crate::creature::Locus;
+    use bevy::math::UVec3;
     use bevy::prelude::EventReader;
     use bevy::prelude::{Entity, Event, Query, ResMut};
 
     // TODO support multiple cells
     #[derive(Event, Debug)]
     pub struct StartMove {
-        pub from: Pos3d,
-        pub to: Pos3d,
+        pub from: UVec3,
+        pub to: UVec3,
         pub entity: Entity,
     }
 
     impl StartMove {
-        pub fn single(from: Pos3d, to: Pos3d, entity: Entity) -> Self {
+        pub fn single(from: UVec3, to: UVec3, entity: Entity) -> Self {
             StartMove { from, to, entity }
         }
     }
@@ -89,7 +88,7 @@ impl Creature {
         }
     }
 
-    pub fn set_pos(mut self, pos: Pos3d) {
+    pub fn set_pos(mut self, pos: UVec3) {
         self.locus.position = Position::Point(pos);
     }
 }
@@ -111,7 +110,7 @@ pub struct Locus {
 }
 
 impl Locus {
-    pub fn set_pos(&mut self, pos: Pos3d) {
+    pub fn set_pos(&mut self, pos: UVec3) {
         self.position = Position::Point(pos);
     }
 
@@ -123,7 +122,7 @@ impl Locus {
 impl Default for Locus {
     fn default() -> Self {
         Locus {
-            position: Position::Point(Pos3d::new(0, 0, 0)),
+            position: Position::Point(UVec3::new(0, 0, 0)),
             speed: 0,
             direction: Direction::North,
             facing: Direction::North,

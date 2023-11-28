@@ -28,8 +28,8 @@ pub type TileSize = PixelSize;
 
 #[derive(Component, Debug, Copy, Clone)]
 pub struct GridSize {
-    pub width: i32,
-    pub height: i32,
+    pub width: u32,
+    pub height: u32,
 }
 
 #[derive(Component, Debug, Copy, Clone)]
