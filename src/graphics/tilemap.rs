@@ -173,16 +173,16 @@ pub fn update_tiles_for_player_cell_visibility(
                                 }
                             }
                             None => {
-                                println!("{:?}", tile_map.entities);
+                                error!("unknown tile entities seen {:?}", tile_map.entities);
                             }
                         }
                     }
                 });
             });
         }
-        Err(e) => println!("{:?}", e),
+        Err(e) => error!("error setting visibility for {:?}", e),
     }
     if counter > 0 {
-        println!("spawned {:?} tiles", counter);
+        debug!("spawned {:?} tiles", counter);
     }
 }

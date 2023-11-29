@@ -23,7 +23,7 @@ pub struct StageBundle {
 }
 
 pub fn spawn_stage(mut commands: Commands, mut ev_writer: EventWriter<AppInitEvent>) {
-    println!("[AppState::InitStage] spawn_stage");
+    debug!("[AppState::InitStage] spawn_stage");
     commands.spawn((StageBundle::default(), SpatialBundle::default()));
 
     ev_writer.send(AppInitEvent::SetAppState(AppState::LoadAssets));

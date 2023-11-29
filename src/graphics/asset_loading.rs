@@ -29,6 +29,6 @@ impl AssetsLoading {
 
 // TODO actually check asset loading
 pub fn ensure_assets_loaded(mut _commands: Commands, mut ev_writer: EventWriter<AppInitEvent>) {
-    println!("faked out asset loading complete");
+    warn!("faked out asset loading complete");
     ev_writer.send(AppInitEvent::SetAppState(AppState::InitUI));
 }

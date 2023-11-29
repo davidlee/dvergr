@@ -37,7 +37,7 @@ pub fn __spawn_layout(
     asset_server: Res<AssetServer>,
     mut ev_writer: EventWriter<AppInitEvent>,
 ) {
-    println!("THIS IS WHERE WE LOAD UI");
+    info!("this is where we load the UI for real, disabled because I don't know how to mount the map into it");
 
     let heading_style = TextStyle {
         font: asset_server.load("font/BigBlueTerminalPlus.ttf"),

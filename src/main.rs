@@ -28,18 +28,25 @@ pub mod typical {
     pub use bevy::prelude::{
         First, Last, OnEnter, OnExit, OnTransition, PostUpdate, PreUpdate, Startup, Update,
     };
+    pub use bevy::utils::tracing::{debug, error, info, trace, warn, Level};
 }
-
-use typical::*;
 
 use bevy::prelude::{DefaultPlugins, ImagePlugin, PluginGroup};
 use bevy::window::{PresentMode, Window, WindowPlugin, WindowResolution, WindowTheme};
 use bevy_pancam::PanCamPlugin;
 use bevy_turborand::prelude::RngPlugin;
 
+use bevy::log::LogPlugin;
+use bevy::utils::tracing::Level;
+use typical::*;
+
 fn main() {
     App::new()
         .add_plugins((DefaultPlugins
+            .set(LogPlugin {
+                level: Level::WARN,
+                ..default()
+            })
             .set(WindowPlugin {
                 primary_window: Some(Window {
                     title: "~= D V E R G R =~".into(),
@@ -142,6 +149,12 @@ fn main() {
         )
         .add_systems(Update, bevy::window::close_on_esc)
         .add_systems(PostUpdate, state::handle_app_init_event)
+        // .add_plugins(DefaultPlugins.set(bevy::log::LogPlugin {
+        //     // Uncomment this to override the default log settings:
+        //     // level: bevy::log::Level::TRACE,
+        //     // filter: "wgpu=warn,bevy_ecs=info".to_string(),
+        //     ..default()
+        // }))
         // EVENTS
         .add_event::<player::movement::DirectionalInput>()
         .add_event::<state::AppInitEvent>()

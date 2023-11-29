@@ -30,7 +30,7 @@ pub fn handle_app_init_event(
         match ev {
             AppInitEvent::SetAppState(ns) => {
                 let current_state = state.get();
-                println!("State Transition: {:?} --> {:?}", current_state, ns);
+                info!("State Transition: {:?} --> {:?}", current_state, ns);
                 next_state.set(*ns);
             }
             AppInitEvent::SetAppStateDeferred(_ns, _delay) => (),

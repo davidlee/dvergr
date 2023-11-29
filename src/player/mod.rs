@@ -5,7 +5,7 @@ use bevy::utils::HashSet;
 
 #[derive(Component, Debug, Clone)]
 pub struct Player {
-    positions_visible: HashSet<[i32; 3]>,
+    pub positions_visible: HashSet<[i32; 3]>,
 }
 
 impl Default for Player {
@@ -91,16 +91,16 @@ pub mod movement {
                             if let Ok(cell) = cell_query.get_component::<Cell>(*cell_entity) {
                                 if cell.passable() {
                                     let ev = StartMove::single(*pos, new_pos, entity);
-                                    // println!("Cell unobstructed ... moving Player: {:?}", ev);
+                                    trace!("Cell unobstructed ... moving Player: {:?}", ev);
                                     ev_move.send(ev);
                                 } else {
-                                    // println!("invalid move to {:?}", cell);
+                                    trace!("invalid move to {:?}", cell);
                                 }
                             }
                         }
-                        None => println!("OUT OF BOUNDS"),
+                        None => info!("OUT OF BOUNDS"),
                     },
-                    Err(_str) => println!("Out of bounds."),
+                    Err(_str) => error!("Out of bounds."),
                 }
             }
         }
@@ -129,7 +129,7 @@ pub mod visibility {
                         match board_mut.cell_store.get(&pos) {
                             Some(cell_entity) => match cell_query.get_mut(*cell_entity) {
                                 Ok((_cell, mut vis)) => (vis.seen, vis.visible) = (true, true),
-                                Err(e) => println!("Error: {:?}", e),
+                                Err(e) => error!("Error: {:?}", e),
                             },
                             None => (),
                         }
@@ -140,14 +140,14 @@ pub mod visibility {
                         match board_mut.cell_store.get(&pos) {
                             Some(cell_entity) => match cell_query.get_mut(*cell_entity) {
                                 Ok((_cell, mut vis)) => vis.visible = false,
-                                Err(e) => println!("Error: {:?}", e),
+                                Err(e) => error!("Error: {:?}", e),
                             },
                             None => (),
                         }
                     }
                     player.positions_visible = new_vis;
                 }
-                _ => panic!("oops",),
+                _ => panic!("oops, unimplemented",),
             }
         }
     }

@@ -27,7 +27,7 @@ fn populate_board(
     mut board: ResMut<Board>,
     mut ev_writer: EventWriter<AppInitEvent>,
 ) {
-    println!("[AppState::InitBoard] populate_board");
+    info!("[AppState::InitBoard] populate_board");
 
     commands.spawn_empty().with_children(|cells_entity| {
         for pos in board.coords().iter() {

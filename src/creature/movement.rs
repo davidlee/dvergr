@@ -20,7 +20,7 @@ pub fn process_movement(
     mut query: Query<(Entity, &Creature, &mut Locus)>,
 ) {
     for e in ev_move.read() {
-        println!("processing movement .. {:?}", e);
+        trace!("processing movement .. {:?}", e);
         let (entity, _creature, mut locus) = query.get_mut(e.entity).unwrap();
         // first make the changes to the creature
         locus.position = Position::Point(e.to);

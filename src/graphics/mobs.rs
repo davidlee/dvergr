@@ -15,11 +15,11 @@ pub struct DwarfSpritesheet {
 pub fn load_spritesheet(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    mut loading: ResMut<AssetsLoading>,
+    // mut loading: ResMut<AssetsLoading>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     mut ev_writer: EventWriter<AppInitEvent>,
 ) {
-    println!("load SPRITESHEET");
+    trace!("loading SpriteSheet (characters)");
 
     let texture_handle: Handle<Image> = asset_server.load(SPRITESHEET_ASSET_PATH);
     let vec2 = Vec2::new(TILE_SIZE_W, TILE_SIZE_H);
@@ -31,12 +31,6 @@ pub fn load_spritesheet(
     commands.insert_resource(DwarfSpritesheet {
         atlas_handle: texture_atlas_handle,
     });
-
-    // TODO
-    // this is a bit janky and not very DRY
-    // improve the asset loading strategy
-    loading.assets.push(texture_handle);
-    loading.count += 1;
 
     ev_writer.send(AppInitEvent::SetAppState(AppState::InitBoard));
 }
@@ -134,12 +128,10 @@ pub fn add_changed_creature_mob_move_anim(
 ) {
     for (_sprite_entity, CreatureEntityRef(entity), transform) in sprite_query.iter_mut() {
         if changed_query.contains(*entity) {
-            println!("??");
             let tile_map = tile_map_query.get_single().expect("WHERE IS MY TILEMAP");
             let (_, _creature, locus) = changed_query.get(*entity).unwrap();
             match locus.position {
                 Position::Point(pos) => {
-                    println!("__2");
                     let target = transform_from_tilemap_pos(tile_map, &pos);
 
                     let anim = MobMoveAnimation::from_translation(
@@ -151,7 +143,6 @@ pub fn add_changed_creature_mob_move_anim(
                 }
                 _ => panic!("doesn't support area yet"),
             }
-            // println!("CH CH CH CHANGES .. {:?}", creature);
         }
     }
 }
