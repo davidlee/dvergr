@@ -89,7 +89,8 @@ fn main() {
         )
         .add_systems(
             Update,
-            graphics::tilemap::render_darkmap_changes
+            // graphics::tilemap::render_darkmap_changes
+            graphics::tilemap::update_tiles_for_player_cell_visibility
                 .after(player::visibility::mark_player_visible_cells),
         )
         .add_systems(

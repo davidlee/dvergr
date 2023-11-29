@@ -32,7 +32,8 @@ fn populate_board(
     commands.spawn_empty().with_children(|cells_entity| {
         for pos in board.coords().iter() {
             let cell = get_cell_for_test_board(pos);
-            let e = cells_entity.spawn(cell).id();
+            let vis = PlayerCellVisibility::new(pos.to_owned());
+            let e = cells_entity.spawn((cell, vis)).id();
             board.cell_store.set(*pos, e);
         }
     });

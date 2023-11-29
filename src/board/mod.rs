@@ -214,7 +214,7 @@ pub struct Cell {
     pub blocks_visibility_computed: bool,
     pub light_intensity: f64,
     pub light_color: Color,
-    pub xyz: IVec3,
+    pub position: IVec3,
 }
 
 impl Cell {}
@@ -225,11 +225,11 @@ pub type CellFloor = Option<Material>;
 pub type CellItems = Option<Vec<Entity>>;
 
 impl Cell {
-    pub fn empty(xyz: IVec3) -> Self {
+    pub fn empty(position: IVec3) -> Self {
         Cell {
             material_blocks_visibility: false,
             blocks_visibility_computed: false,
-            xyz,
+            position,
             ..default()
         }
     }
@@ -239,7 +239,7 @@ impl Cell {
             material: Some(Material::Dirt),
             material_blocks_visibility: true,
             blocks_visibility_computed: true,
-            xyz,
+            position: xyz,
             ..default()
         }
     }
@@ -260,30 +260,49 @@ impl Default for Cell {
             floor: None,
             feature: None,
             items: Some(vec![]),
-
             material_blocks_visibility: false,
             blocks_visibility_computed: false,
             light_intensity: 0.0,
             light_color: Color::NONE,
-            xyz: IVec3::new(-1, -1, -1),
+            position: IVec3::new(-1, -1, -1),
         }
     }
 }
 
 #[derive(Component, PartialEq, Clone, Copy, Debug)]
 pub struct PlayerCellVisibility {
-    seen: bool,
-    visible: bool,
+    pub seen: bool,
+    pub visible: bool,
+    pub position: IVec3,
 }
 
-impl Default for PlayerCellVisibility {
-    fn default() -> Self {
+// impl Default for PlayerCellVisibility {
+//     fn default() -> Self {
+//         Self {
+//             seen: false,
+//             visible: false,
+
+//         }
+//     }
+// }
+
+impl PlayerCellVisibility {
+    pub fn new(position: IVec3) -> Self {
         Self {
-            seen: false,
             visible: false,
+            seen: false,
+            position,
         }
     }
 }
+//     pub fn set_seen(&mut self, seen: bool) {
+//         self.seen = seen
+//     }
+
+//     pub fn set_visible(&mut self, visible: bool) {
+//         self.visible = visible
+//     }
+// }
 
 // Material
 //

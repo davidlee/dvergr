@@ -1,7 +1,19 @@
 use crate::typical::*;
+use bevy::utils::HashSet;
 
-#[derive(Component, Debug, Clone, Copy)]
-pub struct Player;
+#[derive(Component, Debug, Clone)]
+pub struct Player {
+    positions_visible: HashSet<[i32; 3]>,
+}
+
+impl Default for Player {
+    fn default() -> Self {
+        Player {
+            positions_visible: HashSet::new(),
+            // movement delta?
+        }
+    }
+}
 
 #[derive(Bundle, Debug, Clone)]
 pub struct PlayerBundle {
@@ -13,7 +25,7 @@ pub struct PlayerBundle {
 impl Default for PlayerBundle {
     fn default() -> Self {
         PlayerBundle {
-            player: Player,
+            player: Player::default(),
             creature: Creature::human(),
             attributes: Attributes::new(),
         }
@@ -70,10 +82,10 @@ pub mod movement {
                             if let Ok(cell) = cell_query.get_component::<Cell>(*cell_entity) {
                                 if cell.passable() {
                                     let ev = StartMove::single(*pos, new_pos, entity);
-                                    println!("Cell unobstructed ... moving Player: {:?}", ev);
+                                    // println!("Cell unobstructed ... moving Player: {:?}", ev);
                                     ev_move.send(ev);
                                 } else {
-                                    println!("invalid move to {:?}", cell);
+                                    // println!("invalid move to {:?}", cell);
                                 }
                             }
                         }
@@ -87,34 +99,44 @@ pub mod movement {
 }
 
 pub mod visibility {
-    use crate::board::geometry::circle;
-    // use crate::graphics::tilemap::DARK_MAP_Z;
+    use crate::board::geometry::circle_hash_set;
     use crate::typical::*;
 
+    const PLAYER_VISIBILITY_RANGE: i32 = 6; // FIXME add light sources
+
     pub fn mark_player_visible_cells(
-        mut commands: Commands,
         board_mut: Res<Board>,
-        cell_query: Query<(&Cell, &PlayerCellVisibility)>,
-        player_query: Query<(Entity, &Player, &Creature)>,
+        mut cell_query: Query<(&Cell, &mut PlayerCellVisibility)>,
+        mut player_query: Query<(Entity, &mut Player, &Creature)>,
     ) {
-        if let Ok((_entity, _, creature)) = player_query.get_single() {
+        if let Ok((_, mut player, creature)) = player_query.get_single_mut() {
             match creature.locus.position {
                 Position::Point(pos) => {
-                    for v in circle(pos, 6) {
-                        match board_mut.cell_store.get(&v) {
-                            Some(cell_entity) => {
-                                if let Ok((cell, vis)) = cell_query.get(*cell_entity) {
-                                    //
-                                    // FIXME is this shuffle really necessary ??
-                                    //
-                                    // let mut cell = cell.clone();
-                                    // cell.visibility = CellVisibility::Visible;
-                                    // commands.entity(*cell_entity).insert(cell);
-                                }
-                            }
-                            None => (), //println!("circle has missing cells"),
+                    let new_vis = circle_hash_set(pos, PLAYER_VISIBILITY_RANGE);
+                    let old_vis = player.positions_visible.to_owned();
+
+                    for arr_pos in new_vis.difference(&old_vis) {
+                        let pos = IVec3::from_array(*arr_pos);
+                        match board_mut.cell_store.get(&pos) {
+                            Some(cell_entity) => match cell_query.get_mut(*cell_entity) {
+                                Ok((_cell, mut vis)) => (vis.seen, vis.visible) = (true, true),
+                                Err(e) => println!("Error: {:?}", e),
+                            },
+                            None => (),
                         }
                     }
+
+                    for arr_pos in old_vis.difference(&new_vis) {
+                        let pos = IVec3::from_array(*arr_pos);
+                        match board_mut.cell_store.get(&pos) {
+                            Some(cell_entity) => match cell_query.get_mut(*cell_entity) {
+                                Ok((_cell, mut vis)) => vis.visible = false,
+                                Err(e) => println!("Error: {:?}", e),
+                            },
+                            None => (),
+                        }
+                    }
+                    player.positions_visible = new_vis;
                 }
                 _ => panic!("oops",),
             }

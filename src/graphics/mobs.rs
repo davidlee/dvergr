@@ -168,7 +168,7 @@ pub fn mob_movement(
     mut sprite_query: Query<(Entity, &mut MobMoveAnimation, &mut Transform)>,
 ) {
     for (sprite_entity, mut anim, mut transform) in sprite_query.iter_mut() {
-        println!("{:?}", anim);
+        // println!("{:?}", anim);
         if anim.frames == 1 {
             transform.translation = anim.target;
             transform.scale = Vec3::new(1.0, 1.0, 1.0);
@@ -178,7 +178,7 @@ pub fn mob_movement(
             transform.translation.y += anim.delta.y;
             let k = anim.total_frames as f32 / 2.0;
             let scale_factor = (k - (anim.frames as f32 - k).abs()).abs() / 35.0 + 1.0;
-            println!("{}", scale_factor);
+            // println!("{}", scale_factor);
             transform.scale = Vec3::new(scale_factor, scale_factor, scale_factor);
             anim.frames -= 1;
         }
