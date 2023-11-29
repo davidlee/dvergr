@@ -6,14 +6,13 @@ pub mod movement;
 pub use movement::*;
 
 #[allow(dead_code)]
-#[derive(Component, Debug, Clone)]
+#[derive(Bundle, Debug, Clone)]
 pub struct CreatureBundle {
     pub creature: Creature,
     pub attributes: Attributes,
     pub species: Species,
     pub phenotype: Phenotype,
     pub size: CreatureSize,
-    pub base_weight: f64,
     pub condition: CreatureCondition,
     pub locus: Locus,
     pub actions: Actions,
@@ -36,7 +35,6 @@ impl Default for CreatureBundle {
             species: Species::human(),
             phenotype: Phenotype::default(),
             size: CreatureSize::Medium,
-            base_weight: 80.0,
             condition: CreatureCondition::default(),
             locus: Locus::default(),
             // tempo: Tempo::

@@ -1,5 +1,6 @@
 use crate::creature::CreatureBundle;
 use crate::typical::*;
+use bevy::prelude::*;
 use bevy::utils::HashSet;
 
 #[derive(Component, Debug, Clone)]
@@ -50,7 +51,7 @@ pub fn spawn_player(
     let player_bundle = PlayerBundle::default();
     let player_entity = commands.spawn(player_bundle).id();
 
-    // commands.entity(player_entity).log_components();
+    commands.entity(player_entity).log_components();
 
     board
         .creature_store
