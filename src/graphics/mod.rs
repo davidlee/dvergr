@@ -28,8 +28,8 @@ pub type TileSize = PixelSize;
 
 #[derive(Component, Debug, Copy, Clone)]
 pub struct GridSize {
-    pub width: u32,
-    pub height: u32,
+    pub width: i32,
+    pub height: i32,
 }
 
 #[derive(Component, Debug, Copy, Clone)]
@@ -46,7 +46,7 @@ pub struct AssetsLoading {
 
 impl AssetsLoading {
     pub fn init_done(&self) -> bool {
-        return self.count == 2; // hax
+        self.count == 2 // hax
     }
 }
 

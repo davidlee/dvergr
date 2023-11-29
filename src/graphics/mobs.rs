@@ -56,7 +56,7 @@ pub struct PlayerAvatarBundle {
 #[derive(Component, Debug)]
 pub struct CreatureEntityRef(Entity);
 
-pub fn transform_from_tilemap_pos(tile_map: &TileMap, pos: &UVec3) -> Transform {
+pub fn transform_from_tilemap_pos(tile_map: &TileMap, pos: &IVec3) -> Transform {
     let p = tile_map.tile_offset(pos.x, pos.y);
 
     Transform::from_xyz(
@@ -66,13 +66,14 @@ pub fn transform_from_tilemap_pos(tile_map: &TileMap, pos: &UVec3) -> Transform 
     )
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn spawn_player_sprite(
     mut commands: Commands,
     sprites: Res<DwarfSpritesheet>,
     board: Res<Board>,
     mut next_state: ResMut<NextState<AppState>>,
-    state: Res<State<AppState>>,
     mut stage_query: Query<(Entity, &Stage)>,
+    state: Res<State<AppState>>,
     player_query: Query<(Entity, &Player, &Creature)>,
     tile_map_query: Query<&TileMap>,
 ) {
@@ -80,12 +81,12 @@ pub fn spawn_player_sprite(
     let (entity, ..) = player_query.single();
     {
         let tile_map = tile_map_query.single();
-        let pos: UVec3 = board
-            .creature_entities
+        let pos: IVec3 = board
+            .creature_store
             .get_pos_for(&entity)
             .unwrap()
             .to_owned();
-        transform = transform_from_tilemap_pos(&tile_map, &pos);
+        transform = transform_from_tilemap_pos(tile_map, &pos);
     }
 
     commands
@@ -109,6 +110,7 @@ pub fn spawn_player_sprite(
         s => panic!("illegal state: {:?}", s),
     }
 }
+
 #[derive(Component, Debug)]
 pub struct MobMoveAnimation {
     pub delta: Vec2,
@@ -140,7 +142,7 @@ pub fn add_changed_creature_mob_move_anim(
 ) {
     for (_sprite_entity, CreatureEntityRef(entity), transform) in sprite_query.iter_mut() {
         if changed_query.contains(*entity) {
-            println!("giving out ANIMATION");
+            // println!("giving out ANIMATION");
             let tile_map = tile_map_query.get_single().unwrap();
             let (_, creature) = changed_query.get(*entity).unwrap();
             match creature.locus.position {
@@ -156,7 +158,7 @@ pub fn add_changed_creature_mob_move_anim(
                 }
                 _ => panic!("doesn't support area yet"),
             }
-            println!("CH CH CH CHANGES .. {:?}", creature);
+            // println!("CH CH CH CHANGES .. {:?}", creature);
         }
     }
 }

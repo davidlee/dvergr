@@ -13,12 +13,12 @@ impl Plugin for BoardPlugin {
 }
 // systems
 
-fn get_cell_for_test_board(pos: &UVec3) -> Cell {
-    let [x, y, _z] = pos.to_array();
+fn get_cell_for_test_board(pos: &IVec3) -> Cell {
+    let [x, y, z] = pos.to_array();
     if (y % 10 == 0 && x % 6 != 0) || (x % 5 == 0 && y % 3 != 0) {
-        Cell::default()
+        Cell::wall(IVec3::new(x, y, z))
     } else {
-        Cell::empty()
+        Cell::empty(IVec3::new(x, y, z))
     }
 }
 
@@ -33,7 +33,7 @@ fn populate_board(
         for pos in board.coords().iter() {
             let cell = get_cell_for_test_board(pos);
             let e = cells_entity.spawn(cell).id();
-            board.cell_entities.set(*pos, e);
+            board.cell_store.set(*pos, e);
         }
     });
 

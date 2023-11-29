@@ -3,7 +3,7 @@ use crate::action::Tempo;
 use crate::board::Area3d;
 use crate::board::Direction;
 use crate::board::Position;
-use bevy::math::UVec3;
+use bevy::math::IVec3;
 
 use bevy::prelude::{Bundle, Component};
 
@@ -13,20 +13,20 @@ pub mod movement {
     use crate::board::Board;
     use crate::board::Position;
     use crate::creature::Creature;
-    use bevy::math::UVec3;
+    use bevy::math::IVec3;
     use bevy::prelude::EventReader;
     use bevy::prelude::{Entity, Event, Query, ResMut};
 
     // TODO support multiple cells
     #[derive(Event, Debug)]
     pub struct StartMove {
-        pub from: UVec3,
-        pub to: UVec3,
+        pub from: IVec3,
+        pub to: IVec3,
         pub entity: Entity,
     }
 
     impl StartMove {
-        pub fn single(from: UVec3, to: UVec3, entity: Entity) -> Self {
+        pub fn single(from: IVec3, to: IVec3, entity: Entity) -> Self {
             StartMove { from, to, entity }
         }
     }
@@ -42,7 +42,7 @@ pub mod movement {
             // first make the changes to the creature
             creature.locus.position = Position::Point(e.to);
             // then reflect the changes on the board's creatures mapping
-            board.creature_entities.update_single(entity, e.to).unwrap();
+            board.creature_store.update_single(entity, e.to).unwrap();
         }
     }
 }
@@ -78,7 +78,7 @@ impl Creature {
             size: CreatureSize::Medium,
             base_weight: 80.0,
             locus: Locus::default(),
-            tempo: crate::action::TEMPOS[0].clone(),
+            tempo: crate::action::TEMPOS[0],
             templates: (),
             actions: Actions::default(),
             // gear: Equipment::default(),
@@ -88,7 +88,7 @@ impl Creature {
         }
     }
 
-    pub fn set_pos(mut self, pos: UVec3) {
+    pub fn set_pos(mut self, pos: IVec3) {
         self.locus.position = Position::Point(pos);
     }
 }
@@ -110,7 +110,7 @@ pub struct Locus {
 }
 
 impl Locus {
-    pub fn set_pos(&mut self, pos: UVec3) {
+    pub fn set_pos(&mut self, pos: IVec3) {
         self.position = Position::Point(pos);
     }
 
@@ -122,7 +122,7 @@ impl Locus {
 impl Default for Locus {
     fn default() -> Self {
         Locus {
-            position: Position::Point(UVec3::new(0, 0, 0)),
+            position: Position::Point(IVec3::new(0, 0, 0)),
             speed: 0,
             direction: Direction::North,
             facing: Direction::North,

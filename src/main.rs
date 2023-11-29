@@ -14,7 +14,7 @@ pub mod ui;
 
 pub mod typical {
     pub use crate::attributes::Attributes;
-    pub use crate::board::{Board, Cell, CellVisibility, Direction, Position};
+    pub use crate::board::{Board, Cell, Direction, PlayerCellVisibility, Position};
     pub use crate::creature::{Creature, Locus, Species};
     pub use crate::player::Player;
     pub use crate::state::AppState;

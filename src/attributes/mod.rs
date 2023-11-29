@@ -76,6 +76,12 @@ pub struct Attributes {
     // thoughts: (),
 }
 
+impl Default for Attributes {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Attributes {
     pub fn new() -> Attributes {
         let primary = Primary::random();

@@ -28,13 +28,13 @@ pub fn spawn_player_bundle(
 ) {
     println!("[AppState::InitPlayer] spawn_player");
 
-    println!("WARNING: this should be a Position::Point(UVec3) in spawn_player_bundle");
+    println!("WARNING: this should be a Position::Point(IVec3) in spawn_player_bundle");
 
-    let player_default_position = UVec3 { x: 0, y: 0, z: 0 };
+    let player_default_position = IVec3 { x: 0, y: 0, z: 0 };
     let player_entity = commands.spawn(PlayerBundle::default()).id();
 
     board
-        .creature_entities
+        .creature_store
         .add_single(player_entity, player_default_position)
         .unwrap();
 
@@ -62,10 +62,10 @@ pub mod movement {
     ) {
         if let Ok(q) = player_query.get_single() {
             let (entity, ..) = q;
-            let pos = board.creature_entities.get_pos_for(&entity).unwrap();
+            let pos = board.creature_store.get_pos_for(&entity).unwrap();
             for e in ev_input.read() {
                 match board.apply_direction(pos, &e.direction) {
-                    Ok(new_pos) => match board.cell_entities.get(&new_pos) {
+                    Ok(new_pos) => match board.cell_store.get(&new_pos) {
                         Some(cell_entity) => {
                             if let Ok(cell) = cell_query.get_component::<Cell>(*cell_entity) {
                                 if cell.passable() {
@@ -94,25 +94,25 @@ pub mod visibility {
     pub fn mark_player_visible_cells(
         mut commands: Commands,
         board_mut: Res<Board>,
-        cell_query: Query<&Cell>,
+        cell_query: Query<(&Cell, &PlayerCellVisibility)>,
         player_query: Query<(Entity, &Player, &Creature)>,
     ) {
         if let Ok((_entity, _, creature)) = player_query.get_single() {
             match creature.locus.position {
                 Position::Point(pos) => {
                     for v in circle(pos, 6) {
-                        match board_mut.cell_entities.get(&v) {
+                        match board_mut.cell_store.get(&v) {
                             Some(cell_entity) => {
-                                if let Ok(cell) = cell_query.get(*cell_entity) {
+                                if let Ok((cell, vis)) = cell_query.get(*cell_entity) {
                                     //
                                     // FIXME is this shuffle really necessary ??
                                     //
-                                    let mut cell = cell.clone();
-                                    cell.visibility = CellVisibility::Visible;
-                                    commands.entity(*cell_entity).insert(cell);
+                                    // let mut cell = cell.clone();
+                                    // cell.visibility = CellVisibility::Visible;
+                                    // commands.entity(*cell_entity).insert(cell);
                                 }
                             }
-                            None => println!("circle has missing cells"),
+                            None => (), //println!("circle has missing cells"),
                         }
                     }
                 }

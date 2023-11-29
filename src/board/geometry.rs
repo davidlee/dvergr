@@ -1,10 +1,10 @@
 use super::primitives::*;
-use bevy::math::{IVec3, UVec2, UVec3};
+use bevy::math::{IVec2, IVec3};
 
 // Rect
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]
 pub struct Rect {
-    pub origin: UVec2,
+    pub origin: IVec2,
     pub size: Size2d,
 }
 
@@ -17,10 +17,10 @@ pub struct RectPrism {
 
 // https://www.redblobgames.com/grids/circle-drawing/
 //
-pub fn circle(centre: UVec3, radius: i32) -> Vec<UVec3> {
+pub fn circle(centre: IVec3, radius: i32) -> Vec<IVec3> {
     let mut circle_squares = vec![];
 
-    let [cx, cy, cz] = uvec3_to_ivec3(centre).to_array();
+    let [cx, cy, cz] = centre.to_array();
 
     let top = cy - radius;
     let bot = cy + radius;
@@ -32,7 +32,7 @@ pub fn circle(centre: UVec3, radius: i32) -> Vec<UVec3> {
         let right: i32 = f32::floor(cx as f32 + dx) as i32;
 
         for x in left..right {
-            circle_squares.push(UVec3::new(x as u32, y as u32, cz as u32))
+            circle_squares.push(IVec3::new(x, y, cz))
         }
     }
     circle_squares
@@ -40,6 +40,6 @@ pub fn circle(centre: UVec3, radius: i32) -> Vec<UVec3> {
 
 // TODO can this go somewhere better? can't monkey-patch IVec3::From<_>
 
-pub fn uvec3_to_ivec3(uv: UVec3) -> IVec3 {
+pub fn uvec3_to_ivec3(uv: IVec3) -> IVec3 {
     IVec3::new(uv.x as i32, uv.y as i32, uv.z as i32)
 }
