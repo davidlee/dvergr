@@ -1,100 +1,81 @@
 use crate::action::Stance;
-use crate::action::Tempo;
 use crate::board::Area3d;
-use crate::board::Direction;
-use crate::board::Position;
-use bevy::math::IVec3;
+use crate::typical::*;
 
-use bevy::prelude::{Bundle, Component};
+pub mod movement;
+pub use movement::*;
 
-pub mod movement {
-    // use super::*;
-    // use crate::board::Area3d;
-    use crate::board::Board;
-    use crate::board::Position;
-    use crate::creature::Creature;
-    use bevy::math::IVec3;
-    use bevy::prelude::EventReader;
-    use bevy::prelude::{Entity, Event, Query, ResMut};
-
-    // TODO support multiple cells
-    #[derive(Event, Debug)]
-    pub struct StartMove {
-        pub from: IVec3,
-        pub to: IVec3,
-        pub entity: Entity,
-    }
-
-    impl StartMove {
-        pub fn single(from: IVec3, to: IVec3, entity: Entity) -> Self {
-            StartMove { from, to, entity }
-        }
-    }
-
-    pub fn process_movement(
-        mut ev_move: EventReader<StartMove>,
-        mut board: ResMut<Board>,
-        mut query: Query<(Entity, &mut Creature)>,
-    ) {
-        for e in ev_move.read() {
-            println!("processing movement .. {:?}", e);
-            let (entity, mut creature) = query.get_mut(e.entity).unwrap();
-            // first make the changes to the creature
-            creature.locus.position = Position::Point(e.to);
-            // then reflect the changes on the board's creatures mapping
-            board.creature_store.update_single(entity, e.to).unwrap();
-        }
-    }
-}
-
-#[derive(Component, Debug, Clone)]
 #[allow(dead_code)]
-pub struct Creature {
+#[derive(Component, Debug, Clone)]
+pub struct CreatureBundle {
+    pub creature: Creature,
+    pub attributes: Attributes,
     pub species: Species,
     pub phenotype: Phenotype,
     pub size: CreatureSize,
     pub base_weight: f64,
     pub condition: CreatureCondition,
     pub locus: Locus,
-    pub tempo: Tempo, // tempo? pace?
     pub actions: Actions,
+    // tempo: Tempo, // tempo? pace?
+    // // age, disease, subspecies, careers, etc
+    // // a geriatric leprous veteran undead wood-elf pirate
+    // // a deranged adolescent amputee ex-slave sprite
+    // templates: (),
+    // // gear: Equipment,
+    // // attributes
+    // abilities: (),
+    // traits: (),
+}
 
-    // age, disease, subspecies, careers, etc
-    // a geriatric leprous veteran undead wood-elf pirate
-    // a deranged adolescent amputee ex-slave sprite
-    templates: (),
-    // gear: Equipment,
-    // attributes
-    abilities: (),
-    traits: (),
+impl Default for CreatureBundle {
+    fn default() -> Self {
+        Self {
+            creature: Creature::default(),
+            attributes: Attributes::new(),
+            species: Species::human(),
+            phenotype: Phenotype::default(),
+            size: CreatureSize::Medium,
+            base_weight: 80.0,
+            condition: CreatureCondition::default(),
+            locus: Locus::default(),
+            // tempo: Tempo::
+            actions: Actions::default(),
+        }
+    }
+}
+
+impl CreatureBundle {
+    pub fn human() -> Self {
+        Self::default()
+    }
+}
+
+// CREATURE
+//
+
+#[allow(dead_code)]
+#[derive(Component, Debug, Clone)]
+pub struct Creature {
+    dry_weight: f32, // kg
+    height: i32,     // cm
+                     // age:
+}
+
+impl Default for Creature {
+    fn default() -> Self {
+        Creature {
+            dry_weight: 80.,
+            height: 178,
+        }
+    }
 }
 
 impl Creature {
     pub fn human() -> Self {
-        Creature {
-            // position,
-            phenotype: Phenotype::default(),
-            species: Species::human(),
-            size: CreatureSize::Medium,
-            base_weight: 80.0,
-            locus: Locus::default(),
-            tempo: crate::action::TEMPOS[0],
-            templates: (),
-            actions: Actions::default(),
-            // gear: Equipment::default(),
-            condition: CreatureCondition::default(),
-            abilities: (),
-            traits: (),
-        }
-    }
-
-    pub fn set_pos(mut self, pos: IVec3) {
-        self.locus.position = Position::Point(pos);
+        Self::default()
     }
 }
-
-#[derive(Bundle, Debug, Clone)]
-pub struct CreatureBundle {}
 
 // Locus
 //
@@ -102,7 +83,7 @@ pub struct CreatureBundle {}
 #[derive(Component, Debug, Clone, PartialEq)]
 pub struct Locus {
     pub position: Position,
-    pub speed: i32,
+    pub velocity: Vec3,
     pub direction: Direction,
     pub facing: Direction,
     pub stance: Stance,
@@ -123,7 +104,7 @@ impl Default for Locus {
     fn default() -> Self {
         Locus {
             position: Position::Point(IVec3::new(0, 0, 0)),
-            speed: 0,
+            velocity: Vec3::new(0., 0., 0.),
             direction: Direction::North,
             facing: Direction::North,
             stance: Stance::Standing,

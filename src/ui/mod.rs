@@ -1,3 +1,4 @@
+use crate::state::AppInitEvent;
 use crate::AppState;
 use bevy::prelude::*;
 use bevy_pancam::PanCam;
@@ -15,11 +16,8 @@ pub struct MapViewPanel;
 #[derive(Component, Debug)]
 pub struct MapViewContainer;
 
-pub fn spawn_layout_shim(mut next_state: ResMut<NextState<AppState>>, state: Res<State<AppState>>) {
-    match state.get() {
-        AppState::InitUI => next_state.set(AppState::InitTileMap),
-        s => panic!("illegal state: {:?}", s),
-    }
+pub fn spawn_layout_shim(mut ev_writer: EventWriter<AppInitEvent>) {
+    ev_writer.send(AppInitEvent::SetAppState(AppState::InitTileMap));
 }
 
 pub fn spawn_camera(mut commands: Commands) {
@@ -34,11 +32,10 @@ pub fn spawn_camera(mut commands: Commands) {
 // UI Layout
 //
 #[allow(dead_code)]
-pub fn spawn_layout(
+pub fn __spawn_layout(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    mut next_state: ResMut<NextState<AppState>>,
-    state: Res<State<AppState>>,
+    mut ev_writer: EventWriter<AppInitEvent>,
 ) {
     println!("THIS IS WHERE WE LOAD UI");
 
@@ -200,8 +197,5 @@ pub fn spawn_layout(
                 });
         });
 
-    match state.get() {
-        AppState::InitUI => next_state.set(AppState::InitTileMap),
-        s => panic!("illegal state: {:?}", s),
-    }
+    ev_writer.send(AppInitEvent::SetAppState(AppState::InitTileMap));
 }

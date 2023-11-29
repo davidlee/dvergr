@@ -17,7 +17,7 @@ pub mod typical {
     pub use crate::board::{Board, Cell, Direction, PlayerCellVisibility, Position};
     pub use crate::creature::{Creature, Locus, Species};
     pub use crate::player::Player;
-    pub use crate::state::AppState;
+    pub use crate::state::{AppInitEvent, AppState};
     pub use bevy::math::{IVec2, IVec3, UVec2, UVec3};
     pub use bevy::prelude::{
         default, on_event, state_exists, state_exists_and_equals, App, BuildChildren, Bundle,
@@ -72,10 +72,22 @@ fn main() {
         )
         .add_systems(OnEnter(AppState::InitUI), ui::spawn_layout_shim)
         .add_systems(
+            OnEnter(AppState::InitAssets),
+            (
+                graphics::tilemap::load_tileset,
+                graphics::mobs::load_spritesheet.after(graphics::tilemap::load_tileset),
+            ),
+        )
+        .add_systems(
+            PostUpdate,
+            graphics::asset_loading::ensure_assets_loaded
+                .run_if(state_exists_and_equals(AppState::LoadAssets)),
+        )
+        .add_systems(
             OnEnter(AppState::InitTileMap),
             graphics::tilemap::spawn_tile_map,
         )
-        .add_systems(OnEnter(AppState::InitPlayer), player::spawn_player_bundle)
+        .add_systems(OnEnter(AppState::InitPlayer), player::spawn_player)
         .add_systems(
             OnEnter(AppState::InitMobs),
             graphics::mobs::spawn_player_sprite,
@@ -124,10 +136,15 @@ fn main() {
         // MISC
         //
         //
-        .add_systems(Update, graphics::draw_weird_lines)
+        .add_systems(
+            Update,
+            graphics::draw_weird_lines.run_if(state_exists_and_equals(AppState::Game)),
+        )
         .add_systems(Update, bevy::window::close_on_esc)
+        .add_systems(PostUpdate, state::handle_app_init_event)
         // EVENTS
         .add_event::<player::movement::DirectionalInput>()
+        .add_event::<state::AppInitEvent>()
         // ok, ready?
         .run();
 }

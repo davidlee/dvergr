@@ -20,15 +20,15 @@ pub struct TileMap {
     pub tile_size: TileSize,
     pub grid_size: GridSize,
     pub dimensions: PixelSize,
-    pub center_offset: PixelPos,
+    pub center_offset: Vec2,
     pub entities: HashMap<IVec3, Entity>,
 }
 
 impl TileMap {
-    pub fn tile_offset(&self, x: i32, y: i32) -> PixelPos {
+    pub fn tile_offset(&self, x: i32, y: i32) -> Vec2 {
         let x = self.tile_size.width * x as f32;
         let y = self.tile_size.height * y as f32;
-        PixelPos { x, y }
+        Vec2 { x, y }
     }
 
     pub fn new(tile_size: TileSize, grid_size: GridSize) -> Self {
@@ -39,7 +39,7 @@ impl TileMap {
             tile_size,
             grid_size,
             dimensions: PixelSize { width, height },
-            center_offset: PixelPos {
+            center_offset: Vec2 {
                 x: 0. - width / 2.,
                 y: 0. - height / 2.,
             },
@@ -89,9 +89,8 @@ fn texture_index_for_cell(cell: &Cell) -> usize {
 pub fn spawn_tile_map(
     mut commands: Commands,
     board: Res<Board>,
-    mut next_state: ResMut<NextState<AppState>>,
-    state: Res<State<AppState>>,
     mut stage_query: Query<(Entity, &Stage)>,
+    mut ev_writer: EventWriter<AppInitEvent>,
 ) {
     let tile_map = TileMap::new(
         TileSize {
@@ -121,10 +120,7 @@ pub fn spawn_tile_map(
             ));
         });
 
-    match state.get() {
-        AppState::InitTileMap => next_state.set(AppState::InitMobs),
-        s => panic!("illegal state: {:?}", s),
-    }
+    ev_writer.send(AppInitEvent::SetAppState(AppState::InitMobs))
 }
 
 pub fn update_tiles_for_player_cell_visibility(
@@ -152,7 +148,7 @@ pub fn update_tiles_for_player_cell_visibility(
                             }
                             None => {
                                 counter += 1;
-                                let PixelPos { x, y } =
+                                let Vec2 { x, y } =
                                     tile_map.tile_offset(cell.position.x, cell.position.y);
                                 let texture_index = texture_index_for_cell(cell);
                                 let sprite = TextureAtlasSprite::new(texture_index);

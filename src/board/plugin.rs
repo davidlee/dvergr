@@ -25,7 +25,7 @@ fn get_cell_for_test_board(pos: &IVec3) -> Cell {
 fn populate_board(
     mut commands: Commands,
     mut board: ResMut<Board>,
-    mut state: ResMut<NextState<AppState>>,
+    mut ev_writer: EventWriter<AppInitEvent>,
 ) {
     println!("[AppState::InitBoard] populate_board");
 
@@ -38,5 +38,5 @@ fn populate_board(
         }
     });
 
-    state.set(AppState::InitPlayer);
+    ev_writer.send(AppInitEvent::SetAppState(AppState::InitPlayer));
 }

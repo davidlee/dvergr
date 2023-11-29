@@ -14,11 +14,6 @@ pub struct GridSize {
     pub height: i32,
 }
 
-#[derive(Component, Debug, Copy, Clone)]
-pub struct PixelPos {
-    pub x: f32,
-    pub y: f32,
-}
 #[derive(Component, Debug, Default)]
 pub struct Stage;
 
@@ -27,17 +22,9 @@ pub struct StageBundle {
     stage: Stage,
 }
 
-pub fn spawn_stage(
-    mut commands: Commands,
-    mut next_state: ResMut<NextState<AppState>>,
-
-    state: Res<State<AppState>>,
-) {
+pub fn spawn_stage(mut commands: Commands, mut ev_writer: EventWriter<AppInitEvent>) {
     println!("[AppState::InitStage] spawn_stage");
     commands.spawn((StageBundle::default(), SpatialBundle::default()));
 
-    match state.get() {
-        AppState::InitStage => next_state.set(AppState::LoadAssets),
-        s => panic!("illegal state: {:?}", s),
-    }
+    ev_writer.send(AppInitEvent::SetAppState(AppState::LoadAssets));
 }

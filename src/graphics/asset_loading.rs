@@ -11,18 +11,7 @@ impl Plugin for AssetLoadingPlugin {
         app.insert_resource(AssetsLoading {
             assets: vec![],
             count: 0,
-        })
-        .add_systems(
-            OnEnter(AppState::InitAssets),
-            (
-                super::tilemap::load_tileset,
-                super::mobs::load_spritesheet.after(super::tilemap::load_tileset),
-            ),
-        )
-        .add_systems(
-            PostUpdate,
-            ensure_assets_loaded.run_if(state_exists_and_equals(AppState::LoadAssets)),
-        );
+        });
     }
 }
 
@@ -39,13 +28,7 @@ impl AssetsLoading {
 }
 
 // TODO actually check asset loading
-pub fn ensure_assets_loaded(
-    mut _commands: Commands,
-    mut next_state: ResMut<NextState<AppState>>,
-    state: Res<State<AppState>>,
-) {
-    match state.get() {
-        AppState::LoadAssets => next_state.set(AppState::InitUI),
-        s => panic!("illegal state: {:?}", s),
-    }
+pub fn ensure_assets_loaded(mut _commands: Commands, mut ev_writer: EventWriter<AppInitEvent>) {
+    println!("faked out asset loading complete");
+    ev_writer.send(AppInitEvent::SetAppState(AppState::InitUI));
 }

@@ -17,8 +17,7 @@ pub fn load_spritesheet(
     asset_server: Res<AssetServer>,
     mut loading: ResMut<AssetsLoading>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
-    mut next_state: ResMut<NextState<AppState>>,
-    state: Res<State<AppState>>,
+    mut ev_writer: EventWriter<AppInitEvent>,
 ) {
     println!("load SPRITESHEET");
 
@@ -39,10 +38,7 @@ pub fn load_spritesheet(
     loading.assets.push(texture_handle);
     loading.count += 1;
 
-    match state.get() {
-        AppState::InitAssets => next_state.set(AppState::InitBoard),
-        s => panic!("illegal state: {:?}", s),
-    }
+    ev_writer.send(AppInitEvent::SetAppState(AppState::InitBoard));
 }
 
 #[derive(Component, Debug, Default)]
@@ -71,19 +67,18 @@ pub fn spawn_player_sprite(
     mut commands: Commands,
     sprites: Res<DwarfSpritesheet>,
     board: Res<Board>,
-    mut next_state: ResMut<NextState<AppState>>,
     mut stage_query: Query<(Entity, &Stage)>,
-    state: Res<State<AppState>>,
-    player_query: Query<(Entity, &Player, &Creature)>,
+    player_query: Query<(Entity, &Player)>,
     tile_map_query: Query<&TileMap>,
+    mut ev_writer: EventWriter<AppInitEvent>,
 ) {
     let transform: Transform;
-    let (entity, ..) = player_query.single();
+    let (player_entity, ..) = player_query.single();
     {
         let tile_map = tile_map_query.single();
         let pos: IVec3 = board
             .creature_store
-            .get_pos_for(&entity)
+            .get_pos_for(&player_entity)
             .expect("player sprite needs somewhere to go")
             .to_owned();
         transform = transform_from_tilemap_pos(tile_map, &pos);
@@ -95,7 +90,7 @@ pub fn spawn_player_sprite(
         .with_children(|s| {
             s.spawn((
                 PlayerAvatarBundle::default(),
-                CreatureEntityRef(entity),
+                CreatureEntityRef(player_entity),
                 SpriteSheetBundle {
                     texture_atlas: sprites.atlas_handle.clone(),
                     sprite: TextureAtlasSprite::new(0),
@@ -105,10 +100,7 @@ pub fn spawn_player_sprite(
             ));
         });
 
-    match state.get() {
-        AppState::InitMobs => next_state.set(AppState::Game),
-        s => panic!("illegal state: {:?}", s),
-    }
+    ev_writer.send(AppInitEvent::SetAppState(AppState::Game));
 }
 
 #[derive(Component, Debug)]
@@ -138,14 +130,16 @@ pub fn add_changed_creature_mob_move_anim(
     mut commands: Commands,
     tile_map_query: Query<&TileMap>,
     mut sprite_query: Query<(Entity, &CreatureEntityRef, &mut Transform)>,
-    changed_query: Query<(Entity, &Creature), Changed<Creature>>,
+    changed_query: Query<(Entity, &Creature, &Locus), Changed<Locus>>,
 ) {
     for (_sprite_entity, CreatureEntityRef(entity), transform) in sprite_query.iter_mut() {
         if changed_query.contains(*entity) {
+            println!("??");
             let tile_map = tile_map_query.get_single().expect("WHERE IS MY TILEMAP");
-            let (_, creature) = changed_query.get(*entity).unwrap();
-            match creature.locus.position {
+            let (_, _creature, locus) = changed_query.get(*entity).unwrap();
+            match locus.position {
                 Position::Point(pos) => {
+                    println!("__2");
                     let target = transform_from_tilemap_pos(tile_map, &pos);
 
                     let anim = MobMoveAnimation::from_translation(
@@ -167,7 +161,7 @@ pub fn mob_movement(
     mut sprite_query: Query<(Entity, &mut MobMoveAnimation, &mut Transform)>,
 ) {
     for (sprite_entity, mut anim, mut transform) in sprite_query.iter_mut() {
-        // println!("{:?}", anim);
+        println!("{:?}", anim);
         if anim.frames == 1 {
             transform.translation = anim.target;
             transform.scale = Vec3::new(1.0, 1.0, 1.0);
@@ -177,7 +171,6 @@ pub fn mob_movement(
             transform.translation.y += anim.delta.y;
             let k = anim.total_frames as f32 / 2.0;
             let scale_factor = (k - (anim.frames as f32 - k).abs()).abs() / 35.0 + 1.0;
-            // println!("{}", scale_factor);
             transform.scale = Vec3::new(scale_factor, scale_factor, scale_factor);
             anim.frames -= 1;
         }

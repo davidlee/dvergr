@@ -1,3 +1,4 @@
+use crate::creature::CreatureBundle;
 use crate::typical::*;
 use bevy::utils::HashSet;
 
@@ -18,42 +19,45 @@ impl Default for Player {
 #[derive(Bundle, Debug, Clone)]
 pub struct PlayerBundle {
     player: Player,
-    creature: Creature,
-    attributes: Attributes,
+    creature: CreatureBundle,
 }
 
 impl Default for PlayerBundle {
     fn default() -> Self {
         PlayerBundle {
             player: Player::default(),
-            creature: Creature::human(),
-            attributes: Attributes::new(),
+            creature: CreatureBundle {
+                locus: Locus {
+                    position: Position::Point(IVec3::new(0, 0, 0)),
+                    ..default()
+                },
+                ..default()
+            },
         }
     }
 }
 
-pub fn spawn_player_bundle(
+pub fn spawn_player(
     mut commands: Commands,
     mut board: ResMut<Board>,
-    state: Res<State<AppState>>,
-    mut next_state: ResMut<NextState<AppState>>,
+    mut ev_writer: EventWriter<AppInitEvent>,
 ) {
-    println!("[AppState::InitPlayer] spawn_player");
+    println!(
+        "[AppState::InitPlayer] spawn_player 👎 SOMETHING IS WRONG - player bundles not unpacking"
+    );
 
-    println!("WARNING: this should be a Position::Point(IVec3) in spawn_player_bundle");
+    let player_position = IVec3 { x: 0, y: 0, z: 0 };
+    let player_bundle = PlayerBundle::default();
+    let player_entity = commands.spawn(player_bundle).id();
 
-    let player_default_position = IVec3 { x: 0, y: 0, z: 0 };
-    let player_entity = commands.spawn(PlayerBundle::default()).id();
+    // commands.entity(player_entity).log_components();
 
     board
         .creature_store
-        .add_single(player_entity, player_default_position)
+        .add_single(player_entity, player_position)
         .unwrap();
 
-    match state.get() {
-        AppState::InitPlayer => next_state.set(AppState::InitStage),
-        s => panic!("illegal state: {:?}", s),
-    }
+    ev_writer.send(AppInitEvent::SetAppState(AppState::InitStage))
 }
 
 pub mod movement {
@@ -69,16 +73,20 @@ pub mod movement {
         mut ev_input: EventReader<DirectionalInput>,
         mut ev_move: EventWriter<StartMove>,
         cell_query: Query<&Cell>,
-        player_query: Query<(Entity, &mut Player, &mut Creature)>,
+        player_query: Query<(Entity, &mut Player, &mut Creature, &mut Locus)>,
         board: Res<Board>,
     ) {
         if let Ok(q) = player_query.get_single() {
+            println!("yea?");
             let (entity, ..) = q;
             let pos = board.creature_store.get_pos_for(&entity).unwrap();
+            println!("Pos?? {:?}", pos);
             for e in ev_input.read() {
+                println!("input");
                 match board.apply_direction(pos, &e.direction) {
                     Ok(new_pos) => match board.cell_store.get(&new_pos) {
                         Some(cell_entity) => {
+                            println!("some cell {:?}", cell_entity);
                             if let Ok(cell) = cell_query.get_component::<Cell>(*cell_entity) {
                                 if cell.passable() {
                                     let ev = StartMove::single(*pos, new_pos, entity);
@@ -107,10 +115,10 @@ pub mod visibility {
     pub fn mark_player_visible_cells(
         board_mut: Res<Board>,
         mut cell_query: Query<(&Cell, &mut PlayerCellVisibility)>,
-        mut player_query: Query<(Entity, &mut Player, &Creature)>,
+        mut player_query: Query<(Entity, &mut Player, &Creature, &Locus)>,
     ) {
-        if let Ok((_, mut player, creature)) = player_query.get_single_mut() {
-            match creature.locus.position {
+        if let Ok((_, mut player, _creature, locus)) = player_query.get_single_mut() {
+            match locus.position {
                 Position::Point(pos) => {
                     let new_vis = circle_hash_set(pos, PLAYER_VISIBILITY_RANGE);
                     let old_vis = player.positions_visible.to_owned();
