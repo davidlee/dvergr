@@ -43,15 +43,9 @@ pub fn spawn_player(
     mut board: ResMut<Board>,
     mut ev_writer: EventWriter<AppInitEvent>,
 ) {
-    println!(
-        "[AppState::InitPlayer] spawn_player 👎 SOMETHING IS WRONG - player bundles not unpacking"
-    );
-
     let player_position = IVec3 { x: 0, y: 0, z: 0 };
     let player_bundle = PlayerBundle::default();
     let player_entity = commands.spawn(player_bundle).id();
-
-    commands.entity(player_entity).log_components();
 
     board
         .creature_store
