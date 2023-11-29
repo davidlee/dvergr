@@ -6,12 +6,8 @@ use bevy::prelude::*;
 use bevy_turborand::prelude::*;
 
 pub fn draw_weird_lines(
-    //
     mut gizmos: Gizmos,
-    // mut commands: Commands,
-    // board: Res<Board>,
     tile_map_q: Query<&TileMap>,
-    // rand: Res<Rand
     mut global_rng: ResMut<GlobalRng>,
     player_q: Query<(Entity, &Player, &Locus)>,
 ) {
@@ -30,14 +26,12 @@ pub fn draw_weird_lines(
         let t = tile_map.tile_offset(rand_pos.x, rand_pos.y);
         let end = Vec2::new(c.x + t.x, c.y + t.y);
 
-        // let random_pos: Vec<[u32; 3]> = visible_tiles.iter().into::<Vec<_>>();
-
         match locus.position {
             Position::Point(pos) => {
                 let c = tile_map.center_offset;
                 let t = tile_map.tile_offset(pos.x, pos.y);
                 let start = Vec2::new(c.x + t.x, c.y + t.y);
-                gizmos.line_2d(start, end, Color::RED);
+                gizmos.line_2d(start, end, Color::RED.with_a(0.3));
             }
             Position::Area(_) => {}
         }

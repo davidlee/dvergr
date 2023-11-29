@@ -340,6 +340,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy-fps-counter"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "999a4718c50c5d7172b4a0a8e2a2597925d91fe10e086514d5d6f664eb802075"
+dependencies = [
+ "bevy",
+]
+
+[[package]]
 name = "bevy_a11y"
 version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1167,6 +1176,7 @@ name = "blit"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "bevy-fps-counter",
  "bevy_ecs_tilemap",
  "bevy_pancam",
  "bevy_turborand",

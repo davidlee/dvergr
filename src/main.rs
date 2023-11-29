@@ -33,6 +33,7 @@ pub mod typical {
 
 use bevy::prelude::{DefaultPlugins, ImagePlugin, PluginGroup};
 use bevy::window::{PresentMode, Window, WindowPlugin, WindowResolution, WindowTheme};
+use bevy_fps_counter::FpsCounterPlugin;
 use bevy_pancam::PanCamPlugin;
 use bevy_turborand::prelude::RngPlugin;
 
@@ -65,6 +66,7 @@ fn main() {
         .add_state::<AppState>()
         .add_event::<creature::movement::StartMove>()
         // plugins
+        .add_plugins(FpsCounterPlugin)
         .add_plugins(PanCamPlugin)
         .add_plugins(RngPlugin::default())
         .add_plugins(time::TimePlugin)
