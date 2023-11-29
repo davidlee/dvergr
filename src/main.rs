@@ -62,12 +62,15 @@ fn main() {
         .add_plugins(RngPlugin::default())
         .add_plugins(time::TimePlugin)
         .add_plugins(board::BoardPlugin)
-        .add_plugins(graphics::AssetLoadingPlugin)
-        // During init
+        .add_plugins(graphics::asset_loading::AssetLoadingPlugin)
+        //
+        // INITIALIZATION
+        .add_systems(Startup, ui::spawn_camera)
         .add_systems(
             Update,
             graphics::spawn_stage.run_if(state_exists_and_equals(AppState::InitStage)),
         )
+        .add_systems(OnEnter(AppState::InitUI), ui::spawn_layout_shim)
         .add_systems(
             OnEnter(AppState::InitTileMap),
             graphics::tilemap::spawn_tile_map,
@@ -77,22 +80,8 @@ fn main() {
             OnEnter(AppState::InitMobs),
             graphics::mobs::spawn_player_sprite,
         )
-        // During run loop
-        .add_systems(Update, graphics::mobs::add_changed_creature_mob_move_anim)
-        .add_systems(
-            Update,
-            graphics::mobs::mob_movement.after(graphics::mobs::add_changed_creature_mob_move_anim),
-        )
-        .add_systems(
-            Update,
-            player::visibility::mark_player_visible_cells.after(graphics::mobs::mob_movement),
-        )
-        .add_systems(
-            Update,
-            graphics::tilemap::update_tiles_for_player_cell_visibility
-                .after(player::visibility::mark_player_visible_cells),
-        )
-        // Movement
+        //
+        // MOVEMENT
         .add_systems(
             PreUpdate,
             input::keybindings.run_if(state_exists_and_equals(AppState::Game)),
@@ -108,12 +97,37 @@ fn main() {
                 .after(player::movement::validate_directional_input))
             .run_if(state_exists_and_equals(AppState::Game)),
         )
-        .add_event::<player::movement::DirectionalInput>()
-        // systems
-        .add_systems(Startup, ui::spawn_camera)
-        // .add_systems(OnEnter(AppState::InitUI), ui::spawn_layout)
-        .add_systems(OnEnter(AppState::InitUI), ui::spawn_layout_shim)
+        .add_systems(
+            Update,
+            graphics::mobs::add_changed_creature_mob_move_anim
+                .run_if(state_exists_and_equals(AppState::Game)),
+        )
+        .add_systems(
+            Update,
+            (graphics::mobs::mob_movement
+                .after(graphics::mobs::add_changed_creature_mob_move_anim))
+            .run_if(state_exists_and_equals(AppState::Game)),
+        )
+        //
+        // VISIBILITY
+        .add_systems(
+            Update,
+            (player::visibility::mark_player_visible_cells.after(graphics::mobs::mob_movement))
+                .run_if(state_exists_and_equals(AppState::Game)),
+        )
+        .add_systems(
+            Update,
+            (graphics::tilemap::update_tiles_for_player_cell_visibility
+                .after(player::visibility::mark_player_visible_cells))
+            .run_if(state_exists_and_equals(AppState::Game)),
+        )
+        // MISC
+        //
+        //
+        .add_systems(Update, graphics::draw_weird_lines)
         .add_systems(Update, bevy::window::close_on_esc)
-        // events
+        // EVENTS
+        .add_event::<player::movement::DirectionalInput>()
+        // ok, ready?
         .run();
 }

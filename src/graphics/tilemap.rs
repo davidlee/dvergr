@@ -4,7 +4,6 @@ use bevy::utils::HashMap;
 use super::TILEMAP_ASSET_PATH;
 use crate::graphics::typical::*;
 use crate::typical::*;
-use crate::ui::MapViewContainer;
 
 // const BACKGROUND_COLOR: Color = Color::rgb(0.07, 0.12, 0.18);
 
@@ -136,14 +135,18 @@ pub fn update_tiles_for_player_cell_visibility(
     cell_query: Query<(&Cell, &mut PlayerCellVisibility), Changed<PlayerCellVisibility>>,
 ) {
     let mut counter = 0;
+
     match tile_map_query.get_single_mut() {
         Ok((tm_e, mut tile_map)) => {
             commands.entity(tm_e).with_children(|tiles| {
                 cell_query.for_each(|(cell, player_visibility)| {
+                    // LOOP over cell visibility changes
                     if player_visibility.visible {
                         match tile_map.entities.get(&cell.position) {
                             Some(e) => {
                                 if let Ok(mut sprite) = sprite_query.get_mut(*e) {
+                                    // TODO: fade out based on distance from player
+                                    //
                                     sprite.color.set_a(100.0);
                                 }
                             }

@@ -1,5 +1,5 @@
 use crate::AppState;
-use bevy::{prelude::*, render::render_resource::encase::CalculateSizeFor};
+use bevy::prelude::*;
 use bevy_pancam::PanCam;
 
 /*
@@ -22,6 +22,17 @@ pub fn spawn_layout_shim(mut next_state: ResMut<NextState<AppState>>, state: Res
     }
 }
 
+pub fn spawn_camera(mut commands: Commands) {
+    commands.spawn(Camera2dBundle::default()).insert(PanCam {
+        min_scale: 0.1,
+        max_scale: Some(2.),
+        ..default()
+    });
+}
+
+//
+// UI Layout
+//
 #[allow(dead_code)]
 pub fn spawn_layout(
     mut commands: Commands,
@@ -193,12 +204,4 @@ pub fn spawn_layout(
         AppState::InitUI => next_state.set(AppState::InitTileMap),
         s => panic!("illegal state: {:?}", s),
     }
-}
-
-pub fn spawn_camera(mut commands: Commands) {
-    commands.spawn(Camera2dBundle::default()).insert(PanCam {
-        min_scale: 0.1,
-        max_scale: Some(2.),
-        ..default()
-    });
 }
