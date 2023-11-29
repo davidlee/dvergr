@@ -29,7 +29,7 @@ impl Default for PlayerBundle {
             player: Player::default(),
             creature: CreatureBundle {
                 locus: Locus {
-                    position: Position::Point(IVec3::new(0, 0, 0)),
+                    position: Position::Point(IVec3::new(3, 3, 0)),
                     ..default()
                 },
                 ..default()
@@ -43,8 +43,18 @@ pub fn spawn_player(
     mut board: ResMut<Board>,
     mut ev_writer: EventWriter<AppInitEvent>,
 ) {
-    let player_position = IVec3 { x: 0, y: 0, z: 0 };
-    let player_bundle = PlayerBundle::default();
+    let player_position = IVec3 { x: 3, y: 3, z: 0 };
+    let position = Position::Point(player_position);
+    let player_bundle = PlayerBundle {
+        creature: CreatureBundle {
+            locus: Locus {
+                position,
+                ..default()
+            },
+            ..default()
+        },
+        ..default()
+    };
     let player_entity = commands.spawn(player_bundle).id();
 
     board
@@ -72,16 +82,12 @@ pub mod movement {
         board: Res<Board>,
     ) {
         if let Ok(q) = player_query.get_single() {
-            println!("yea?");
             let (entity, ..) = q;
             let pos = board.creature_store.get_pos_for(&entity).unwrap();
-            println!("Pos?? {:?}", pos);
             for e in ev_input.read() {
-                println!("input");
                 match board.apply_direction(pos, &e.direction) {
                     Ok(new_pos) => match board.cell_store.get(&new_pos) {
                         Some(cell_entity) => {
-                            println!("some cell {:?}", cell_entity);
                             if let Ok(cell) = cell_query.get_component::<Cell>(*cell_entity) {
                                 if cell.passable() {
                                     let ev = StartMove::single(*pos, new_pos, entity);

@@ -12,8 +12,8 @@ pub fn draw_weird_lines(
     tile_map_q: Query<&TileMap>,
     player_q: Query<(Entity, &Player, &Locus)>,
 ) {
-    if let Ok((e, player, locus)) = player_q.get_single() {
-        println!("??? {:?}", player);
+    if let Ok((e, _player, locus)) = player_q.get_single() {
+        // println!("??? {:?}", player);
         commands.entity(e).log_components();
 
         let tile_map = tile_map_q.get_single().unwrap();

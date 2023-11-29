@@ -161,7 +161,6 @@ pub fn mob_movement(
     mut sprite_query: Query<(Entity, &mut MobMoveAnimation, &mut Transform)>,
 ) {
     for (sprite_entity, mut anim, mut transform) in sprite_query.iter_mut() {
-        println!("{:?}", anim);
         if anim.frames == 1 {
             transform.translation = anim.target;
             transform.scale = Vec3::new(1.0, 1.0, 1.0);
