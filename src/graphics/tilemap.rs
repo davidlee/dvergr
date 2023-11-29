@@ -1,8 +1,10 @@
+use bevy::prelude::*;
 use bevy::utils::HashMap;
 
 use super::TILEMAP_ASSET_PATH;
 use crate::graphics::typical::*;
 use crate::typical::*;
+use crate::ui::MapViewContainer;
 
 // const BACKGROUND_COLOR: Color = Color::rgb(0.07, 0.12, 0.18);
 
@@ -103,16 +105,18 @@ pub fn spawn_tile_map(
         },
     );
 
-    let (stage_entity, _) = stage_query.single_mut();
     let centre_offset = tile_map.center_offset;
+    let (stage_entity, _stage) = stage_query.single_mut();
+    let transform = Transform::from_xyz(centre_offset.x, centre_offset.y, 0.);
+
     commands
         .get_entity(stage_entity)
-        .unwrap()
-        .with_children(|stage_entity| {
-            stage_entity.spawn((
+        .expect("no stage, no player!")
+        .with_children(|parent| {
+            parent.spawn((
                 tile_map,
                 SpatialBundle {
-                    transform: Transform::from_xyz(centre_offset.x, centre_offset.y, 0.),
+                    transform,
                     ..default()
                 },
             ));
@@ -173,9 +177,7 @@ pub fn update_tiles_for_player_cell_visibility(
                                 println!("{:?}", tile_map.entities);
                             }
                         }
-                    } else {
                     }
-                    // darkmap
                 });
             });
         }

@@ -44,18 +44,20 @@ pub struct RectPrism {
 pub fn circle_hash_set(centre: IVec3, radius: i32) -> HashSet<[i32; 3]> {
     let mut circle = HashSet::new();
 
-    let [cx, cy, z] = centre.to_array();
+    let [x, y, z] = centre.to_array();
+    let [fx, fy, fr] = [x as f32, y as f32, radius as f32 + 0.5];
+    let r2 = fr * fr;
 
-    let top = cy - radius;
-    let bot = cy + radius;
+    let top = fy - fr;
+    let bot = fy + fr;
 
-    for y in top..bot {
-        let dy: i32 = y - cy;
-        let dx: f32 = f32::sqrt((radius * radius - dy * dy) as f32);
-        let left: i32 = f32::ceil(cx as f32 - dx) as i32;
-        let right: i32 = f32::floor(cx as f32 + dx) as i32;
+    for y in f32::round(top) as i32..f32::round(bot) as i32 {
+        let dy = y as f32 - fy;
+        let dx = f32::sqrt(r2 - dy * dy);
+        let left = f32::ceil(fx - dx);
+        let right = f32::floor(fx + dx);
 
-        for x in left..right {
+        for x in f32::round(left) as i32..f32::round(right) as i32 {
             circle.insert([x, y, z]);
         }
     }

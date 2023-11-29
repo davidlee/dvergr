@@ -84,14 +84,14 @@ pub fn spawn_player_sprite(
         let pos: IVec3 = board
             .creature_store
             .get_pos_for(&entity)
-            .unwrap()
+            .expect("player sprite needs somewhere to go")
             .to_owned();
         transform = transform_from_tilemap_pos(tile_map, &pos);
     }
 
     commands
         .get_entity(stage_query.single_mut().0) // Stage entity
-        .unwrap()
+        .expect("no stage, no player")
         .with_children(|s| {
             s.spawn((
                 PlayerAvatarBundle::default(),
@@ -142,8 +142,7 @@ pub fn add_changed_creature_mob_move_anim(
 ) {
     for (_sprite_entity, CreatureEntityRef(entity), transform) in sprite_query.iter_mut() {
         if changed_query.contains(*entity) {
-            // println!("giving out ANIMATION");
-            let tile_map = tile_map_query.get_single().unwrap();
+            let tile_map = tile_map_query.get_single().expect("WHERE IS MY TILEMAP");
             let (_, creature) = changed_query.get(*entity).unwrap();
             match creature.locus.position {
                 Position::Point(pos) => {

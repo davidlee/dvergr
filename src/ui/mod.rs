@@ -1,5 +1,5 @@
 use crate::AppState;
-use bevy::prelude::*;
+use bevy::{prelude::*, render::render_resource::encase::CalculateSizeFor};
 use bevy_pancam::PanCam;
 
 /*
@@ -12,23 +12,25 @@ pallette:
 #[derive(Component, Debug)]
 pub struct MapViewPanel;
 
-#[allow(dead_code, unused_variables, unreachable_code)]
+#[derive(Component, Debug)]
+pub struct MapViewContainer;
 
-pub fn spawn_layout(
-    commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut next_state: ResMut<NextState<AppState>>,
-    state: Res<State<AppState>>,
-) {
-    println!("Draw UI (skipping -> AppState::Game)");
-
-    // FIXME
+pub fn spawn_layout_shim(mut next_state: ResMut<NextState<AppState>>, state: Res<State<AppState>>) {
     match state.get() {
         AppState::InitUI => next_state.set(AppState::InitTileMap),
         s => panic!("illegal state: {:?}", s),
     }
+}
 
-    return;
+#[allow(dead_code)]
+pub fn spawn_layout(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut next_state: ResMut<NextState<AppState>>,
+    state: Res<State<AppState>>,
+) {
+    println!("THIS IS WHERE WE LOAD UI");
+
     let heading_style = TextStyle {
         font: asset_server.load("font/BigBlueTerminalPlus.ttf"),
         font_size: 22.0,
@@ -62,13 +64,11 @@ pub fn spawn_layout(
                     style: Style {
                         width: Val::Percent(100.),
                         height: Val::Px(50.),
-                        // for contained text
                         align_items: AlignItems::Center,
                         justify_content: JustifyContent::Center,
                         ..default()
                     },
                     background_color: BackgroundColor(Color::hex("1B3A4B").unwrap()),
-                    // border_color: Color::RED.into(),
                     ..Default::default()
                 })
                 .with_children(|parent| {
@@ -109,11 +109,8 @@ pub fn spawn_layout(
                     parent
                         .spawn(NodeBundle {
                             style: Style {
-                                // width: Val::Percent(100.),
                                 flex_grow: 100.,
                                 height: Val::Percent(100.),
-                                // for contained text
-                                // align_items: AlignItems::Center,
                                 flex_direction: FlexDirection::Column,
                                 justify_content: JustifyContent::Center,
                                 ..default()
@@ -122,49 +119,42 @@ pub fn spawn_layout(
                             ..Default::default()
                         })
                         .with_children(|parent| {
-                            // parent.spawn(TextBundle::from_section(
-                            //     "Main Content",
-                            //     heading_style.clone(),
-                            // ));
                             parent
                                 .spawn((
                                     MapViewPanel,
                                     NodeBundle {
                                         // Map Area
                                         style: Style {
-                                            // width: Val::Percent(100.),
                                             flex_grow: 100.,
                                             height: Val::Percent(70.),
-                                            // for contained text
-                                            // align_items: AlignItems::Center,
                                             justify_content: JustifyContent::Center,
                                             ..default()
                                         },
                                         background_color: BackgroundColor(
-                                            Color::hex("212F45").unwrap(),
+                                            Color::rgba_u8(10, 45, 75, 45),
+                                            // Color::hex("212F45").unwrap(),
                                         ),
                                         ..Default::default()
                                     },
                                 ))
                                 .with_children(|parent| {
-                                    // TODO _ this is where we wanna drap a text representation of
-                                    // the map ... do we wanna stash a reference? drop an entity?
-                                    parent.spawn(TextBundle::from_section(
-                                        "ASCII Map Goes Here",
-                                        text_style.clone(),
+                                    parent.spawn((
+                                        TextBundle::from_section(
+                                            "ASCII Map Goes Here",
+                                            text_style.clone(),
+                                        ),
+                                        MapViewContainer,
                                     ));
+                                    // MAP GOES HERE
+                                    // parent.spawn(MapViewContainer);
                                 });
 
                             parent
                                 .spawn(NodeBundle {
                                     // Console
                                     style: Style {
-                                        // width: Val::Percent(100.),
                                         flex_grow: 100.,
                                         height: Val::Percent(30.),
-                                        // for contained text
-                                        // align_items: AlignItems::Center,
-                                        // justify_content: JustifyContent::Center,
                                         ..default()
                                     },
                                     background_color: BackgroundColor(
@@ -187,7 +177,6 @@ pub fn spawn_layout(
                         width: Val::Percent(100.0),
                         height: Val::Px(50.0),
                         bottom: Val::Px(0.),
-                        // for contained text
                         align_items: AlignItems::Center,
                         justify_content: JustifyContent::Center,
                         ..Default::default()

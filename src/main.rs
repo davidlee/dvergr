@@ -89,26 +89,31 @@ fn main() {
         )
         .add_systems(
             Update,
-            // graphics::tilemap::render_darkmap_changes
             graphics::tilemap::update_tiles_for_player_cell_visibility
                 .after(player::visibility::mark_player_visible_cells),
         )
+        // Movement
         .add_systems(
             PreUpdate,
-            creature::movement::process_movement.run_if(state_exists_and_equals(AppState::Game)),
+            input::keybindings.run_if(state_exists_and_equals(AppState::Game)),
         )
         .add_systems(
             PreUpdate,
-            (player::movement::validate_directional_input
-                .before(creature::movement::process_movement))
+            (player::movement::validate_directional_input.after(input::keybindings))
+                .run_if(state_exists_and_equals(AppState::Game)),
+        )
+        .add_systems(
+            PreUpdate,
+            (creature::movement::process_movement
+                .after(player::movement::validate_directional_input))
             .run_if(state_exists_and_equals(AppState::Game)),
         )
         .add_event::<player::movement::DirectionalInput>()
         // systems
         .add_systems(Startup, ui::spawn_camera)
-        .add_systems(OnEnter(AppState::InitUI), ui::spawn_layout)
+        // .add_systems(OnEnter(AppState::InitUI), ui::spawn_layout)
+        .add_systems(OnEnter(AppState::InitUI), ui::spawn_layout_shim)
         .add_systems(Update, bevy::window::close_on_esc)
-        .add_systems(Update, input::keybindings)
         // events
         .run();
 }
