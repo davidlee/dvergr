@@ -21,6 +21,7 @@ pub mod typical {
     pub use crate::creature::{species::Species, Attributes, Creature, CreatureSize, Locus};
     pub use crate::player::Player;
     pub use crate::state::{AppInitEvent, AppState};
+    pub use crate::time::Clock;
     pub use bevy::math::{IVec2, IVec3, UVec2, UVec3};
     pub use bevy::prelude::{
         default, on_event, state_exists, state_exists_and_equals, App, BuildChildren, Bundle,
@@ -34,7 +35,7 @@ pub mod typical {
     pub use bevy::utils::tracing::{debug, error, info, trace, warn, Level};
 }
 
-use bevy::prelude::{DefaultPlugins, ImagePlugin, PluginGroup};
+use bevy::prelude::{ClearColor, Color, DefaultPlugins, ImagePlugin, PluginGroup};
 use bevy::window::{PresentMode, Window, WindowPlugin, WindowResolution, WindowTheme};
 use bevy_fps_counter::FpsCounterPlugin;
 use bevy_pancam::PanCamPlugin;
@@ -47,10 +48,6 @@ use typical::*;
 fn main() {
     App::new()
         .add_plugins((DefaultPlugins
-            .set(LogPlugin {
-                level: Level::WARN,
-                ..default()
-            })
             .set(WindowPlugin {
                 primary_window: Some(Window {
                     title: "~= D V E R G R =~".into(),
@@ -65,7 +62,14 @@ fn main() {
                 }),
                 ..default()
             })
+            .set(LogPlugin {
+                // level: Level::INFO,
+                level: Level::TRACE,
+                filter: "wgpu=warn,bevy_ecs=info".to_string(),
+                ..default()
+            })
             .set(ImagePlugin::default_nearest()),)) // no blurry sprites
+        .insert_resource(ClearColor(Color::rgb(0.0, 0.05, 0.15)))
         .add_state::<AppState>()
         .add_event::<creature::movement::StartMove>()
         // plugins
@@ -82,7 +86,7 @@ fn main() {
             Update,
             graphics::components::spawn_stage.run_if(state_exists_and_equals(AppState::InitStage)),
         )
-        .add_systems(OnEnter(AppState::InitUI), ui::spawn_layout_shim)
+        .add_systems(OnEnter(AppState::InitUI), ui::spawn_layout)
         .add_systems(
             OnEnter(AppState::InitAssets),
             (
@@ -153,13 +157,8 @@ fn main() {
             graphics::draw_weird_lines.run_if(state_exists_and_equals(AppState::Game)),
         )
         .add_systems(Update, bevy::window::close_on_esc)
-        .add_systems(PostUpdate, state::handle_app_init_event)
-        // .add_plugins(DefaultPlugins.set(bevy::log::LogPlugin {
-        //     // Uncomment this to override the default log settings:
-        //     // level: bevy::log::Level::TRACE,
-        //     // filter: "wgpu=warn,bevy_ecs=info".to_string(),
-        //     ..default()
-        // }))
+        .add_systems(PostUpdate, state::handle_app_init_event) // TODO REMOVE AFTER INIT COMPLETE
+        .add_systems(PostUpdate, time::clock_frame_tick)
         // EVENTS
         .add_event::<player::movement::DirectionalInput>()
         .add_event::<state::AppInitEvent>()

@@ -8,12 +8,11 @@ pub mod player_avatar;
 pub mod playground;
 pub mod tilemap;
 pub mod typical {
-
     pub use super::asset_loading::AssetsLoading;
     pub use super::components::{GridSize, PixelSize, Stage, TileSize};
     pub use super::mobs::{CreatureEntityRef, DwarfSpritesheet};
     pub use super::player_avatar::PlayerAvatar;
-    pub use super::tilemap::TileMap;
+    pub use super::tilemap::{TileMap, TILE_SIZE_H, TILE_SIZE_W};
     pub use super::transform_from_tilemap_pos;
     pub use bevy::prelude::{
         AssetServer, Assets, Color, Handle, Image, SpatialBundle, Sprite, SpriteBundle,

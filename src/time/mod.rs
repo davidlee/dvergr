@@ -1,4 +1,5 @@
-use bevy::prelude::{App, Plugin, Resource};
+use crate::typical::*;
+// use bevy::prelude::{App, Plugin, ResMut, Resource};
 
 pub mod f64 {
     pub const SECONDS_PER_MINUTE: f64 = 60.0;
@@ -15,8 +16,8 @@ pub mod u32 {
 pub struct TimePlugin;
 
 impl Plugin for TimePlugin {
-    fn build(&self, _app: &mut App) {
-        //
+    fn build(&self, app: &mut App) {
+        app.insert_resource(Clock::default());
     }
 }
 
@@ -57,9 +58,10 @@ impl Seconds {
 #[allow(dead_code)]
 #[derive(Resource)]
 pub struct Clock {
-    // turn: u32,
     seconds: f64,
     paused: bool,
+    current_frame: u32,
+    current_turn: u32,
 }
 
 impl Default for Clock {
@@ -67,17 +69,29 @@ impl Default for Clock {
         Clock {
             seconds: 0.,
             paused: true,
+            current_frame: 0,
+            current_turn: 0,
         }
     }
 }
 
 impl Clock {
-    pub fn next_frame(&mut self) {
-        self.seconds += 0.1;
+    const SECONDS_PER_TURN: f64 = 0.1;
+    const ONE_SECOND: f64 = 1.0;
+
+    pub fn next_turn(&mut self) {
+        self.seconds += Self::SECONDS_PER_TURN;
+        self.current_turn += 1;
     }
 
     pub fn next_second(&mut self) {
-        self.seconds += 1.;
+        self.seconds += Self::ONE_SECOND;
+        self.current_turn += 10;
+    }
+
+    pub fn advance_turns(&mut self, turns: u32) {
+        self.current_turn = turns;
+        self.seconds += turns as f64 * Self::SECONDS_PER_TURN;
     }
 
     pub fn duration(&self) -> Duration {
@@ -95,13 +109,27 @@ impl Clock {
     pub fn days(&self) -> f64 {
         Seconds::to_days(self.seconds)
     }
+
+    pub fn frame_tick(&mut self) {
+        trace!("tick, tock ... {:?})", self.current_frame);
+        self.current_frame = self.current_frame.checked_add(1).unwrap_or(0);
+    }
+
+    pub fn current_turn(&self) -> u32 {
+        self.current_turn
+    }
+
+    pub fn current_frame(&self) -> u32 {
+        self.current_frame
+    }
 }
+
+pub fn clock_frame_tick(mut clock: ResMut<Clock>) {
+    clock.frame_tick();
+}
+
 // timers
 // events
-
-impl Plugin for Clock {
-    fn build(&self, _app: &mut App) {}
-}
 
 #[allow(dead_code)]
 pub struct Duration {

@@ -2,38 +2,33 @@
 use crate::graphics::typical::*;
 use crate::typical::*;
 use bevy::prelude::*;
-// use std::f32::consts::PI;
-use bevy_turborand::prelude::*;
+
+// use super::tilemap;
 
 pub fn draw_weird_lines(
     mut gizmos: Gizmos,
     tile_map_q: Query<&TileMap>,
-    mut global_rng: ResMut<GlobalRng>,
     player_q: Query<(Entity, &Player, &Locus)>,
+    clock: Res<Clock>,
 ) {
-    if let Ok((_e, player, locus)) = player_q.get_single() {
+    if let Ok((_e, _player, locus)) = player_q.get_single() {
         let tile_map = tile_map_q.get_single().unwrap();
-        // choose a random visible tile
-        let visible_tiles: Vec<[i32; 3]> =
-            player.positions_visible.to_owned().into_iter().collect();
-        if visible_tiles.len() == 0 {
-            return;
-        }
-        let n: usize = visible_tiles.len();
-        let i = global_rng.usize(0..n);
-        let rand_pos = IVec3::from(visible_tiles[i]);
-        let c = tile_map.center_offset;
-        let t = tile_map.tile_offset(rand_pos.x, rand_pos.y);
-        let end = Vec2::new(c.x + t.x, c.y + t.y);
 
-        match locus.position {
-            Position::Point(pos) => {
-                let c = tile_map.center_offset;
-                let t = tile_map.tile_offset(pos.x, pos.y);
-                let start = Vec2::new(c.x + t.x, c.y + t.y);
-                gizmos.line_2d(start, end, Color::RED.with_a(0.3));
-            }
-            Position::Area(_) => {}
+        if let Position::Point(pos) = locus.position {
+            let a = (clock.current_frame() % 120) as f32 / 120.0;
+
+            // // Draw a box around the player
+            let origin = tile_map.translate(pos);
+            let size = Vec2::new(TILE_SIZE_W * 3.0, TILE_SIZE_H * 3.0);
+            gizmos.rect_2d(origin, 0.0, size, Color::ORANGE_RED.with_a(a));
+
+            // draw a line to somewhere
+            //
+            // gizmos.line_2d(
+            //     tile_map.translate(pos),
+            //     Vec2::new(0., 0.),
+            //     Color::RED.with_a(a),
+            // );
         }
     }
 }

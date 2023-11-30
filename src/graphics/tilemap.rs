@@ -46,6 +46,12 @@ impl TileMap {
             entities: HashMap::new(),
         }
     }
+
+    pub fn translate(&self, board_pos: IVec3) -> Vec2 {
+        let x = (self.tile_size.width * board_pos.x as f32) + self.center_offset.x;
+        let y = (self.tile_size.height * board_pos.y as f32) + self.center_offset.y;
+        Vec2::new(x, y)
+    }
 }
 
 // Resource

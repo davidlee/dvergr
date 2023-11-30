@@ -1,9 +1,25 @@
+use crate::graphics::typical::*;
 use crate::typical::*;
+use bevy::prelude::*;
+
+#[derive(Component, Debug)]
+pub struct MapViewPanel;
+
 //
 // UI Layout
 //
+
+const COLORS: [Color; 4] = [
+    //
+    Color::rgb(0.05, 0.15, 0.11), // header
+    Color::rgb(0.0, 0.2, 0.4),    // footer
+    Color::rgb(0.0, 0.0, 0.15),   // side
+    Color::rgb(0.0, 0.05, 0.1),   // term
+                                  //
+];
+
 #[allow(dead_code)]
-pub fn __spawn_layout(
+pub fn spawn_layout(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut ev_writer: EventWriter<AppInitEvent>,
@@ -33,7 +49,7 @@ pub fn __spawn_layout(
                 flex_direction: FlexDirection::Column,
                 ..default()
             },
-            background_color: BackgroundColor(Color::hex("272640").unwrap()),
+            background_color: BackgroundColor(Color::NONE),
             ..Default::default()
         })
         .with_children(|parent| {
@@ -47,7 +63,7 @@ pub fn __spawn_layout(
                         justify_content: JustifyContent::Center,
                         ..default()
                     },
-                    background_color: BackgroundColor(Color::hex("1B3A4B").unwrap()),
+                    background_color: BackgroundColor(COLORS[1]),
                     ..Default::default()
                 })
                 .with_children(|parent| {
@@ -62,7 +78,7 @@ pub fn __spawn_layout(
                         flex_direction: FlexDirection::Row,
                         ..default()
                     },
-                    background_color: BackgroundColor(Color::BLACK),
+                    background_color: BackgroundColor(Color::NONE),
                     ..Default::default()
                 })
                 .with_children(|parent| {
@@ -72,12 +88,10 @@ pub fn __spawn_layout(
                             style: Style {
                                 min_width: Val::Px(200.),
                                 height: Val::Percent(100.),
-                                // for contained text
-                                // align_items: AlignItems::Start,
                                 justify_content: JustifyContent::Center,
                                 ..default()
                             },
-                            background_color: BackgroundColor(Color::hex("144552").unwrap()),
+                            background_color: BackgroundColor(COLORS[2]),
                             ..Default::default()
                         })
                         .with_children(|parent| {
@@ -94,7 +108,7 @@ pub fn __spawn_layout(
                                 justify_content: JustifyContent::Center,
                                 ..default()
                             },
-                            background_color: BackgroundColor(Color::hex("000000").unwrap()),
+                            background_color: BackgroundColor(Color::NONE),
                             ..Default::default()
                         })
                         .with_children(|parent| {
@@ -109,23 +123,15 @@ pub fn __spawn_layout(
                                             justify_content: JustifyContent::Center,
                                             ..default()
                                         },
-                                        background_color: BackgroundColor(
-                                            Color::rgba_u8(10, 45, 75, 45),
-                                            // Color::hex("212F45").unwrap(),
-                                        ),
-                                        ..Default::default()
+                                        background_color: BackgroundColor(Color::NONE),
+                                        ..default()
                                     },
                                 ))
                                 .with_children(|parent| {
-                                    parent.spawn((
-                                        TextBundle::from_section(
-                                            "ASCII Map Goes Here",
-                                            text_style.clone(),
-                                        ),
-                                        MapViewContainer,
+                                    parent.spawn(TextBundle::from_section(
+                                        "ASCII Map Goes Here",
+                                        text_style.clone(),
                                     ));
-                                    // MAP GOES HERE
-                                    // parent.spawn(MapViewContainer);
                                 });
 
                             parent
@@ -136,9 +142,7 @@ pub fn __spawn_layout(
                                         height: Val::Percent(30.),
                                         ..default()
                                     },
-                                    background_color: BackgroundColor(
-                                        Color::hex("272640").unwrap(),
-                                    ),
+                                    background_color: BackgroundColor(COLORS[3]),
                                     ..Default::default()
                                 })
                                 .with_children(|parent| {
@@ -160,7 +164,7 @@ pub fn __spawn_layout(
                         justify_content: JustifyContent::Center,
                         ..Default::default()
                     },
-                    background_color: BackgroundColor(Color::hex("1B3A4B").unwrap()),
+                    background_color: BackgroundColor(COLORS[1]),
                     ..Default::default()
                 })
                 .with_children(|parent| {
