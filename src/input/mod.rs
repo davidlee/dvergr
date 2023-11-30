@@ -1,4 +1,4 @@
-use crate::graphics::mobs::MobMoveAnimation;
+use crate::graphics::move_anim::MobMoveAnimation;
 use crate::player::movement::DirectionalInput;
 use crate::typical::*;
 

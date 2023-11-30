@@ -127,21 +127,22 @@ fn main() {
         )
         .add_systems(
             Update,
-            graphics::mobs::add_changed_creature_mob_move_anim
+            graphics::move_anim::add_changed_creature_mob_move_anim
                 .run_if(state_exists_and_equals(AppState::Game)),
         )
         .add_systems(
             Update,
-            (graphics::mobs::mob_movement
-                .after(graphics::mobs::add_changed_creature_mob_move_anim))
+            (graphics::move_anim::mob_movement
+                .after(graphics::move_anim::add_changed_creature_mob_move_anim))
             .run_if(state_exists_and_equals(AppState::Game)),
         )
         //
         // VISIBILITY
         .add_systems(
             Update,
-            (player::visibility::mark_player_visible_cells.after(graphics::mobs::mob_movement))
-                .run_if(state_exists_and_equals(AppState::Game)),
+            (player::visibility::mark_player_visible_cells
+                .after(graphics::move_anim::mob_movement))
+            .run_if(state_exists_and_equals(AppState::Game)),
         )
         .add_systems(
             Update,

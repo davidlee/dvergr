@@ -4,9 +4,11 @@ pub const SPRITESHEET_ASSET_PATH: &str = "vettlingr/dwarves.png";
 pub mod asset_loading;
 pub mod components;
 pub mod mobs;
+pub mod move_anim;
 pub mod player_avatar;
 pub mod playground;
 pub mod tilemap;
+
 pub mod typical {
     pub use super::asset_loading::AssetsLoading;
     pub use super::components::{GridSize, PixelSize, Stage, TileSize};
