@@ -1,5 +1,4 @@
 use crate::action::Stance;
-use crate::board::Area3d;
 use crate::typical::*;
 
 pub mod movement;

@@ -1,6 +1,6 @@
-use crate::board::Direction;
 use crate::graphics::mobs::MobMoveAnimation;
 use crate::player::movement::DirectionalInput;
+use crate::typical::*;
 
 use bevy::prelude::{Entity, EventWriter, Input, KeyCode, Query, Res, Transform};
 

@@ -14,7 +14,12 @@ pub mod ui;
 
 pub mod typical {
     pub use crate::attributes::Attributes;
-    pub use crate::board::{Board, Cell, Direction, PlayerCellVisibility, Position};
+    pub use crate::board::{
+        cell::Cell,
+        direction::Direction,
+        primitives::{Area3d, Size3d},
+        Board, Material, PlayerCellVisibility, Position,
+    };
     pub use crate::creature::{Creature, Locus, Species};
     pub use crate::player::Player;
     pub use crate::state::{AppInitEvent, AppState};
@@ -70,14 +75,14 @@ fn main() {
         .add_plugins(PanCamPlugin)
         .add_plugins(RngPlugin::default())
         .add_plugins(time::TimePlugin)
-        .add_plugins(board::BoardPlugin)
+        .add_plugins(board::plugin::BoardPlugin)
         .add_plugins(graphics::asset_loading::AssetLoadingPlugin)
         //
         // INITIALIZATION
         .add_systems(Startup, ui::spawn_camera)
         .add_systems(
             Update,
-            graphics::spawn_stage.run_if(state_exists_and_equals(AppState::InitStage)),
+            graphics::components::spawn_stage.run_if(state_exists_and_equals(AppState::InitStage)),
         )
         .add_systems(OnEnter(AppState::InitUI), ui::spawn_layout_shim)
         .add_systems(
@@ -99,7 +104,7 @@ fn main() {
         .add_systems(OnEnter(AppState::InitPlayer), player::spawn_player)
         .add_systems(
             OnEnter(AppState::InitMobs),
-            graphics::mobs::spawn_player_sprite,
+            graphics::player_avatar::spawn_player_avatar,
         )
         //
         // MOVEMENT

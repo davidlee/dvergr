@@ -9,7 +9,7 @@ const TILE_SIZE_H: f32 = 32.0;
 #[derive(Resource, Debug)]
 pub struct DwarfSpritesheet {
     #[allow(dead_code)]
-    atlas_handle: Handle<TextureAtlas>,
+    pub atlas_handle: Handle<TextureAtlas>,
 }
 
 pub fn load_spritesheet(
@@ -35,67 +35,8 @@ pub fn load_spritesheet(
     ev_writer.send(AppInitEvent::SetAppState(AppState::InitBoard));
 }
 
-#[derive(Component, Debug, Default)]
-pub struct PlayerAvatar;
-
-#[derive(Bundle, Debug, Default)]
-pub struct PlayerAvatarBundle {
-    avatar: PlayerAvatar,
-}
-
 #[derive(Component, Debug)]
-pub struct CreatureEntityRef(Entity);
-
-pub fn transform_from_tilemap_pos(tile_map: &TileMap, pos: &IVec3) -> Transform {
-    let p = tile_map.tile_offset(pos.x, pos.y);
-
-    Transform::from_xyz(
-        p.x + tile_map.center_offset.x,
-        p.y + tile_map.center_offset.y,
-        1.0,
-    )
-}
-
-#[allow(clippy::too_many_arguments)]
-pub fn spawn_player_sprite(
-    mut commands: Commands,
-    sprites: Res<DwarfSpritesheet>,
-    board: Res<Board>,
-    mut stage_query: Query<(Entity, &Stage)>,
-    player_query: Query<(Entity, &Player)>,
-    tile_map_query: Query<&TileMap>,
-    mut ev_writer: EventWriter<AppInitEvent>,
-) {
-    let transform: Transform;
-    let (player_entity, ..) = player_query.single();
-    {
-        let tile_map = tile_map_query.single();
-        let pos: IVec3 = board
-            .creature_store
-            .get_pos_for(&player_entity)
-            .expect("player sprite needs somewhere to go")
-            .to_owned();
-        transform = transform_from_tilemap_pos(tile_map, &pos);
-    }
-
-    commands
-        .get_entity(stage_query.single_mut().0) // Stage entity
-        .expect("no stage, no player")
-        .with_children(|s| {
-            s.spawn((
-                PlayerAvatarBundle::default(),
-                CreatureEntityRef(player_entity),
-                SpriteSheetBundle {
-                    texture_atlas: sprites.atlas_handle.clone(),
-                    sprite: TextureAtlasSprite::new(0),
-                    transform,
-                    ..default()
-                },
-            ));
-        });
-
-    ev_writer.send(AppInitEvent::SetAppState(AppState::Game));
-}
+pub struct CreatureEntityRef(pub Entity);
 
 #[derive(Component, Debug)]
 pub struct MobMoveAnimation {
