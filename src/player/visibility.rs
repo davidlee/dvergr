@@ -1,8 +1,7 @@
-
 use crate::board::geometry::circle_hash_set;
 use crate::typical::*;
 
-const PLAYER_VISIBILITY_RANGE: i32 = 6; // FIXME add light sources
+const PLAYER_VISIBILITY_RANGE: i32 = 24; // FIXME add light sources
 
 pub fn mark_player_visible_cells(
     board_mut: Res<Board>,

@@ -1,6 +1,5 @@
 pub mod action;
 pub mod anatomy;
-pub mod attributes;
 pub mod board;
 pub mod creature;
 pub mod damage;
@@ -13,14 +12,13 @@ pub mod time;
 pub mod ui;
 
 pub mod typical {
-    pub use crate::attributes::Attributes;
     pub use crate::board::{
         cell::Cell,
         direction::Direction,
         primitives::{Area3d, Size3d},
         Board, Material, PlayerCellVisibility, Position,
     };
-    pub use crate::creature::{Creature, Locus, Species};
+    pub use crate::creature::{species::Species, Attributes, Creature, CreatureSize, Locus};
     pub use crate::player::Player;
     pub use crate::state::{AppInitEvent, AppState};
     pub use bevy::math::{IVec2, IVec3, UVec2, UVec3};

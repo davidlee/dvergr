@@ -1,8 +1,20 @@
-use crate::action::Stance;
 use crate::typical::*;
 
+pub mod condition;
+pub mod equipment;
+pub mod locus;
 pub mod movement;
+pub mod phenotype;
+pub mod species;
+
 pub use movement::*;
+pub mod attributes;
+pub use attributes::*;
+pub use condition::*;
+pub use equipment::*;
+pub use locus::*;
+pub use phenotype::*;
+pub use species::*;
 
 #[allow(dead_code)]
 #[derive(Bundle, Debug, Clone)]
@@ -73,43 +85,6 @@ impl Creature {
         Self::default()
     }
 }
-
-// Locus
-//
-
-#[derive(Component, Debug, Clone, PartialEq)]
-pub struct Locus {
-    pub position: Position,
-    pub velocity: Vec3,
-    pub direction: Direction,
-    pub facing: Direction,
-    pub stance: Stance,
-    pub weight: f64,
-}
-
-impl Locus {
-    pub fn set_pos(&mut self, pos: IVec3) {
-        self.position = Position::Point(pos);
-    }
-
-    pub fn set_area(&mut self, area: Area3d) {
-        self.position = Position::Area(area);
-    }
-}
-
-impl Default for Locus {
-    fn default() -> Self {
-        Locus {
-            position: Position::Point(IVec3::new(0, 0, 0)),
-            velocity: Vec3::new(0., 0., 0.),
-            direction: Direction::North,
-            facing: Direction::North,
-            stance: Stance::Standing,
-            weight: 80.0,
-        }
-    }
-}
-
 // Size
 //
 #[derive(Component, Debug, Clone, Default, Eq, PartialEq, Ord, PartialOrd)]
@@ -123,29 +98,6 @@ pub enum CreatureSize {
     Giant, // two story humanoid; war elephant
     Leviathan(), // show me map tiles
 }
-
-// Condition
-//
-#[derive(Component, Debug, Clone, Default, Eq, PartialEq)]
-#[allow(dead_code)]
-pub struct CreatureCondition {
-    needs: (),
-    conditions: (),
-    injuries: (),
-    encumberance: (),
-}
-
-impl CreatureCondition {
-    fn default() -> Self {
-        CreatureCondition {
-            needs: (),
-            conditions: (),
-            injuries: (),
-            encumberance: (),
-        }
-    }
-}
-
 // Actions
 //
 #[derive(Component, Debug, Clone, Default)]
@@ -154,95 +106,4 @@ pub struct Actions {
     current: (),
     queue: (),
     // behaviour_tree: Option<()>,
-}
-
-// Species
-//
-#[derive(Component, Debug, Clone, Eq, Ord, PartialEq, PartialOrd, Default)]
-#[allow(dead_code)]
-pub struct Species {
-    name: String,
-    anatomy_template: (),
-    subtype: Option<()>,
-}
-
-impl Species {
-    fn default() -> Self {
-        Species {
-            name: String::from("human"),
-            anatomy_template: (),
-            subtype: None,
-        }
-    }
-
-    pub fn humanoid(name: &str) -> Self {
-        Species {
-            name: String::from(name),
-            anatomy_template: (),
-            subtype: None,
-        }
-    }
-
-    pub fn human() -> Self {
-        Species::humanoid("human")
-    }
-}
-
-// Phenotype
-//
-#[derive(Component, Debug, Clone, Default, Eq, PartialEq)]
-#[allow(dead_code)]
-pub struct Phenotype {
-    species: Species,
-    size: CreatureSize,
-    anatomy_template: (),
-
-    natural_weapons: (),
-    natural_armour: (),
-    natural_inventory: (),
-
-    innate_abilities: (),
-    traits: (),
-    // metabolism
-    // needs
-    // thoughts ..
-}
-
-impl Phenotype {
-    fn default() -> Self {
-        Phenotype {
-            species: Species::default(),
-            size: CreatureSize::default(),
-            anatomy_template: (),
-
-            natural_weapons: (),
-            natural_armour: (),
-            natural_inventory: (),
-            innate_abilities: (),
-            traits: (),
-        }
-    }
-}
-
-// Equipment
-//
-#[derive(Component, Debug, Clone, Default, Eq, PartialEq)]
-#[allow(dead_code)]
-pub struct Equipment {
-    worn_armour: (),
-    equipped: (),
-    wearing: (),
-    carrying: (),
-}
-
-#[allow(dead_code)]
-impl Equipment {
-    fn default() -> Self {
-        Equipment {
-            worn_armour: (),
-            equipped: (),
-            wearing: (),
-            carrying: (),
-        }
-    }
 }
