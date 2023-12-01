@@ -70,6 +70,8 @@ impl Board {
             Ok(IVec3::new(x, y, z))
         }
     }
+
+    // pub fn apply_direction_checked(&self, )
 }
 
 // Position

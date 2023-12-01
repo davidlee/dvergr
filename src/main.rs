@@ -4,6 +4,7 @@ pub mod character;
 pub mod creature;
 pub mod damage;
 pub mod dice;
+pub mod events;
 pub mod graphics;
 pub mod input;
 pub mod player;
@@ -20,6 +21,7 @@ pub mod typical {
     };
     pub use crate::character::{Character, CharacterBundle, Equipment, Pace};
     pub use crate::creature::{species::Species, Attributes, Creature, CreatureSize, Locus};
+    pub use crate::events::*;
     pub use crate::player::Player;
     pub use crate::state::{AppInitEvent, AppState};
     pub use crate::time::Clock;
@@ -64,15 +66,17 @@ fn main() {
                 ..default()
             })
             .set(LogPlugin {
+                // level: Level::TRACE,
                 // level: Level::INFO,
-                level: Level::TRACE,
+                level: Level::WARN,
                 filter: "wgpu=warn,bevy_ecs=info".to_string(),
                 ..default()
             })
             .set(ImagePlugin::default_nearest()),)) // no blurry sprites
         .insert_resource(ClearColor(Color::rgb(0.0, 0.05, 0.15)))
         .add_state::<AppState>()
-        .add_event::<creature::movement::StartMove>()
+        // .add_event::<creature::movement::BeginUpdateLocus>()
+        .add_event::<events::begin_action::UpdateLocus>()
         // plugins
         .add_plugins(FpsCounterPlugin)
         .add_plugins(PanCamPlugin)
@@ -156,7 +160,7 @@ fn main() {
         //
         .add_systems(
             Update,
-            graphics::draw_weird_lines.run_if(state_exists_and_equals(AppState::Game)),
+            graphics::render_gizmos.run_if(state_exists_and_equals(AppState::Game)),
         )
         .add_systems(Update, bevy::window::close_on_esc)
         .add_systems(PostUpdate, state::handle_app_init_event) // TODO REMOVE AFTER INIT COMPLETE

@@ -6,7 +6,7 @@ pub mod components;
 pub mod mobs;
 pub mod move_anim;
 pub mod player_avatar;
-pub mod playground;
+pub mod player_decoration;
 pub mod tilemap;
 
 pub mod typical {
@@ -24,7 +24,7 @@ pub mod typical {
 use crate::typical::*;
 use typical::*;
 
-pub use playground::draw_weird_lines;
+pub use player_decoration::render_gizmos;
 
 pub fn transform_from_tilemap_pos(tile_map: &TileMap, pos: &IVec3) -> Transform {
     let p = tile_map.tile_offset(pos.x, pos.y);

@@ -1,4 +1,8 @@
-use bevy::math::IVec3;
+use crate::typical::*;
+
+use std::f32::consts::TAU;
+
+// use bevy::math::*;
 
 // Direction
 //
@@ -12,17 +16,53 @@ pub enum Direction {
     SouthWest,
     West,
     NorthWest,
-    Up,
-    Down,
+    // Up,
+    // Down,
 }
 
 impl Direction {
+    const DIRECTION_NUM: usize = 8;
+
     pub fn offset(self) -> IVec3 {
         DIRECTION_OFFSETS[self as usize]
     }
+
+    pub fn offset2d(self) -> IVec2 {
+        let o = self.offset();
+        IVec2::new(o.x, o.y)
+    }
+
+    pub fn offset2df(self) -> Vec2 {
+        let v = self.offset2d();
+        Vec2::new(v.x as f32, v.y as f32)
+    }
+
+    pub fn arc_vectors(self, n: usize) -> [Vec2; 2] {
+        [
+            Self::ivec3_to_vec2(DIRECTION_OFFSETS[self.counter_clockwise_neigbour(n) as usize]),
+            Self::ivec3_to_vec2(DIRECTION_OFFSETS[self.clockwise_neighbour(n) as usize]),
+        ]
+    }
+
+    fn ivec3_to_vec2(ivec3: IVec3) -> Vec2 {
+        let [x, y, _] = ivec3.to_array();
+        Vec2::new(x as f32, y as f32)
+    }
+
+    pub fn clockwise_neighbour(self, n: usize) -> Self {
+        DIRECTIONS[(self as usize + n) % Self::DIRECTION_NUM]
+    }
+
+    pub fn counter_clockwise_neigbour(self, n: usize) -> Self {
+        DIRECTIONS[(Self::DIRECTION_NUM + self as usize - n) % Self::DIRECTION_NUM]
+    }
+
+    pub fn angular_rotation(self) -> f32 {
+        ANGULAR_ROTATIONS[self as usize]
+    }
 }
 
-pub const DIRECTIONS: [Direction; 10] = [
+pub const DIRECTIONS: [Direction; 8] = [
     Direction::North,
     Direction::NorthEast,
     Direction::East,
@@ -31,8 +71,8 @@ pub const DIRECTIONS: [Direction; 10] = [
     Direction::SouthWest,
     Direction::West,
     Direction::NorthWest,
-    Direction::Up,
-    Direction::Down,
+    // Direction::Up,
+    // Direction::Down,
 ];
 
 pub const CARDINAL_DIRECTIONS: [Direction; 4] = [
@@ -42,7 +82,7 @@ pub const CARDINAL_DIRECTIONS: [Direction; 4] = [
     Direction::West,
 ];
 
-pub const DIRECTION_OFFSETS: [IVec3; 10] = [
+pub const DIRECTION_OFFSETS: [IVec3; 8] = [
     IVec3 { x: 0, y: 1, z: 0 },
     IVec3 { x: 1, y: 1, z: 0 },
     IVec3 { x: 1, y: 0, z: 0 },
@@ -51,8 +91,20 @@ pub const DIRECTION_OFFSETS: [IVec3; 10] = [
     IVec3 { x: -1, y: -1, z: 0 },
     IVec3 { x: -1, y: 0, z: 0 },
     IVec3 { x: -1, y: 1, z: 0 },
-    IVec3 { x: 0, y: 0, z: 1 },
-    IVec3 { x: 0, y: 0, z: -1 },
+    // vert
+    // IVec3 { x: 0, y: 0, z: 1 },
+    // IVec3 { x: 0, y: 0, z: -1 },
+];
+
+pub const ANGULAR_ROTATIONS: [f32; 8] = [
+    TAU * 0.0,
+    TAU * 0.125,
+    TAU * 0.25,
+    TAU * 0.375,
+    TAU * 0.5,
+    TAU * 0.625,
+    TAU * 0.75,
+    TAU * 0.875,
 ];
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]
