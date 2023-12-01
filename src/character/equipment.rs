@@ -5,10 +5,10 @@ use crate::typical::*;
 #[derive(Component, Debug, Clone, Default, Eq, PartialEq)]
 #[allow(dead_code)]
 pub struct Equipment {
-    worn_armour: (),
-    equipped: (),
-    wearing: (),
-    carrying: (),
+    pub worn_armour: (),
+    pub equipped: (),
+    pub wearing: (),
+    pub carrying: (),
 }
 
 #[allow(dead_code)]

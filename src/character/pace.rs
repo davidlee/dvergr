@@ -1,86 +1,92 @@
 use crate::typical::*;
 
-mod id {
-    #[derive(Clone, Copy, Debug, Default)]
-    pub enum TempoId {
-        Immobile,
-        Interminable,
-        Slow,
-        Careful,
-        Deliberate,
-        #[default]
-        Relaxed,
-        Brisk,
-        Rapid,
-        Reckless,
-    }
-    pub use TempoId::*;
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
+pub enum PaceId {
+    Immobile,
+    Interminable,
+    Slow,
+    Careful,
+    Deliberate,
+    #[default]
+    Relaxed,
+    Brisk,
+    Rapid,
+    Reckless,
 }
+
+pub use PaceId::*;
 
 #[derive(Component, Debug, Clone, Copy)]
 #[allow(dead_code)]
-pub struct Tempo {
-    id: id::TempoId,
+pub struct Pace {
+    id: PaceId,
     name: &'static str,
     move_time_mult: f64,
     sneak_modifier: i16,
 }
 
-// Is this a naive approach?
-// Should this be loaded via Serde?
-// Is it important to be able to reference via enum?
+impl Default for Pace {
+    fn default() -> Self {
+        Pace::get(PaceId::default())
+    }
+}
 
-use id::*;
-pub static TEMPOS: [Tempo; 9] = [
-    Tempo {
+impl Pace {
+    fn get(id: PaceId) -> Pace {
+        PACE[id as usize]
+    }
+}
+
+const PACE: [Pace; 9] = [
+    Pace {
         id: Immobile,
         move_time_mult: f64::NAN, // careful yo
         sneak_modifier: 10,
         name: "immobile",
     },
-    Tempo {
+    Pace {
         id: Interminable,
         move_time_mult: 8.0,
         sneak_modifier: 6,
         name: "interminable",
     },
-    Tempo {
+    Pace {
         id: Slow,
         move_time_mult: 4.0,
         sneak_modifier: 4,
         name: "slow",
     },
-    Tempo {
+    Pace {
         id: Careful,
         move_time_mult: 2.0,
         sneak_modifier: 2,
         name: "careful",
     },
-    Tempo {
+    Pace {
         id: Deliberate,
         move_time_mult: 1.0,
         sneak_modifier: 1,
         name: "deliberate",
     },
-    Tempo {
+    Pace {
         id: Relaxed,
         move_time_mult: 0.8,
         sneak_modifier: 0,
         name: "relaxed",
     },
-    Tempo {
+    Pace {
         id: Brisk,
         move_time_mult: 0.6,
         sneak_modifier: -2,
         name: "brisk",
     },
-    Tempo {
+    Pace {
         id: Rapid,
         move_time_mult: 8.0,
         sneak_modifier: -4,
         name: "rapid",
     },
-    Tempo {
+    Pace {
         id: Reckless,
         move_time_mult: 8.0,
         sneak_modifier: -8,
@@ -88,31 +94,8 @@ pub static TEMPOS: [Tempo; 9] = [
     },
 ];
 
-// should be a state machine??
-#[derive(Component, Debug, Clone, Copy, Default, Eq, PartialEq)]
-pub enum Stance {
-    Dynamic,
-    #[default]
-    Standing,
-    Crouching,
-    Kneeling,
-    Prone,
-    // Grappling,
-    // Flatfooted,
-    // Unbalanced,
-    // Falling,
-    // Unconscious,
-    // Climbing,
-    // Walking,
-    // Running,
-    // Jumping,
+#[test]
+fn pace_index() {
+    assert_eq!(Pace::get(PaceId::Careful).id, PaceId::Careful);
+    assert_eq!(PACE[PaceId::Careful as usize].id, PaceId::Careful);
 }
-
-// grapple -> state machine?
-
-// pub enum CombatBearing {
-//     Positioning,
-//     Probing,
-//     Defensive,
-//     Weaving,
-// }

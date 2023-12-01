@@ -1,6 +1,6 @@
-pub mod action;
 pub mod anatomy;
 pub mod board;
+pub mod character;
 pub mod creature;
 pub mod damage;
 pub mod dice;
@@ -18,6 +18,7 @@ pub mod typical {
         primitives::{Area3d, Size3d},
         Board, Material, PlayerCellVisibility, Position,
     };
+    pub use crate::character::{Character, CharacterBundle, Equipment, Pace};
     pub use crate::creature::{species::Species, Attributes, Creature, CreatureSize, Locus};
     pub use crate::player::Player;
     pub use crate::state::{AppInitEvent, AppState};

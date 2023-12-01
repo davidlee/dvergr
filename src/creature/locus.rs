@@ -1,6 +1,6 @@
 use crate::typical::*;
 
-use crate::action::Stance;
+use crate::creature::Stance;
 // Locus
 //
 

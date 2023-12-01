@@ -1,18 +1,16 @@
 use crate::typical::*;
 
+pub mod attributes;
 pub mod condition;
-pub mod equipment;
 pub mod locus;
 pub mod movement;
 pub mod phenotype;
 pub mod species;
 
-pub use movement::*;
-pub mod attributes;
 pub use attributes::*;
 pub use condition::*;
-pub use equipment::*;
 pub use locus::*;
+pub use movement::*;
 pub use phenotype::*;
 pub use species::*;
 
@@ -107,3 +105,32 @@ pub struct Actions {
     queue: (),
     // behaviour_tree: Option<()>,
 }
+
+// should be a state machine??
+#[derive(Component, Debug, Clone, Copy, Default, Eq, PartialEq)]
+pub enum Stance {
+    Dynamic,
+    #[default]
+    Standing,
+    Crouching,
+    Kneeling,
+    Prone,
+    // Grappling,
+    // Flatfooted,
+    // Unbalanced,
+    // Falling,
+    // Unconscious,
+    // Climbing,
+    // Walking,
+    // Running,
+    // Jumping,
+}
+
+// grapple -> state machine?
+
+// pub enum CombatBearing {
+//     Positioning,
+//     Probing,
+//     Defensive,
+//     Weaving,
+// }

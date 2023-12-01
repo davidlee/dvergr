@@ -24,6 +24,7 @@ impl Default for Player {
 pub struct PlayerBundle {
     player: Player,
     creature: CreatureBundle,
+    character: CharacterBundle,
 }
 
 impl Default for PlayerBundle {
@@ -36,6 +37,11 @@ impl Default for PlayerBundle {
                     ..default()
                 },
                 ..default()
+            },
+            character: CharacterBundle {
+                character: Character,
+                equipment: Equipment::default(),
+                pace: Pace::default(),
             },
         }
     }
