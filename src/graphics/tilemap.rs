@@ -82,13 +82,13 @@ pub fn load_tileset(
 const I_FLOOR: usize = 843;
 const I_WALL: usize = 0;
 
-fn texture_index_for_cell(cell: &Cell) -> usize {
-    if cell.passable() {
-        I_FLOOR
-    } else {
-        I_WALL
-    }
-}
+// fn texture_index_for_cell(cell: &Cell) -> usize {
+//     if cell.passable() {
+//         I_FLOOR
+//     } else {
+//         I_WALL
+//     }
+// }
 
 // systems
 
@@ -134,17 +134,21 @@ pub fn update_tiles_for_player_cell_visibility(
     tileset: Res<Tileset>,
     mut tile_map_query: Query<(Entity, &mut TileMap)>,
     mut sprite_query: Query<&mut TextureAtlasSprite>,
-    cell_query: Query<(&Cell, &mut PlayerCellVisibility), Changed<PlayerCellVisibility>>,
+    cell_query: Query<
+        (&Cell, &mut PlayerCellVisibility, Option<&Wall>),
+        Changed<PlayerCellVisibility>,
+    >,
 ) {
     let mut counter = 0;
 
     match tile_map_query.get_single_mut() {
         Ok((tm_e, mut tile_map)) => {
             commands.entity(tm_e).with_children(|tiles| {
-                cell_query.for_each(|(cell, player_visibility)| {
+                cell_query.for_each(|(cell, player_visibility, maybe_wall)| {
                     // LOOP over cell visibility changes
                     if player_visibility.visible {
                         match tile_map.entities.get(&cell.position) {
+                            // seen previously
                             Some(e) => {
                                 if let Ok(mut sprite) = sprite_query.get_mut(*e) {
                                     // TODO: fade out based on distance from player
@@ -152,11 +156,17 @@ pub fn update_tiles_for_player_cell_visibility(
                                     sprite.color.set_a(100.0);
                                 }
                             }
+                            // newly seen
                             None => {
                                 counter += 1;
                                 let Vec2 { x, y } =
                                     tile_map.tile_offset(cell.position.x, cell.position.y);
-                                let texture_index = texture_index_for_cell(cell);
+                                let texture_index;
+                                if maybe_wall.is_some() {
+                                    texture_index = I_WALL;
+                                } else {
+                                    texture_index = I_FLOOR;
+                                }
                                 let sprite = TextureAtlasSprite::new(texture_index);
                                 let transform = Transform::from_xyz(x, y, TILE_MAP_Z as f32);
 

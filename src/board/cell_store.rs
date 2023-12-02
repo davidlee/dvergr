@@ -4,13 +4,13 @@ use bevy::utils::HashMap;
 // CellStore
 //
 #[derive(Resource, Eq, PartialEq, Clone, Debug, Default)]
-pub struct CellStore {
+pub struct EntityPositionStore {
     // TODO make this IVec3, Entity
     to_entity: HashMap<IVec3, Entity>,
     to_uvec: HashMap<Entity, IVec3>,
 }
 
-impl CellStore {
+impl EntityPositionStore {
     pub fn set(&mut self, pos: IVec3, entity: Entity) {
         self.to_entity.insert(pos, entity);
         self.to_uvec.insert(entity, pos);
@@ -27,6 +27,15 @@ impl CellStore {
     pub fn remove(&mut self, pos: &IVec3) -> Option<Entity> {
         if let Some(entity) = self.to_entity.remove(pos) {
             self.to_uvec.remove(&entity);
+            Some(entity)
+        } else {
+            None
+        }
+    }
+
+    pub fn remove_entity(&mut self, entity: Entity) -> Option<Entity> {
+        if let Some(pos) = self.to_uvec.remove(&entity) {
+            self.to_entity.remove(&pos);
             Some(entity)
         } else {
             None

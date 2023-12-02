@@ -6,13 +6,8 @@ pub mod geometry;
 pub mod plugin;
 pub mod primitives;
 
-// pub use plugin::BoardPlugin;
-// pub use direction::Direction;
-// pub use primitives::*;
-// pub use geometry::*;
 pub use cell_store::*;
 pub use creature_store::*;
-// pub use cell::*;
 
 pub const BOARD_SIZE_X: i32 = 48;
 pub const BOARD_SIZE_Y: i32 = 24;
@@ -25,7 +20,12 @@ use crate::typical::*;
 #[allow(dead_code)]
 pub struct Board {
     pub size: Size3d,
-    pub cell_store: CellStore,
+    pub cell_store: EntityPositionStore,
+    pub wall_store: EntityPositionStore,
+    pub floor_store: EntityPositionStore,
+    pub feature_store: EntityPositionStore,
+    pub visibility_store: EntityPositionStore,
+    pub items_store: EntityPositionStore,
     pub creature_store: CreatureStore,
 }
 
@@ -37,7 +37,12 @@ impl Default for Board {
                 height: BOARD_SIZE_Y,
                 depth: 1,
             },
-            cell_store: CellStore::default(),
+            cell_store: EntityPositionStore::default(),
+            wall_store: EntityPositionStore::default(),
+            floor_store: EntityPositionStore::default(),
+            feature_store: EntityPositionStore::default(),
+            items_store: EntityPositionStore::default(),
+            visibility_store: EntityPositionStore::default(),
             creature_store: CreatureStore::default(),
         }
     }
@@ -70,8 +75,6 @@ impl Board {
             Ok(IVec3::new(x, y, z))
         }
     }
-
-    // pub fn apply_direction_checked(&self, )
 }
 
 // Position
@@ -92,7 +95,8 @@ pub struct PlayerCellVisibility {
 }
 
 impl PlayerCellVisibility {
-    pub fn new(position: IVec3) -> Self {
+    pub fn new(x: i32, y: i32, z: i32) -> Self {
+        let position = IVec3::new(x, y, z);
         Self {
             visible: false,
             seen: false,

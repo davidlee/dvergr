@@ -14,7 +14,9 @@ pub mod ui;
 
 pub mod typical {
     pub use crate::board::{
-        cell::{Cell, Material},
+        cell::{
+            Cell, CellFeature, CellFloorBundle, CellItems, CellWallBundle, Floor, Material, Wall,
+        },
         direction::Direction,
         primitives::{Area3d, Size3d},
         Board, PlayerCellVisibility, Position,

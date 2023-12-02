@@ -8,10 +8,10 @@ const CELL_DIMENSIONS_METRES: [f32; 3] = [0.5, 0.5, 2.0];
 
 #[derive(PartialEq, Clone, Debug, Component)]
 pub struct Cell {
-    pub material: Option<Entity>,
-    pub floor: Option<Entity>,
-    pub feature: Option<Entity>, // door, trap, statue, well, etc
-    pub items: Option<Entity>,
+    // pub material: Option<Entity
+    // pub floor: Option<Entity>,
+    // pub feature: Option<Entity>, // door, trap, statue, well, etc
+    // pub items: Option<Entity>,
 
     // pub material_blocks_visibility: bool,
     // pub blocks_visibility_computed: bool,
@@ -34,73 +34,114 @@ we'd want a CellBundle ...
 
 */
 
-#[derive(Bundle, Debug, Copy, Clone, Eq, PartialEq)]
-struct CellBundle {
+// #[derive(Component)]
+// type MaybeCellFillMaterial = Option<CellFillMaterial>;
+
+#[derive(Bundle, Debug, Clone, PartialEq)]
+pub struct CellWallBundle {
     pub cell: Cell,
-    pub cell_material: CellFillMaterial,
-    // pub items:
+    pub player_visibility: PlayerCellVisibility,
+    pub cell_material: Wall,
+    // can have floor
+    pub cell_items: CellItems,
 }
 
-impl Cell {}
+pub struct CellFloorBundle {
+    pub cell: Cell,
+    pub player_visibility: PlayerCellVisibility,
+    pub cell_floor: Floor,
+    pub cell_items: CellItems,
+    // can have feature
+}
 
-// type aliases
-pub type CellMaterial = Option<Material>;
-pub type CellFloor = Option<Material>;
-pub type CellItems = Option<Vec<Entity>>;
+// TODO cell with no material / floor cannot have items; they fall through
 
 impl Cell {
-    pub fn empty(position: IVec3) -> Self {
-        Cell {
-            // material_blocks_visibility: false,
-            // blocks_visibility_computed: false,
-            position,
-            ..default()
-        }
-    }
-
-    pub fn wall(xyz: IVec3) -> Self {
-        Cell {
-            // material: Some(Material::Dirt),
-            // material_blocks_visibility: true,
-            // blocks_visibility_computed: true,
-            position: xyz,
-            ..default()
-        }
-    }
-
-    pub fn passable(&self) -> bool {
-        self.material.is_none()
-    }
-
-    pub fn impassable(&self) -> bool {
-        !self.passable()
-    }
-
-    pub fn blocks_visibility(&self) -> bool {
-        self.material.is_some() // and is not ... glass?
+    pub fn new(x: i32, y: i32, z: i32) -> Self {
+        let position = IVec3::new(x, y, z);
+        Self { position }
     }
 }
 
 impl Default for Cell {
     fn default() -> Self {
         Cell {
-            material: None,
-            floor: None,
-            feature: None,
-            items: None,
-            // items: Some(vec![]),
-            // material_blocks_visibility: false,
-            // blocks_visibility_computed: false,
-            // light_intensity: 0.0,
-            // light_color: Color::NONE,
             position: IVec3::new(-1, -1, -1),
         }
     }
 }
 
+#[derive(Component, Eq, PartialEq, Debug, Clone)]
+pub struct Wall {
+    material: Material,
+    position: IVec3,
+}
+
+impl Wall {
+    pub fn blocks_visibility(&self) -> bool {
+        true
+    }
+
+    pub fn impassable(&self) -> bool {
+        true
+    }
+
+    pub fn new(x: i32, y: i32, z: i32, material: Material) -> Self {
+        let position = IVec3::new(x, y, z);
+        Self { position, material }
+    }
+}
+
+#[derive(Component, Eq, PartialEq, Debug, Copy, Clone)]
+pub struct CellFeature {
+    entity: Entity,
+    position: IVec3,
+}
+
+impl CellFeature {
+    pub fn blocks_visibility(&self) -> bool {
+        false
+    }
+
+    pub fn impassable(&self) -> bool {
+        false
+    }
+    pub fn new(x: i32, y: i32, z: i32, entity: Entity) -> Self {
+        let position = IVec3::new(x, y, z);
+        Self { position, entity }
+    }
+}
+
+#[derive(Component, Eq, PartialEq, Debug, Clone)]
+pub struct CellItems {
+    items: Vec<Entity>,
+    position: IVec3,
+}
+
+impl CellItems {
+    pub fn new(x: i32, y: i32, z: i32) -> Self {
+        let position = IVec3::new(x, y, z);
+        let items = vec![];
+        Self { position, items }
+    }
+}
+
+#[derive(Component, Eq, PartialEq, Debug, Clone)]
+pub struct Floor {
+    material: Material,
+    position: IVec3,
+}
+
+impl Floor {
+    pub fn new(x: i32, y: i32, z: i32, material: Material) -> Self {
+        let position = IVec3::new(x, y, z);
+        Self { position, material }
+    }
+}
+
 // Material
 //
-#[derive(Default, Eq, PartialEq, Clone, Debug, PartialOrd, Ord)]
+#[derive(Component, Default, Eq, PartialEq, Clone, Debug, PartialOrd, Ord)]
 pub enum Material {
     #[default]
     Dirt,
