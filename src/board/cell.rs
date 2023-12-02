@@ -73,8 +73,8 @@ impl Default for Cell {
 
 #[derive(Component, Eq, PartialEq, Debug, Clone)]
 pub struct Wall {
-    material: Material,
-    position: IVec3,
+    pub material: Material,
+    pub position: IVec3,
 }
 
 impl Wall {
