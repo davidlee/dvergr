@@ -17,9 +17,9 @@ pub mod typical {
         cell::{
             Cell, CellFeature, CellFloorBundle, CellItems, CellWallBundle, Floor, Material, Wall,
         },
-        direction::Direction,
+        direction::{Direction, CARDINAL_DIRECTIONS, COMPASS_DEGREES, DIRECTION_OFFSETS},
         primitives::{Area3d, Size3d},
-        Board, PlayerCellVisibility, Position,
+        Board, PlayerCellVisibility, Position, BOARD_SIZE_X, BOARD_SIZE_Y, BOARD_SIZE_Z,
     };
     pub use crate::character::{Character, CharacterBundle, Equipment, Pace};
     pub use crate::creature::{species::Species, Attributes, Creature, CreatureSize, Locus};

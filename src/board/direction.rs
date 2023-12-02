@@ -2,8 +2,6 @@ use crate::typical::*;
 
 use std::f32::consts::TAU;
 
-// use bevy::math::*;
-
 // Direction
 //
 #[derive(Eq, PartialEq, Copy, Clone, Debug, Ord, PartialOrd)]
@@ -96,11 +94,10 @@ pub const DIRECTION_OFFSETS: [IVec3; 8] = [
     // IVec3 { x: 0, y: 0, z: -1 },
 ];
 
+// * TAU = degrees
 pub const DIRECTION_RADIANS: [f32; 8] = [0.0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875];
 
-// pub const COMPASS_DEGREES: [f32; 8] = [0., 45., 90., 135., 180., 225., 270., 315.];
-pub const COMPASS_DEGREES: [f32; 8] = [0., 45., 90., 135., 180., -135., -90., -45.];
-
+pub const COMPASS_DEGREES: [f32; 8] = [0., 45., 90., 135., 180., 225., 270., 315.];
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]
 pub enum Orientation {
     Horizontal,

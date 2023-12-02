@@ -1,6 +1,3 @@
-use std::f32::consts::{PI, TAU};
-
-// use bevy::{math::IVec3, utils::HashSet};
 use crate::typical::*;
 
 use super::{BOARD_SIZE_X, BOARD_SIZE_Y};
@@ -39,15 +36,23 @@ pub fn take_sector(
     width: f32,
     centre: &IVec3,
     circle: HashSet<[i32; 3]>,
+    // clock: Res<Clock>,
     // permissiveness: f32,
 ) -> HashSet<[i32; 3]> {
     circle
         .into_iter()
         .filter(|v| {
-            let angle_to_point = angle_between_2d(centre, &IVec3::from_array(*v));
-            warn!("{:?}", angle_to_point);
-            return angle_to_point >= (angle - width / 2.0)
-                && angle_to_point <= (angle + width / 2.0);
+            let alpha = angle_between_2d(centre, &IVec3::from_array(*v));
+
+            let (min_a, max_a) = (abs_radians(angle - width / 2.0), angle + width / 2.0);
+
+            // normal case
+            if min_a < max_a {
+                return alpha >= min_a && alpha <= max_a;
+            } else {
+                // min / max either side of 0/360 degrees, as when looking North
+                return alpha <= max_a || alpha >= min_a;
+            }
         })
         .collect::<HashSet<_>>()
 }
@@ -57,50 +62,47 @@ pub fn sector_facing(
     centre: &IVec3,
     circle: HashSet<[i32; 3]>,
 ) -> HashSet<[i32; 3]> {
-    let angle = crate::board::direction::COMPASS_DEGREES[facing as usize];
-    // let angle = crate::board::direction::DIRECTION_RADIANS[facing as usize];
-    warn!(angle);
-    take_sector(angle, 90., centre, circle)
+    let angle = f32::to_radians(COMPASS_DEGREES[facing as usize]);
+    // warn!(angle);
+    take_sector(angle, f32::to_radians(90.), centre, circle)
 }
 
-fn mod360(value: f32) -> f32 {
-    (value + 360.) % 360.
-}
+// untested / ported from red blob article
 
-fn modl(value: f32, modulo: f32) -> f32 {
-    return ((value * modulo) + modulo) % modulo;
-}
+// fn modl(value: f32, modulo: f32) -> f32 {
+//     return ((value * modulo) + modulo) % modulo;
+// }
 
-pub fn degrees_left(start_deg: f32, end_deg: f32) -> f32 {
-    modl(end_deg - start_deg, 360.0)
-}
+// pub fn degrees_left(start_deg: f32, end_deg: f32) -> f32 {
+//     modl(end_deg - start_deg, 360.0)
+// }
 
-pub fn degrees_right(start_deg: f32, end_deg: f32) -> f32 {
-    modl(start_deg - end_deg, 360.0)
-}
+// pub fn degrees_right(start_deg: f32, end_deg: f32) -> f32 {
+//     modl(start_deg - end_deg, 360.0)
+// }
 
-pub fn degrees_apart(start_deg: f32, end_deg: f32) -> f32 {
-    f32::min(
-        degrees_left(start_deg, end_deg),
-        degrees_right(start_deg, end_deg),
-    )
-}
+// pub fn degrees_apart(start_deg: f32, end_deg: f32) -> f32 {
+//     f32::min(
+//         degrees_left(start_deg, end_deg),
+//         degrees_right(start_deg, end_deg),
+//     )
+// }
 
 pub fn angle_between_2d(a: &IVec3, b: &IVec3) -> f32 {
     let (x1, y1, x2, y2) = (a.x as f32, a.y as f32, b.x as f32, b.y as f32);
-    f32::atan2(x2 - x1, y2 - y1) * (180. / PI)
+    abs_radians(f32::atan2(x2 - x1, y2 - y1))
 }
 
-#[test]
-fn sanity() {
-    let o = IVec3::new(0, 0, 0);
-    // assert_eq!(angle_between_2d(&o, &Direction::North.offset()), 0.);
-    assert_eq!(angle_between_2d(&o, &Direction::East.offset()), 90.);
-    // assert_eq!(angle_between_2d(&o, &Direction::South.offset()), 180.);
-    assert_eq!(angle_between_2d(&o, &Direction::West.offset()), 270.);
+fn abs_radians(a: f32) -> f32 {
+    if a < 0. {
+        f32::to_radians(360.) + a
+    } else {
+        a
+    }
 }
 
 // https://www.redblobgames.com/grids/line-drawing/
+//
 pub fn line(p0: IVec3, p1: IVec3) -> Vec<IVec3> {
     let mut points = vec![];
     let n = distance_between_2d(p0, p1);
