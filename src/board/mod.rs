@@ -100,16 +100,3 @@ impl PlayerCellVisibility {
         }
     }
 }
-
-// Material
-//
-#[derive(Default, Resource, Eq, PartialEq, Clone, Debug, PartialOrd, Ord)]
-pub enum Material {
-    #[default]
-    Dirt,
-    Sandstone,
-    Granite,
-    Marble,
-    Quartz,
-    Sand,
-}

@@ -14,10 +14,10 @@ pub mod ui;
 
 pub mod typical {
     pub use crate::board::{
-        cell::Cell,
+        cell::{Cell, Material},
         direction::Direction,
         primitives::{Area3d, Size3d},
-        Board, Material, PlayerCellVisibility, Position,
+        Board, PlayerCellVisibility, Position,
     };
     pub use crate::character::{Character, CharacterBundle, Equipment, Pace};
     pub use crate::creature::{species::Species, Attributes, Creature, CreatureSize, Locus};

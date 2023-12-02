@@ -69,3 +69,16 @@ pub fn render_gizmos(
         }
     }
 }
+
+#[allow(dead_code, unused_variables, unused_mut)]
+pub fn render_rays(
+    mut gizmos: Gizmos,
+    tile_map_q: Query<&TileMap>,
+    board: Res<Board>,
+    player_q: Query<(Entity, &Player, &Locus)>,
+    cells_q: Query<(Entity, &Cell)>,
+    // clock: Res<Clock>,
+) {
+    // find all walls
+    // determine whether there's an adjacent wall, use this to build vertices
+}
