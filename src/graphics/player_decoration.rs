@@ -26,30 +26,30 @@ pub fn render_gizmos(
 
             let alpha = (clock.current_frame() % 120) as f32 / 120.0;
 
+            // FOV
             gizmos
                 .arc_2d(
                     player_centre,
                     locus.direction.angular_rotation(),
                     PI / 2.,
                     TILE_SIZE_W * 24. * alpha,
-                    Color::GREEN.with_a(0.25),
+                    Color::GOLD.with_a(0.9),
                 )
                 .segments(36);
 
+            // peripheral vision arc
             gizmos.arc_2d(
                 player_centre,
                 locus.direction.angular_rotation(),
                 PI,
                 TILE_SIZE_W * 6.,
-                Color::GREEN.with_a(0.25),
+                Color::ORANGE.with_a(0.25),
             );
 
+            // Show the current light radius
+            // TODO light sources modelled properly
             gizmos
-                .circle_2d(
-                    player_centre,
-                    36.0 + (alpha * TILE_SIZE_W * 24.0),
-                    Color::GOLD.with_a(1.0 - alpha),
-                )
+                .circle_2d(player_centre, TILE_SIZE_W * 24.0, Color::GOLD.with_a(0.1))
                 .segments(36);
 
             // Draw a box around the player
