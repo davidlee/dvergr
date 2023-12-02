@@ -1,24 +1,28 @@
-use crate::board::geometry::circle_hash_set;
+use crate::board::geometry::*;
 use crate::typical::*;
 
-const PLAYER_VISIBILITY_RANGE: i32 = 24; // FIXME add light sources
+const PLAYER_VISIBILITY_RANGE: f32 = 24.5; // FIXME add light sources
+
+// https://www.albertford.com/shadowcasting/#symmetry
+// https://www.roguebasin.com/index.php/FOV_using_recursive_shadowcasting
 
 pub fn mark_player_visible_cells(
     board_mut: Res<Board>,
-    mut cell_query: Query<(&Cell, &mut PlayerCellVisibility)>,
-    mut player_query: Query<(Entity, &mut Player, &Creature, &Locus)>,
+    mut visibility_query: Query<&mut PlayerCellVisibility>,
+    mut player_query: Query<(&mut Player, &Locus)>,
 ) {
-    if let Ok((_, mut player, _creature, locus)) = player_query.get_single_mut() {
+    if let Ok((mut player, locus)) = player_query.get_single_mut() {
         match locus.position {
             Position::Point(pos) => {
-                let new_vis = circle_hash_set(pos, PLAYER_VISIBILITY_RANGE);
+                let circle = circle(pos, PLAYER_VISIBILITY_RANGE);
+                let new_vis = sector_facing(locus.facing, &pos, circle);
                 let old_vis = player.positions_visible.to_owned();
 
                 for arr_pos in new_vis.difference(&old_vis) {
                     let pos = IVec3::from_array(*arr_pos);
                     match board_mut.cell_store.get(&pos) {
-                        Some(cell_entity) => match cell_query.get_mut(*cell_entity) {
-                            Ok((_cell, mut vis)) => (vis.seen, vis.visible) = (true, true),
+                        Some(entity) => match visibility_query.get_mut(*entity) {
+                            Ok(mut vis) => (vis.seen, vis.visible) = (true, true),
                             Err(e) => error!("Error: {:?}", e),
                         },
                         None => (),
@@ -28,8 +32,8 @@ pub fn mark_player_visible_cells(
                 for arr_pos in old_vis.difference(&new_vis) {
                     let pos = IVec3::from_array(*arr_pos);
                     match board_mut.cell_store.get(&pos) {
-                        Some(cell_entity) => match cell_query.get_mut(*cell_entity) {
-                            Ok((_cell, mut vis)) => vis.visible = false,
+                        Some(entity) => match visibility_query.get_mut(*entity) {
+                            Ok(mut vis) => vis.visible = false,
                             Err(e) => error!("Error: {:?}", e),
                         },
                         None => (),
@@ -37,7 +41,7 @@ pub fn mark_player_visible_cells(
                 }
                 player.positions_visible = new_vis;
             }
-            _ => panic!("oops, unimplemented",),
+            Position::Area(_) => panic!("oops, unimplemented"),
         }
     }
 }

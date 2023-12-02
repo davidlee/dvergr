@@ -63,14 +63,6 @@ impl Cell {
     }
 }
 
-impl Default for Cell {
-    fn default() -> Self {
-        Cell {
-            position: IVec3::new(-1, -1, -1),
-        }
-    }
-}
-
 #[derive(Component, Eq, PartialEq, Debug, Clone)]
 pub struct Wall {
     pub material: Material,

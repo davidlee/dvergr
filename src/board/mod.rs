@@ -14,6 +14,7 @@ pub const BOARD_SIZE_Y: i32 = 24;
 pub const BOARD_SIZE_Z: i32 = 1;
 
 use crate::typical::*;
+
 // Board
 //
 #[derive(Clone, Debug, Resource)]
@@ -47,6 +48,7 @@ impl Default for Board {
         }
     }
 }
+
 impl Board {
     pub fn coords(&self) -> Vec<IVec3> {
         let mut cv = vec![];

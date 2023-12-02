@@ -58,7 +58,7 @@ impl Direction {
     }
 
     pub fn angular_rotation(self) -> f32 {
-        ANGULAR_ROTATIONS[self as usize]
+        DIRECTION_RADIANS[self as usize] * TAU
     }
 }
 
@@ -96,16 +96,10 @@ pub const DIRECTION_OFFSETS: [IVec3; 8] = [
     // IVec3 { x: 0, y: 0, z: -1 },
 ];
 
-pub const ANGULAR_ROTATIONS: [f32; 8] = [
-    TAU * 0.0,
-    TAU * 0.125,
-    TAU * 0.25,
-    TAU * 0.375,
-    TAU * 0.5,
-    TAU * 0.625,
-    TAU * 0.75,
-    TAU * 0.875,
-];
+pub const DIRECTION_RADIANS: [f32; 8] = [0.0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875];
+
+// pub const COMPASS_DEGREES: [f32; 8] = [0., 45., 90., 135., 180., 225., 270., 315.];
+pub const COMPASS_DEGREES: [f32; 8] = [0., 45., 90., 135., 180., -135., -90., -45.];
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]
 pub enum Orientation {

@@ -38,6 +38,8 @@ pub mod typical {
         First, Last, OnEnter, OnExit, OnTransition, PostUpdate, PreUpdate, Startup, Update,
     };
     pub use bevy::utils::tracing::{debug, error, info, trace, warn, Level};
+
+    pub use bevy::utils::{HashMap, HashSet};
 }
 
 use bevy::prelude::{ClearColor, Color, DefaultPlugins, ImagePlugin, PluginGroup};
