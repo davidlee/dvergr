@@ -6,10 +6,10 @@ use super::{BOARD_SIZE_X, BOARD_SIZE_Y};
 // https://www.redblobgames.com/coordinates/axes-and-angles/#angles
 // https://www.redblobgames.com/grids/line-drawing/
 
-pub fn circle(centre: IVec3, radius: f32) -> HashSet<[i32; 3]> {
-    let mut circle = HashSet::new();
+pub fn circle(centre: IVec3, radius: f32) -> HashSet<[i32; 2]> {
+    let mut circle: HashSet<[i32; 2]> = HashSet::new();
 
-    let [x, y, z] = centre.to_array();
+    let [x, y, _z] = centre.to_array();
     let [fx, fy, r] = [x as f32, y as f32, radius]; // r = x.5 looks better
     let r2 = r * r;
 
@@ -24,7 +24,7 @@ pub fn circle(centre: IVec3, radius: f32) -> HashSet<[i32; 3]> {
 
         for x in f32::round(left) as i32..f32::round(right) as i32 {
             if x >= 0 && y >= 0 && x <= BOARD_SIZE_X && y <= BOARD_SIZE_Y {
-                circle.insert([x, y, z]);
+                circle.insert([x, y]);
             }
         }
     }
@@ -35,14 +35,13 @@ pub fn take_sector(
     angle: f32,
     width: f32,
     centre: &IVec3,
-    circle: HashSet<[i32; 3]>,
-    // clock: Res<Clock>,
-    // permissiveness: f32,
-) -> HashSet<[i32; 3]> {
+    circle: HashSet<[i32; 2]>,
+) -> HashSet<[i32; 2]> {
+    let centre = IVec2::new(centre.x, centre.y);
     circle
         .into_iter()
         .filter(|v| {
-            let alpha = angle_between_2d(centre, &IVec3::from_array(*v));
+            let alpha = angle_between_2d(&centre, &IVec2::from_array(*v));
 
             let (min_a, max_a) = (abs_radians(angle - width / 2.0), angle + width / 2.0);
 
@@ -60,8 +59,8 @@ pub fn take_sector(
 pub fn sector_facing(
     facing: Direction,
     centre: &IVec3,
-    circle: HashSet<[i32; 3]>,
-) -> HashSet<[i32; 3]> {
+    circle: HashSet<[i32; 2]>,
+) -> HashSet<[i32; 2]> {
     let angle = f32::to_radians(COMPASS_DEGREES[facing as usize]);
     // warn!(angle);
     take_sector(angle, f32::to_radians(90.), centre, circle)
@@ -88,7 +87,7 @@ pub fn sector_facing(
 //     )
 // }
 
-pub fn angle_between_2d(a: &IVec3, b: &IVec3) -> f32 {
+pub fn angle_between_2d(a: &IVec2, b: &IVec2) -> f32 {
     let (x1, y1, x2, y2) = (a.x as f32, a.y as f32, b.x as f32, b.y as f32);
     abs_radians(f32::atan2(x2 - x1, y2 - y1))
 }

@@ -18,7 +18,7 @@ pub fn validate_directional_input(
         for e in ev_input.read() {
             match locus.position {
                 Position::Point(curr_pos_ivec) => {
-                    // this just checks bounds of the board, not whether cel is occupied:
+                    // this just checks bounds of the board, not whether cell is occupied:
                     match board.apply_direction(&curr_pos_ivec, &e.direction) {
                         Ok(new_pos) => match board.wall_store.get(&new_pos) {
                             Some(_) => trace!("cell contains a wall"),
@@ -38,6 +38,7 @@ pub fn validate_directional_input(
                                 ev_move.send(ev);
                             }
                         },
+                        // TODO load bordering map
                         Err(_str) => error!("Out of bounds."),
                     }
                 }

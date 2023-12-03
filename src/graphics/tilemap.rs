@@ -5,7 +5,8 @@ use super::TILEMAP_ASSET_PATH;
 use crate::graphics::typical::*;
 use crate::typical::*;
 
-// const BACKGROUND_COLOR: Color = Color::rgb(0.07, 0.12, 0.18);
+#[allow(dead_code)]
+const BACKGROUND_COLOR: Color = Color::rgb(0.07, 0.12, 0.18);
 
 pub const TILE_MAP_Z: i32 = 0;
 pub const DARK_MAP_Z: i32 = 0;
@@ -81,14 +82,6 @@ pub fn load_tileset(
 
 const I_FLOOR: usize = 843;
 const I_WALL: usize = 0;
-
-// fn texture_index_for_cell(cell: &Cell) -> usize {
-//     if cell.passable() {
-//         I_FLOOR
-//     } else {
-//         I_WALL
-//     }
-// }
 
 // systems
 
@@ -182,10 +175,12 @@ pub fn update_tiles_for_player_cell_visibility(
                             }
                         }
                     } else if player_visibility.seen {
+                        // newly obscured
                         match tile_map.entities.get(&cell.position) {
                             Some(e) => {
                                 if let Ok(mut sprite) = sprite_query.get_mut(*e) {
-                                    sprite.color.set_a(0.10);
+                                    // sprite.color.set_a(0.0);
+                                    sprite.color.set_a(0.1);
                                 }
                             }
                             None => {

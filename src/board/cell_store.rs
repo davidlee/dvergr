@@ -11,6 +11,14 @@ pub struct EntityPositionStore {
 }
 
 impl EntityPositionStore {
+    pub fn as_hashset2d(&self) -> HashSet<[i32; 2]> {
+        let mut set = HashSet::new();
+        self.to_entity.keys().for_each(|pos| {
+            set.insert([pos.x, pos.y]);
+        });
+        set
+    }
+
     pub fn set(&mut self, pos: IVec3, entity: Entity) {
         self.to_entity.insert(pos, entity);
         self.to_uvec.insert(entity, pos);

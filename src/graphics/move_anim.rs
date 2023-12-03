@@ -51,11 +51,19 @@ pub fn add_changed_creature_mob_move_anim(
     }
 }
 
+// TODO: experiment w. moving the world (TileMap) rather than / inverse to the PlayerAvatar
+//
 pub fn mob_movement(
     mut commands: Commands,
-    mut sprite_query: Query<(Entity, &mut MobMoveAnimation, &mut Transform)>,
+    mut sprite_query: Query<(
+        Entity,
+        Option<&PlayerAvatar>,
+        &mut MobMoveAnimation,
+        &mut Transform,
+    )>,
+    // mut tile_map_query: Query<&TileMap, &mut Transform>,
 ) {
-    for (sprite_entity, mut anim, mut transform) in sprite_query.iter_mut() {
+    for (sprite_entity, _player, mut anim, mut transform) in sprite_query.iter_mut() {
         if anim.frames == 1 {
             transform.translation = anim.target;
             transform.scale = Vec3::new(1.0, 1.0, 1.0);

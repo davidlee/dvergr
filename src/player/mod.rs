@@ -8,7 +8,7 @@ pub mod visibility;
 
 #[derive(Component, Debug, Clone)]
 pub struct Player {
-    pub positions_visible: HashSet<[i32; 3]>,
+    pub positions_visible: HashSet<[i32; 2]>,
 }
 
 impl Default for Player {
