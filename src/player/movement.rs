@@ -6,6 +6,7 @@ pub struct DirectionalInput {
     pub direction: Direction,
 }
 
+// TODO turn / body without moving if facing changed
 pub fn validate_directional_input(
     mut ev_input: EventReader<DirectionalInput>,
     mut ev_move: EventWriter<UpdateLocus>,

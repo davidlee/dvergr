@@ -179,8 +179,9 @@ pub fn update_tiles_for_player_cell_visibility(
                         match tile_map.entities.get(&cell.position) {
                             Some(e) => {
                                 if let Ok(mut sprite) = sprite_query.get_mut(*e) {
-                                    // sprite.color.set_a(0.0);
-                                    sprite.color.set_a(0.1);
+                                    sprite.color.set_a(0.0);
+                                    // TODO - animate them fading out over a few seconds
+                                    // sprite.color.set_a(0.1);
                                 }
                             }
                             None => {
