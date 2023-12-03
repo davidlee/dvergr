@@ -40,28 +40,22 @@ pub fn mark_player_visible_cells(
 
                 // line of sight:
                 //
-                let mut los_vec: Vec<[i32; 2]> =
+                let mut unobscured: Vec<[i32; 2]> =
                     // compute_fov_2d_recursive([pos.x, pos.y], &board.wall_store.as_hashset2d());
                     compute_fov_2d([pos.x, pos.y], &board.wall_store.as_hashset2d());
 
-                // warn!("{:?}", &board.wall_store.as_hashset2d());
-
-                let mut los_set: HashSet<[i32; 2]> = HashSet::new();
-                los_set
-                    .try_reserve(los_vec.len())
+                let mut visible: HashSet<[i32; 2]> = HashSet::new();
+                visible
+                    .try_reserve(unobscured.len())
                     .expect("failed allocation");
-                while los_vec.len() > 0 {
-                    // warn!("{:?}", los_vec);
-                    los_set.insert(los_vec.pop().expect("should not panic"));
+                while unobscured.len() > 0 {
+                    let xy = unobscured.pop().expect("we good?");
+                    if visible_sector.contains(&xy) {
+                        visible.insert(xy);
+                    }
                 }
 
-                let new_vis = los_set;
-                //let mut new_vis: HashSet<[i32; 2]> = visible_sector.clone();
-
-                // for xy in los_set.difference(&visible_sector) {
-                //     let res = new_vis.remove(xy);
-                //     warn!("{:?} => {:?}", xy, res);
-                // }
+                let new_vis = visible;
 
                 let old_vis = player.positions_visible.to_owned(); // FIXME
 

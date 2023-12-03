@@ -13,7 +13,6 @@ use crate::{BOARD_SIZE_X, BOARD_SIZE_Y};
 type DepthColVec = IVec2;
 type XyVec = IVec2;
 
-// TODO add bounds
 pub fn compute_fov_2d_recursive<'a>(
     origin: [i32; 2],
     walls: &'a HashSet<[i32; 2]>,
@@ -34,7 +33,6 @@ pub fn compute_fov_2d_recursive<'a>(
     visible
 }
 
-// TODO add bounds
 pub fn compute_fov_2d<'a>(origin: [i32; 2], walls: &'a HashSet<[i32; 2]>) -> Vec<[i32; 2]> {
     let mut visible = vec![];
     visible.push(origin);
@@ -73,6 +71,7 @@ fn scan_rows(
         for tile in row.tiles().iter() {
             let (x, y) = quadrant.transform(tile);
             if out_of_bounds(x, y) {
+                // would be better to do this less often.
                 return visible;
             }
 
@@ -89,9 +88,7 @@ fn scan_rows(
             if is_floor(prev_x, prev_y) && is_wall(x, y) {
                 let mut next_row = row.next();
                 next_row.end_slope = slope(tile);
-                if !out_of_bounds(prev_x, prev_y) {
-                    rows.push(next_row);
-                }
+                rows.push(next_row);
             }
             prev_tile = *tile;
         }
@@ -99,9 +96,7 @@ fn scan_rows(
 
         if is_floor(px, py) {
             let next_row = row.next();
-            if !out_of_bounds(px, py) {
-                rows.push(next_row);
-            }
+            rows.push(next_row);
         }
     }
 
@@ -121,6 +116,9 @@ fn scan_row_recur(
     for tile in row.tiles().iter() {
         let (x, y) = quadrant.transform(tile);
         let (prev_x, prev_y) = quadrant.transform(&prev_tile);
+        if out_of_bounds(x, y) {
+            return visible;
+        }
 
         if is_wall(x, y) || is_symmetric(&row, tile) {
             visible.push([x, y]);
@@ -131,14 +129,9 @@ fn scan_row_recur(
         }
 
         if is_floor(prev_x, prev_y) && is_wall(x, y) {
-            if out_of_bounds(x, y) {
-                warn!("DONEZO {:?},{:?}", x, y);
-                return visible;
-            } else {
-                let mut next_row = row.next();
-                next_row.end_slope = slope(tile);
-                visible.append(&mut scan_row_recur(next_row, prev_tile, quadrant, walls));
-            }
+            let mut next_row = row.next();
+            next_row.end_slope = slope(tile);
+            visible.append(&mut scan_row_recur(next_row, prev_tile, quadrant, walls));
         }
         prev_tile = *tile;
     }
@@ -146,10 +139,8 @@ fn scan_row_recur(
     let (px, py) = quadrant.transform(&prev_tile);
 
     if is_floor(px, py) {
-        if !out_of_bounds(px, py) {
-            let next_row = row.next();
-            visible.append(&mut scan_row_recur(next_row, prev_tile, quadrant, walls));
-        }
+        let next_row = row.next();
+        visible.append(&mut scan_row_recur(next_row, prev_tile, quadrant, walls));
     }
     visible
 }
