@@ -34,8 +34,78 @@ pub fn compute_fov_2d_recursive<'a>(
     visible
 }
 
+// TODO add bounds
+pub fn compute_fov_2d<'a>(origin: [i32; 2], walls: &'a HashSet<[i32; 2]>) -> Vec<[i32; 2]> {
+    let mut visible = vec![];
+    visible.push(origin);
+
+    for cardinal in CARDINALS {
+        let quadrant: Quadrant = Quadrant::new(cardinal, &IVec2::from_array(origin));
+        let first_row = Row::new(1, -1.0, 1.0);
+        visible.append(&mut scan_rows(
+            first_row,
+            IVec2::from_array(origin),
+            &quadrant,
+            walls,
+        ));
+    }
+    visible
+}
+
 fn out_of_bounds(x: i32, y: i32) -> bool {
-    i32::min(x, y) < 0 || x > BOARD_SIZE_X || y > BOARD_SIZE_Y
+    x < 0 || y < 0 || x > BOARD_SIZE_X || y > BOARD_SIZE_Y
+}
+
+fn scan_rows(
+    row: Row,
+    mut prev_tile: DepthColVec,
+    quadrant: &Quadrant,
+    walls: &HashSet<[i32; 2]>,
+) -> Vec<[i32; 2]> {
+    let mut visible = Vec::new();
+    let is_wall = |x, y| walls.contains(&[x, y]);
+    let is_floor = |x, y| !walls.contains(&[x, y]);
+    //
+    let mut rows: Vec<Row> = vec![row];
+    while rows.len() > 0 {
+        let mut row = rows.pop().unwrap();
+
+        for tile in row.tiles().iter() {
+            let (x, y) = quadrant.transform(tile);
+            if out_of_bounds(x, y) {
+                return visible;
+            }
+
+            let (prev_x, prev_y) = quadrant.transform(&prev_tile);
+
+            if is_wall(x, y) || is_symmetric(&row, tile) {
+                visible.push([x, y]);
+            }
+
+            if is_wall(prev_x, prev_y) && is_floor(x, y) {
+                row.start_slope = slope(tile);
+            }
+
+            if is_floor(prev_x, prev_y) && is_wall(x, y) {
+                let mut next_row = row.next();
+                next_row.end_slope = slope(tile);
+                if !out_of_bounds(prev_x, prev_y) {
+                    rows.push(next_row);
+                }
+            }
+            prev_tile = *tile;
+        }
+        let (px, py) = quadrant.transform(&prev_tile);
+
+        if is_floor(px, py) {
+            let next_row = row.next();
+            if !out_of_bounds(px, py) {
+                rows.push(next_row);
+            }
+        }
+    }
+
+    visible
 }
 
 fn scan_row_recur(
@@ -44,27 +114,28 @@ fn scan_row_recur(
     quadrant: &Quadrant,
     walls: &HashSet<[i32; 2]>,
 ) -> Vec<[i32; 2]> {
-    //
     let mut visible = Vec::new();
-    let is_wall = |x, y| walls.contains(&[x, y]) || out_of_bounds(x, y);
+    let is_wall = |x, y| walls.contains(&[x, y]);
     let is_floor = |x, y| !walls.contains(&[x, y]);
 
     for tile in row.tiles().iter() {
         let (x, y) = quadrant.transform(tile);
-        let (px, py) = quadrant.transform(&prev_tile);
+        let (prev_x, prev_y) = quadrant.transform(&prev_tile);
 
         if is_wall(x, y) || is_symmetric(&row, tile) {
             visible.push([x, y]);
         }
 
-        if is_wall(px, py) && is_floor(x, y) {
+        if is_wall(prev_x, prev_y) && is_floor(x, y) {
             row.start_slope = slope(tile);
         }
 
-        if is_floor(px, py) & is_wall(x, y) {
+        if is_floor(prev_x, prev_y) && is_wall(x, y) {
             if out_of_bounds(x, y) {
-                break;
-            } else if let Some(mut next_row) = row.next() {
+                warn!("DONEZO {:?},{:?}", x, y);
+                return visible;
+            } else {
+                let mut next_row = row.next();
                 next_row.end_slope = slope(tile);
                 visible.append(&mut scan_row_recur(next_row, prev_tile, quadrant, walls));
             }
@@ -75,14 +146,9 @@ fn scan_row_recur(
     let (px, py) = quadrant.transform(&prev_tile);
 
     if is_floor(px, py) {
-        let next_row = row.next();
-        if next_row.is_some() {
-            visible.append(&mut scan_row_recur(
-                next_row.unwrap(),
-                prev_tile,
-                quadrant,
-                walls,
-            ));
+        if !out_of_bounds(px, py) {
+            let next_row = row.next();
+            visible.append(&mut scan_row_recur(next_row, prev_tile, quadrant, walls));
         }
     }
     visible
@@ -169,16 +235,11 @@ impl Row {
         ts
     }
 
-    fn next(&self) -> Option<Self> {
-        // FIXME check board bounds
-        if self.depth < 15 {
-            Some(Row {
-                depth: self.depth + 1,
-                start_slope: self.start_slope,
-                end_slope: self.end_slope,
-            })
-        } else {
-            None
+    fn next(&self) -> Self {
+        Row {
+            depth: self.depth + 1,
+            start_slope: self.start_slope,
+            end_slope: self.end_slope,
         }
     }
 }

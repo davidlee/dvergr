@@ -41,7 +41,8 @@ pub fn mark_player_visible_cells(
                 // line of sight:
                 //
                 let mut los_vec: Vec<[i32; 2]> =
-                    compute_fov_2d_recursive([pos.x, pos.y], &board.wall_store.as_hashset2d());
+                    // compute_fov_2d_recursive([pos.x, pos.y], &board.wall_store.as_hashset2d());
+                    compute_fov_2d([pos.x, pos.y], &board.wall_store.as_hashset2d());
 
                 // warn!("{:?}", &board.wall_store.as_hashset2d());
 
