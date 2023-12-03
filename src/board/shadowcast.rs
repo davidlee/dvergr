@@ -24,7 +24,12 @@ pub fn compute_fov_2d_recursive<'a>(
     for cardinal in CARDINALS {
         let quadrant: Quadrant = Quadrant::new(cardinal, &IVec2::from_array(origin));
         let first_row = Row::new(1, -1.0, 1.0);
-        visible.append(&mut scan_row_recur(first_row, None, &quadrant, walls));
+        visible.append(&mut scan_row_recur(
+            first_row,
+            IVec2::from_array(origin), // does this work?
+            &quadrant,
+            walls,
+        ));
     }
     visible
 }
@@ -35,52 +40,49 @@ fn out_of_bounds(x: i32, y: i32) -> bool {
 
 fn scan_row_recur(
     mut row: Row,
-    prev_tile: Option<DepthColVec>,
+    mut prev_tile: DepthColVec,
     quadrant: &Quadrant,
     walls: &HashSet<[i32; 2]>,
 ) -> Vec<[i32; 2]> {
-    let mut prev_tile = prev_tile;
+    //
     let mut visible = Vec::new();
     let is_wall = |x, y| walls.contains(&[x, y]) || out_of_bounds(x, y);
     let is_floor = |x, y| !walls.contains(&[x, y]);
 
     for tile in row.tiles().iter() {
         let (x, y) = quadrant.transform(tile);
+        let (px, py) = quadrant.transform(&prev_tile);
 
         if is_wall(x, y) || is_symmetric(&row, tile) {
             visible.push([x, y]);
         }
 
-        if prev_tile.is_some() {
-            let (px, py) = quadrant.transform(&prev_tile.unwrap());
+        if is_wall(px, py) && is_floor(x, y) {
+            row.start_slope = slope(tile);
+        }
 
-            if is_wall(px, py) && is_floor(x, y) {
-                row.start_slope = slope(tile);
-            }
-
-            if is_floor(px, py) & is_wall(x, y) {
-                if let Some(mut next_row) = row.next() {
-                    next_row.end_slope = slope(tile);
-                    visible.append(&mut scan_row_recur(next_row, prev_tile, quadrant, walls));
-                }
+        if is_floor(px, py) & is_wall(x, y) {
+            if out_of_bounds(x, y) {
+                break;
+            } else if let Some(mut next_row) = row.next() {
+                next_row.end_slope = slope(tile);
+                visible.append(&mut scan_row_recur(next_row, prev_tile, quadrant, walls));
             }
         }
-        prev_tile = Some(*tile);
+        prev_tile = *tile;
     }
 
-    if prev_tile.is_some() {
-        let (px, py) = quadrant.transform(&prev_tile.unwrap());
+    let (px, py) = quadrant.transform(&prev_tile);
 
-        if is_floor(px, py) {
-            let next_row = row.next();
-            if next_row.is_some() {
-                visible.append(&mut scan_row_recur(
-                    next_row.unwrap(),
-                    prev_tile,
-                    quadrant,
-                    walls,
-                ));
-            }
+    if is_floor(px, py) {
+        let next_row = row.next();
+        if next_row.is_some() {
+            visible.append(&mut scan_row_recur(
+                next_row.unwrap(),
+                prev_tile,
+                quadrant,
+                walls,
+            ));
         }
     }
     visible
@@ -114,8 +116,8 @@ fn round_ties_down(n: f32) -> i32 {
 
 struct Quadrant {
     pub cardinal: Cardinal,
-    pub ox: i32,
-    pub oy: i32,
+    pub origin_x: i32,
+    pub origin_y: i32,
 }
 
 impl Quadrant {
@@ -123,16 +125,20 @@ impl Quadrant {
     pub fn transform(&self, tile: &DepthColVec) -> (i32, i32) {
         let [row, col] = tile.to_array();
         match self.cardinal {
-            North => return (self.ox + col, self.oy - row),
-            South => return (self.ox + col, self.oy + row),
-            East => return (self.ox + row, self.oy + col),
-            West => return (self.ox - row, self.oy + col),
+            North => return (self.origin_x + col, self.origin_y - row),
+            South => return (self.origin_x + col, self.origin_y + row),
+            East => return (self.origin_x + row, self.origin_y + col),
+            West => return (self.origin_x - row, self.origin_y + col),
         }
     }
 
     pub fn new(cardinal: Cardinal, origin: &XyVec) -> Self {
         let [ox, oy] = origin.to_array();
-        Quadrant { cardinal, ox, oy }
+        Quadrant {
+            cardinal,
+            origin_x: ox,
+            origin_y: oy,
+        }
     }
 }
 
