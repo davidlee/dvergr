@@ -1,6 +1,5 @@
 // #![allow(dead_code)]
 
-use crate::board::CARDINAL_DIRECTIONS;
 use crate::typical::*;
 #[allow(unused_imports)]
 use crate::{BOARD_SIZE_X, BOARD_SIZE_Y};
@@ -13,25 +12,39 @@ use crate::{BOARD_SIZE_X, BOARD_SIZE_Y};
 
 type DepthColVec = IVec2;
 type XyVec = IVec2;
-type XyTuple = (i32, i32);
+
+// TODO add bounds
+pub fn compute_fov_2d_recursive<'a>(
+    origin: [i32; 2],
+    walls: &'a HashSet<[i32; 2]>,
+) -> Vec<[i32; 2]> {
+    let mut visible = vec![];
+    visible.push(origin);
+
+    for cardinal in CARDINALS {
+        let quadrant: Quadrant = Quadrant::new(cardinal, &IVec2::from_array(origin));
+        let first_row = Row::new(1, -1.0, 1.0);
+        visible.append(&mut scan_row_recur(first_row, None, &quadrant, walls));
+    }
+    visible
+}
+
+fn out_of_bounds(x: i32, y: i32) -> bool {
+    i32::min(x, y) < 0 || x > BOARD_SIZE_X || y > BOARD_SIZE_Y
+}
 
 fn scan_row_recur(
     mut row: Row,
     prev_tile: Option<DepthColVec>,
     quadrant: &Quadrant,
-
     walls: &HashSet<[i32; 2]>,
 ) -> Vec<[i32; 2]> {
-    // ...
     let mut prev_tile = prev_tile;
     let mut visible = Vec::new();
-    let is_wall = |x, y| walls.contains(&[x, y]);
+    let is_wall = |x, y| walls.contains(&[x, y]) || out_of_bounds(x, y);
     let is_floor = |x, y| !walls.contains(&[x, y]);
 
-    // ...
     for tile in row.tiles().iter() {
-        warn!("tile: {:?}", tile);
-
         let (x, y) = quadrant.transform(tile);
 
         if is_wall(x, y) || is_symmetric(&row, tile) {
@@ -39,12 +52,10 @@ fn scan_row_recur(
         }
 
         if prev_tile.is_some() {
-            warn!("prev: {:?}", prev_tile);
-
             let (px, py) = quadrant.transform(&prev_tile.unwrap());
 
             if is_wall(px, py) && is_floor(x, y) {
-                row.start_slope = Fraction::slope(tile);
+                row.start_slope = slope(tile);
             }
 
             if is_floor(px, py) & is_wall(x, y) {
@@ -75,41 +86,24 @@ fn scan_row_recur(
     visible
 }
 
-// TODO add bounds
-pub fn compute_fov_2d_recursive<'a>(
-    origin: [i32; 2],
-    walls: &'a HashSet<[i32; 2]>,
-) -> Vec<[i32; 2]> {
-    let mut visible = vec![];
-    visible.push(origin);
-
-    for dir in CARDINAL_DIRECTIONS {
-        let quadrant: Quadrant = Quadrant::new(dir, &IVec2::from_array(origin));
-        let first_row = Row::new(1, Fraction::new(-1, 1), Fraction::new(1, 1));
-        visible.append(&mut scan_row_recur(first_row, None, &quadrant, walls));
-    }
-    visible
-}
-
-// is_symmetric checks if a given floor tile can be seen symmetrically from the origin. It returns
+// is_symmetric: checks if a given floor tile can be seen symmetrically from the origin. It returns
 // true if the central point of the tile is in the sector swept out by the row’s start and end slopes.
 // Otherwise, it returns false.
 fn is_symmetric(row: &Row, tile: &DepthColVec) -> bool {
-    let [_row_depth, col] = tile.to_array();
-    // FIXME check rounding
-    col as i32 >= row.depth * row.start_slope.round_down()
-        && col <= row.depth * row.end_slope.round_up()
+    let col = tile.to_array()[1] as f32;
+    let depth = row.depth as f32;
+    col >= depth * row.start_slope && col <= depth * row.end_slope
 }
 
-fn slope(tile: &DepthColVec) -> Fraction {
+fn slope(tile: &DepthColVec) -> f32 {
     let [row_depth, col] = tile.to_array();
-    // (2.0 * col as f32 - 1.0) / (2.0 * row_depth as f32)
-    Fraction::new(2 * col - 1, 2 * row_depth)
+    (2.0 * col as f32 - 1.0) / (2.0 * row_depth as f32)
 }
 
 // round_ties_up and round_ties_down round n to the nearest integer. If n ends in .5, round_ties_up
 // rounds up and round_ties_down rounds down. Note: round_ties_up is not the same as Python’s round.
 // Python’s round will round away from 0, resulting in unwanted behavior for negative numbers.
+// TODO: verify this is necessary with Rust
 fn round_ties_up(n: f32) -> i32 {
     f32::floor(n + 0.5) as i32
 }
@@ -118,82 +112,39 @@ fn round_ties_down(n: f32) -> i32 {
     f32::ceil(n - 0.5) as i32
 }
 
-#[test]
-fn test_rounding() {
-    assert_eq!(round_ties_up(4.5), 5);
-    assert_eq!(round_ties_down(4.5), 4);
-    assert_eq!(round_ties_up(-4.5), -4);
-    assert_eq!(round_ties_down(-4.5), -5);
-}
-
-pub struct Quadrant {
-    pub cardinal: Direction,
+struct Quadrant {
+    pub cardinal: Cardinal,
     pub ox: i32,
     pub oy: i32,
 }
 
 impl Quadrant {
-    pub fn transform(&self, tile: &DepthColVec) -> XyTuple {
-        let [col, row] = tile.to_array();
+    // map rows & columns to global board position (x,y)
+    pub fn transform(&self, tile: &DepthColVec) -> (i32, i32) {
+        let [row, col] = tile.to_array();
         match self.cardinal {
-            Direction::North => return (self.ox + col, self.oy - row),
-            Direction::South => return (self.ox + col, self.oy + row),
-            Direction::East => return (self.ox + row, self.oy + col),
-            Direction::West => return (self.ox - row, self.oy + col),
-            _ => panic!(),
+            North => return (self.ox + col, self.oy - row),
+            South => return (self.ox + col, self.oy + row),
+            East => return (self.ox + row, self.oy + col),
+            West => return (self.ox - row, self.oy + col),
         }
     }
 
-    pub fn new(cardinal: Direction, origin: &XyVec) -> Self {
+    pub fn new(cardinal: Cardinal, origin: &XyVec) -> Self {
         let [ox, oy] = origin.to_array();
-        if !CARDINAL_DIRECTIONS.contains(&cardinal) {
-            panic!("illegal direction: {:?} must be cardinal", cardinal);
-        }
         Quadrant { cardinal, ox, oy }
-    }
-}
-
-#[derive(Clone, Copy, PartialEq, Debug)]
-struct Fraction {
-    numerator: i32,
-    denominator: i32,
-}
-
-impl Fraction {
-    pub fn new(numerator: i32, denominator: i32) -> Self {
-        Fraction {
-            numerator,
-            denominator,
-        }
-    }
-
-    pub fn slope(tile: &DepthColVec) -> Self {
-        let [row_depth, col] = tile.to_array();
-        Fraction::new(2 * col - 1, 2 * row_depth)
-    }
-
-    fn as_f32(&self) -> f32 {
-        self.numerator as f32 / self.denominator as f32
-    }
-
-    pub fn round_up(&self) -> i32 {
-        f32::floor(self.as_f32() + 0.5) as i32
-    }
-
-    pub fn round_down(&self) -> i32 {
-        f32::ceil(self.as_f32() - 0.5) as i32
     }
 }
 
 #[derive(Debug, Clone)]
 struct Row {
     depth: i32,
-    start_slope: Fraction,
-    end_slope: Fraction,
+    start_slope: f32,
+    end_slope: f32,
 }
 
 impl Row {
-    fn new(depth: i32, start_slope: Fraction, end_slope: Fraction) -> Self {
+    fn new(depth: i32, start_slope: f32, end_slope: f32) -> Self {
         Row {
             depth,
             start_slope,
@@ -201,45 +152,19 @@ impl Row {
         }
     }
 
-    // #[allow(dead_code)]
-    // fn range(min: i32, max: i32) -> Vec<i32> {
-    //     let mut r = vec![];
-    //     // TODO
-    //     r
-    // }
-
     fn tiles(&self) -> Vec<DepthColVec> {
         let mut ts = vec![];
-        let min_col = round_ties_up(self.depth as f32 * self.start_slope.as_f32());
-        let max_col = round_ties_down(self.depth as f32 * self.end_slope.as_f32());
+        let min_col = round_ties_up(self.depth as f32 * self.start_slope);
+        let max_col = round_ties_down(self.depth as f32 * self.end_slope);
 
-        let mut range = [min_col, max_col];
-        range.sort();
-        let [min_col, max_col] = range;
-
-        for col in min_col..(max_col + 1) {
+        for col in min_col..=max_col {
             ts.push(IVec2::new(self.depth, col));
-            warn!("[{:?} -- ({:?}] -> {:?} tiles ", min_col, max_col, ts);
         }
-
-        // if max_col > min_col && min_col > 0 {
-        //     for col in i32::abs(min_col)..(i32::abs(max_col + 1)) {
-        //         ts.push(IVec2::new(self.depth, col));
-        //     }
-        // } else if max_col < min_col && min_col < 0 {
-        //     for col in i32::abs(max_col + 1)..(i32::abs(min_col)) {
-        //         ts.push(IVec2::new(self.depth, -col));
-        //     }
-        //     warn!("[{:?} -- ({:?}] -> {:?} tiles ", min_col, max_col, ts);
-        // } else if max_col == min_col {
-        //     ts.push(IVec2::new(self.depth, max_col));
-        // } else {
-        //     panic!("{:?} {:?}", min_col, max_col);
-        // }
         ts
     }
 
     fn next(&self) -> Option<Self> {
+        // FIXME check board bounds
         if self.depth < 15 {
             Some(Row {
                 depth: self.depth + 1,
@@ -251,3 +176,13 @@ impl Row {
         }
     }
 }
+
+enum Cardinal {
+    North,
+    East,
+    South,
+    West,
+}
+use Cardinal::*;
+
+const CARDINALS: [Cardinal; 4] = [North, East, South, West];
