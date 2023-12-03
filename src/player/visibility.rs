@@ -35,6 +35,7 @@ pub fn mark_player_visible_cells(
 
                 // field of view:
                 //
+                #[allow(unused_variables)]
                 let visible_sector: HashSet<[i32; 2]> = sector_facing(locus.facing, &pos, circle);
 
                 // line of sight:

@@ -2,6 +2,7 @@
 
 use crate::board::CARDINAL_DIRECTIONS;
 use crate::typical::*;
+#[allow(unused_imports)]
 use crate::{BOARD_SIZE_X, BOARD_SIZE_Y};
 
 // https://www.roguebasin.com/index.php?title=FOV_using_recursive_shadowcasting
@@ -14,12 +15,6 @@ type DepthColVec = IVec2;
 type XyVec = IVec2;
 type XyTuple = (i32, i32);
 
-// pub fn mark_visible(_x: i32, _y: i32) { }
-// pub fn is_wall(_x: i32, _y: i32) { }
-// pub fn is_floor(_x: i32, _y: i32) { }
-
-// fn is_floor(x: i32, y:i32)
-
 fn scan_row_recur(
     mut row: Row,
     prev_tile: Option<DepthColVec>,
@@ -27,12 +22,16 @@ fn scan_row_recur(
 
     walls: &HashSet<[i32; 2]>,
 ) -> Vec<[i32; 2]> {
+    // ...
     let mut prev_tile = prev_tile;
     let mut visible = Vec::new();
     let is_wall = |x, y| walls.contains(&[x, y]);
     let is_floor = |x, y| !walls.contains(&[x, y]);
 
+    // ...
     for tile in row.tiles().iter() {
+        warn!("tile: {:?}", tile);
+
         let (x, y) = quadrant.transform(tile);
 
         if is_wall(x, y) || is_symmetric(&row, tile) {
@@ -40,6 +39,8 @@ fn scan_row_recur(
         }
 
         if prev_tile.is_some() {
+            warn!("prev: {:?}", prev_tile);
+
             let (px, py) = quadrant.transform(&prev_tile.unwrap());
 
             if is_wall(px, py) && is_floor(x, y) {
@@ -84,22 +85,11 @@ pub fn compute_fov_2d_recursive<'a>(
 
     for dir in CARDINAL_DIRECTIONS {
         let quadrant: Quadrant = Quadrant::new(dir, &IVec2::from_array(origin));
-        let first_row = Row::new(1, Fraction::new(-1, 1), Fraction::new(-1, 1));
+        let first_row = Row::new(1, Fraction::new(-1, 1), Fraction::new(1, 1));
         visible.append(&mut scan_row_recur(first_row, None, &quadrant, walls));
     }
     visible
 }
-// TODO: needs to be modified to pass in functions
-//
-// pub fn compute_fov_2d_non_recursive(origin: XyVec, _is_blocking: bool) {
-//     mark_visible(origin.x, origin.y);
-
-//     for dir in CARDINAL_DIRECTIONS {
-//         let quadrant: Quadrant = Quadrant::new(dir, origin);
-//         let first_row = Row::new(1, -1.0, -1.0);
-//         scan_iterative(first_row, &quadrant);
-//     }
-// }
 
 // is_symmetric checks if a given floor tile can be seen symmetrically from the origin. It returns
 // true if the central point of the tile is in the sector swept out by the row’s start and end slopes.
@@ -120,21 +110,21 @@ fn slope(tile: &DepthColVec) -> Fraction {
 // round_ties_up and round_ties_down round n to the nearest integer. If n ends in .5, round_ties_up
 // rounds up and round_ties_down rounds down. Note: round_ties_up is not the same as Python’s round.
 // Python’s round will round away from 0, resulting in unwanted behavior for negative numbers.
-// fn round_ties_up(n: f32) -> i32 {
-//     f32::floor(n + 0.5) as i32
-// }
+fn round_ties_up(n: f32) -> i32 {
+    f32::floor(n + 0.5) as i32
+}
 
-// fn round_ties_down(n: f32) -> i32 {
-//     f32::ceil(n - 0.5) as i32
-// }
+fn round_ties_down(n: f32) -> i32 {
+    f32::ceil(n - 0.5) as i32
+}
 
-// #[test]
-// fn test_rounding() {
-//     assert_eq!(round_ties_up(4.5), 5);
-//     assert_eq!(round_ties_down(4.5), 4);
-//     assert_eq!(round_ties_up(-4.5), -4);
-//     assert_eq!(round_ties_down(-4.5), -5);
-// }
+#[test]
+fn test_rounding() {
+    assert_eq!(round_ties_up(4.5), 5);
+    assert_eq!(round_ties_down(4.5), 4);
+    assert_eq!(round_ties_up(-4.5), -4);
+    assert_eq!(round_ties_down(-4.5), -5);
+}
 
 pub struct Quadrant {
     pub cardinal: Direction,
@@ -211,30 +201,46 @@ impl Row {
         }
     }
 
+    // #[allow(dead_code)]
+    // fn range(min: i32, max: i32) -> Vec<i32> {
+    //     let mut r = vec![];
+    //     // TODO
+    //     r
+    // }
+
     fn tiles(&self) -> Vec<DepthColVec> {
         let mut ts = vec![];
-        let min_col = self.depth * self.start_slope.round_up();
-        let max_col = self.depth * self.end_slope.round_down();
+        let min_col = round_ties_up(self.depth as f32 * self.start_slope.as_f32());
+        let max_col = round_ties_down(self.depth as f32 * self.end_slope.as_f32());
 
-        if max_col > min_col && min_col > 0 {
-            for col in i32::abs(min_col)..(i32::abs(max_col + 1)) {
-                ts.push(IVec2::new(self.depth, col));
-            }
-        } else if max_col < min_col && min_col < 0 {
-            for col in i32::abs(min_col)..(i32::abs(max_col + 1)) {
-                ts.push(IVec2::new(self.depth, -col));
-            }
-        } else if max_col == min_col {
-            ts.push(IVec2::new(self.depth, max_col));
-        } else {
-            panic!("{:?} {:?}", min_col, max_col);
+        let mut range = [min_col, max_col];
+        range.sort();
+        let [min_col, max_col] = range;
+
+        for col in min_col..(max_col + 1) {
+            ts.push(IVec2::new(self.depth, col));
+            warn!("[{:?} -- ({:?}] -> {:?} tiles ", min_col, max_col, ts);
         }
-        warn!("[{:?} -- ({:?}] -> {:?} tiles ", min_col, max_col, ts);
+
+        // if max_col > min_col && min_col > 0 {
+        //     for col in i32::abs(min_col)..(i32::abs(max_col + 1)) {
+        //         ts.push(IVec2::new(self.depth, col));
+        //     }
+        // } else if max_col < min_col && min_col < 0 {
+        //     for col in i32::abs(max_col + 1)..(i32::abs(min_col)) {
+        //         ts.push(IVec2::new(self.depth, -col));
+        //     }
+        //     warn!("[{:?} -- ({:?}] -> {:?} tiles ", min_col, max_col, ts);
+        // } else if max_col == min_col {
+        //     ts.push(IVec2::new(self.depth, max_col));
+        // } else {
+        //     panic!("{:?} {:?}", min_col, max_col);
+        // }
         ts
     }
 
     fn next(&self) -> Option<Self> {
-        if self.depth < 20 {
+        if self.depth < 15 {
             Some(Row {
                 depth: self.depth + 1,
                 start_slope: self.start_slope,
@@ -245,46 +251,3 @@ impl Row {
         }
     }
 }
-
-// #[test]
-// fn test_range() {
-//     let mut n = 0;
-//     for i in 0..3 {
-//         n += i;
-//     }
-//     assert_eq!(n, 6);
-
-//     let mut n = 0;
-//     for i in -1..-1 {
-//         n += i;
-//     }
-// }
-
-// non-recursive implementation of scan
-// //
-// fn scan_iterative(row: Row, quadrant: &Quadrant) {
-//     let mut rows: Vec<Row> = vec![row];
-//     while rows.len() > 0 {
-//         let mut row = rows.pop().unwrap();
-//         let mut prev_tile: Option<DepthColVec> = None;
-//         for tile in row.tiles() {
-//             if is_wall(tile, quadrant) || is_symmetric(&row, tile) {
-//                 reveal(tile, quadrant);
-//             }
-//             if prev_tile.is_some() {
-//                 if is_wall(prev_tile.unwrap(), quadrant) && is_floor(tile, quadrant) {
-//                     row.start_slope = slope(tile);
-//                 }
-//                 if is_floor(prev_tile.unwrap(), quadrant) && is_wall(tile, quadrant) {
-//                     let mut next_row = row.next().clone();
-//                     next_row.end_slope = slope(tile);
-//                     rows.push(next_row);
-//                 }
-//             }
-//             prev_tile = Some(tile);
-//         }
-//         if is_floor(prev_tile.unwrap(), quadrant) {
-//             rows.push(row.next());
-//         }
-//     }
-// }
