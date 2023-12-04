@@ -155,9 +155,12 @@ fn main() {
         )
         .add_systems(
             Update,
-            (graphics::tilemap::update_tiles_for_player_cell_visibility
-                .after(player::visibility::mark_player_visible_cells))
-            .run_if(state_exists_and_equals(AppState::Game)),
+            (
+                graphics::tilemap::update_tiles_for_player_cell_visibility,
+                graphics::tilemap::anim_fade_sprite_alpha,
+            )
+                .after(player::visibility::mark_player_visible_cells)
+                .run_if(state_exists_and_equals(AppState::Game)),
         )
         // MISC
         //

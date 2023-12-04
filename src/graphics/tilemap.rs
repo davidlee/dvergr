@@ -83,6 +83,54 @@ pub fn load_tileset(
 const I_FLOOR: usize = 843;
 const I_WALL: usize = 0;
 
+#[derive(Component, Debug)]
+pub struct LinearAnim {
+    initial: f32,
+    target: f32,
+    steps: u8,
+    current_step: u8,
+}
+
+// TODO roll this and MobMoveAnim into a trait
+impl LinearAnim {
+    fn new(from: f32, to: f32, steps: u8) -> Self {
+        Self {
+            initial: from,
+            target: to,
+            steps,
+            current_step: 0,
+        }
+    }
+
+    fn delta(&self) -> f32 {
+        (self.target - self.initial) / (self.steps as f32)
+    }
+
+    fn current(&self) -> f32 {
+        self.initial + self.delta() * self.current_step as f32
+    }
+
+    fn next(&mut self) -> u8 {
+        self.current_step += 1;
+        self.current_step
+    }
+
+    fn done(&self) -> bool {
+        self.current_step >= self.steps
+    }
+
+    fn noop(&self) -> bool {
+        self.steps == 0
+    }
+
+    fn reset(&mut self) -> () {
+        self.initial = 0.;
+        self.target = 0.;
+        self.steps = 0;
+        self.current_step = 0;
+    }
+}
+
 // systems
 
 pub fn spawn_tile_map(
@@ -126,74 +174,93 @@ pub fn update_tiles_for_player_cell_visibility(
     mut commands: Commands,
     tileset: Res<Tileset>,
     mut tile_map_query: Query<(Entity, &mut TileMap)>,
-    mut sprite_query: Query<&mut TextureAtlasSprite>,
+    mut sprite_query: Query<(&mut TextureAtlasSprite, Option<&mut LinearAnim>)>,
     cell_query: Query<
         (&Cell, &mut PlayerCellVisibility, Option<&Wall>),
         Changed<PlayerCellVisibility>,
     >,
 ) {
-    let mut counter = 0;
+    let (tile_map_entity, mut tile_map) = match tile_map_query.get_single_mut() {
+        Err(_) => return,
+        Ok((tile_map_entity, tile_map)) => (tile_map_entity, tile_map),
+    };
 
-    match tile_map_query.get_single_mut() {
-        Ok((tm_e, mut tile_map)) => {
-            commands.entity(tm_e).with_children(|tiles| {
-                cell_query.for_each(|(cell, player_visibility, maybe_wall)| {
-                    // LOOP over cell visibility changes
-                    if player_visibility.visible {
-                        match tile_map.entities.get(&cell.position) {
-                            // seen previously
-                            Some(e) => {
-                                if let Ok(mut sprite) = sprite_query.get_mut(*e) {
-                                    // TODO: fade out based on distance from player
-                                    //
-                                    sprite.color.set_a(100.0);
-                                }
-                            }
-                            // newly seen
-                            None => {
-                                counter += 1;
-                                let Vec2 { x, y } =
-                                    tile_map.tile_offset(cell.position.x, cell.position.y);
-                                let texture_index;
-                                if maybe_wall.is_some() {
-                                    texture_index = I_WALL;
-                                } else {
-                                    texture_index = I_FLOOR;
-                                }
-                                let sprite = TextureAtlasSprite::new(texture_index);
-                                let transform = Transform::from_xyz(x, y, TILE_MAP_Z as f32);
+    // collect a list of entities to animate fading out; we can't use (reborrow) commands
+    // inside .with_children
+    let mut fade_entites: Vec<Entity> = vec![];
 
-                                let tile_entity = tiles
-                                    .spawn(SpriteSheetBundle {
-                                        texture_atlas: tileset.atlas_handle.to_owned(),
-                                        sprite,
-                                        transform,
-                                        ..default()
-                                    })
-                                    .id();
-                                tile_map.entities.insert(cell.position, tile_entity);
-                            }
-                        }
-                    } else if player_visibility.seen {
-                        // newly obscured
-                        match tile_map.entities.get(&cell.position) {
-                            Some(e) => {
-                                if let Ok(mut sprite) = sprite_query.get_mut(*e) {
-                                    // sprite.color.set_a(0.0);
-                                    sprite.color.set_a(0.1);
-                                }
-                            }
-                            None => {
-                                error!("unknown tile entities seen {:?}", tile_map.entities);
+    commands.entity(tile_map_entity).with_children(|tiles| {
+        cell_query.for_each(|(cell, player_visibility, maybe_wall)| {
+            if player_visibility.visible {
+                match tile_map.entities.get(&cell.position) {
+                    // newly visible
+                    None => {
+                        let Vec2 { x, y } = tile_map.tile_offset(cell.position.x, cell.position.y);
+                        let texture_index = if maybe_wall.is_some() {
+                            I_WALL
+                        } else {
+                            I_FLOOR
+                        };
+                        let sprite = TextureAtlasSprite::new(texture_index);
+                        let transform = Transform::from_xyz(x, y, TILE_MAP_Z as f32);
+
+                        let tile_entity = tiles
+                            .spawn(SpriteSheetBundle {
+                                texture_atlas: tileset.atlas_handle.to_owned(),
+                                sprite,
+                                transform,
+                                ..default()
+                            })
+                            .id();
+                        // add a reference to the tile map's entity store
+                        tile_map.entities.insert(cell.position, tile_entity);
+                    }
+                    // seen previously
+                    Some(e) => {
+                        if let Ok((mut sprite, maybe_anim)) = sprite_query.get_mut(*e) {
+                            sprite.color.set_a(100.0);
+                            if let Some(mut anim) = maybe_anim {
+                                anim.reset();
                             }
                         }
                     }
-                });
-            });
+                }
+            } else if player_visibility.seen {
+                // newly obscured
+                match tile_map.entities.get(&cell.position) {
+                    Some(e) => {
+                        if let Ok((mut sprite, _)) = sprite_query.get_mut(*e) {
+                            // sprite.color.set_a(0.1);
+                            fade_entites.push(*e);
+                        }
+                    }
+                    None => {
+                        error!("unknown tile entities seen {:?}", tile_map.entities);
+                    }
+                }
+            }
+        });
+    });
+
+    // add component to fade alpha of component
+    fade_entites.iter().for_each(|e| {
+        commands.entity(*e).insert(LinearAnim::new(1.0, 0.1, 120));
+    });
+}
+
+pub fn anim_fade_sprite_alpha(
+    // mut commands: Commands,
+    mut query: Query<(Entity, &mut LinearAnim, &mut TextureAtlasSprite)>,
+) {
+    for (_, mut anim, mut sprite) in query.iter_mut() {
+        if anim.noop() {
+            continue;
+        } else if anim.done() {
+            sprite.color = sprite.color.with_a(anim.target);
+            anim.reset();
+        } else {
+            sprite.color = sprite.color.with_a(anim.current());
+            anim.next();
         }
-        Err(e) => error!("error setting visibility for {:?}", e),
-    }
-    if counter > 0 {
-        debug!("spawned {:?} tiles", counter);
     }
 }

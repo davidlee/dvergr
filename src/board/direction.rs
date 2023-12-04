@@ -14,8 +14,6 @@ pub enum Direction {
     SouthWest,
     West,
     NorthWest,
-    // Up,
-    // Down,
 }
 
 impl Direction {
@@ -55,8 +53,12 @@ impl Direction {
         DIRECTIONS[(Self::DIRECTION_NUM + self as usize - n) % Self::DIRECTION_NUM]
     }
 
-    pub fn angular_rotation(self) -> f32 {
+    pub fn to_degrees(self) -> f32 {
         DIRECTION_RADIANS[self as usize] * TAU
+    }
+
+    pub fn to_radians(self) -> f32 {
+        DIRECTION_RADIANS[self as usize]
     }
 }
 
@@ -69,8 +71,6 @@ pub const DIRECTIONS: [Direction; 8] = [
     Direction::SouthWest,
     Direction::West,
     Direction::NorthWest,
-    // Direction::Up,
-    // Direction::Down,
 ];
 
 pub const CARDINAL_DIRECTIONS: [Direction; 4] = [
@@ -89,9 +89,6 @@ pub const DIRECTION_OFFSETS: [IVec3; 8] = [
     IVec3 { x: -1, y: -1, z: 0 },
     IVec3 { x: -1, y: 0, z: 0 },
     IVec3 { x: -1, y: 1, z: 0 },
-    // vert
-    // IVec3 { x: 0, y: 0, z: 1 },
-    // IVec3 { x: 0, y: 0, z: -1 },
 ];
 
 // * TAU = degrees

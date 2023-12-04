@@ -1,3 +1,5 @@
+use std::f32::consts::TAU;
+
 use crate::typical::*;
 
 use super::{BOARD_SIZE_X, BOARD_SIZE_Y};
@@ -41,19 +43,21 @@ pub fn take_sector(
     circle
         .into_iter()
         .filter(|v| {
+            // find the angle from the centre to each cell
             let alpha = angle_between_2d(&centre, &IVec2::from_array(*v));
 
+            // find the bounds, either side of the angle
             let (min_a, max_a) = (abs_radians(angle - width / 2.0), angle + width / 2.0);
 
             // normal case
             if min_a < max_a {
                 return alpha >= min_a && alpha <= max_a;
             } else {
-                // min / max either side of 0/360 degrees, as when looking North
+                // min / max are either side of 0/360 degrees, as when looking North
                 return alpha <= max_a || alpha >= min_a;
             }
         })
-        .collect::<HashSet<_>>()
+        .collect()
 }
 
 pub fn sector_facing(
@@ -62,8 +66,16 @@ pub fn sector_facing(
     circle: HashSet<[i32; 2]>,
 ) -> HashSet<[i32; 2]> {
     let angle = f32::to_radians(COMPASS_DEGREES[facing as usize]);
-    // warn!(angle);
     take_sector(angle, f32::to_radians(90.), centre, circle)
+}
+
+pub fn fov_facing(centre: &IVec3, facing: Direction, radius: f32) -> HashSet<[i32; 2]> {
+    take_sector(
+        facing.to_degrees(),
+        f32::to_radians(120.),
+        centre,
+        circle(*centre, radius),
+    )
 }
 
 // untested / ported from red blob article

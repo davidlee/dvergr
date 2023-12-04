@@ -7,7 +7,10 @@ use crate::{BOARD_SIZE_X, BOARD_SIZE_Y};
 type DepthColVec = IVec2;
 type XyVec = IVec2;
 
-pub fn compute_fov_2d<'a>(origin: [i32; 2], walls: &'a HashSet<[i32; 2]>) -> Vec<[i32; 2]> {
+pub fn shadowcast_visibility_2d<'a>(
+    origin: [i32; 2],
+    walls: &'a HashSet<[i32; 2]>,
+) -> Vec<[i32; 2]> {
     let mut visible = vec![];
     visible.push(origin);
 

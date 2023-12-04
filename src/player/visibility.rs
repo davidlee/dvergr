@@ -12,7 +12,6 @@ const PLAYER_VISIBILITY_RANGE: f32 = 24.5; // FIXME add light sources
 /*
 TODO:
 -----
-// +++ symmetric shadowcasting
 
 + separate lighting from player visibility
 + show lit but obscured cells as geometric gold
@@ -29,37 +28,21 @@ pub fn mark_player_visible_cells(
     if let Ok((mut player, locus)) = player_query.get_single_mut() {
         match locus.position {
             Position::Point(pos) => {
-                // lighting:
-                //
-                let circle = circle(pos, PLAYER_VISIBILITY_RANGE);
+                let unobscured =
+                    shadowcast_visibility_2d([pos.x, pos.y], &board.wall_store.as_hashset2d())
+                        .into_iter()
+                        .collect::<HashSet<[i32; 2]>>();
 
-                // field of view:
-                //
-                #[allow(unused_variables)]
-                let visible_sector: HashSet<[i32; 2]> = sector_facing(locus.facing, &pos, circle);
+                let visible: HashSet<[i32; 2]> = fov_facing(&pos, locus.facing, 28.)
+                    .intersection(&unobscured)
+                    .into_iter()
+                    .cloned()
+                    .collect();
 
-                // line of sight:
-                //
-                let mut unobscured: Vec<[i32; 2]> =
-                    // compute_fov_2d_recursive([pos.x, pos.y], &board.wall_store.as_hashset2d());
-                    compute_fov_2d([pos.x, pos.y], &board.wall_store.as_hashset2d());
+                let prev_visible = player.positions_visible.to_owned(); // FIXME
 
-                let mut visible: HashSet<[i32; 2]> = HashSet::new();
-                visible
-                    .try_reserve(unobscured.len())
-                    .expect("failed allocation");
-                while unobscured.len() > 0 {
-                    let xy = unobscured.pop().expect("we good?");
-                    if visible_sector.contains(&xy) {
-                        visible.insert(xy);
-                    }
-                }
-
-                let new_vis = visible;
-
-                let old_vis = player.positions_visible.to_owned(); // FIXME
-
-                for arr_pos in new_vis.difference(&old_vis) {
+                // these cells are newly visible
+                for arr_pos in visible.difference(&prev_visible) {
                     let pos = IVec3::from_array([arr_pos[0], arr_pos[1], pos.z]);
                     match board.cell_store.get(&pos) {
                         Some(entity) => match visibility_query.get_mut(*entity) {
@@ -70,7 +53,8 @@ pub fn mark_player_visible_cells(
                     }
                 }
 
-                for arr_pos in old_vis.difference(&new_vis) {
+                // these cells are newly obscured
+                for arr_pos in prev_visible.difference(&visible) {
                     let pos = IVec3::from_array([arr_pos[0], arr_pos[1], pos.z]);
                     match board.cell_store.get(&pos) {
                         Some(entity) => match visibility_query.get_mut(*entity) {
@@ -80,7 +64,8 @@ pub fn mark_player_visible_cells(
                         None => (),
                     }
                 }
-                player.positions_visible = new_vis;
+
+                player.positions_visible = visible;
             }
             Position::Area(_) => panic!("oops, unimplemented"),
         }
