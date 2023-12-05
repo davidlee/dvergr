@@ -39,12 +39,16 @@ pub fn take_sector(
     centre: &IVec3,
     circle: HashSet<[i32; 2]>,
 ) -> HashSet<[i32; 2]> {
-    let centre = IVec2::new(centre.x, centre.y);
+    let centre = [centre.x, centre.y];
+
     circle
         .into_iter()
         .filter(|v| {
+            if v == &centre {
+                return true;
+            }
             // find the angle from the centre to each cell
-            let alpha = angle_between_2d(&centre, &IVec2::from_array(*v));
+            let alpha = angle_of_coords(&centre, &v);
 
             // find the bounds, either side of the angle
             let (min_a, max_a) = (abs_radians(angle - width / 2.0), angle + width / 2.0);
@@ -104,10 +108,10 @@ pub fn angle_between_2d(a: &IVec2, b: &IVec2) -> f32 {
     abs_radians(f32::atan2(x2 - x1, y2 - y1))
 }
 
-// pub fn angle_between_2d(a: &[i32; 2], b: &[i32; 2]) -> f32 {
-//     let (x1, y1, x2, y2) = (a[0] as f32, a[1] as f32, b[0] as f32, b[1] as f32);
-//     abs_radians(f32::atan2(x2 - x1, y2 - y1))
-// }
+pub fn angle_of_coords(a: &[i32; 2], b: &[i32; 2]) -> f32 {
+    let (x1, y1, x2, y2) = (a[0] as f32, a[1] as f32, b[0] as f32, b[1] as f32);
+    abs_radians(f32::atan2(x2 - x1, y2 - y1))
+}
 
 pub fn abs_radians(a: f32) -> f32 {
     if a < 0. {

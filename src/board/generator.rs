@@ -91,8 +91,6 @@ fn shared_y(rs: [&Room; 2]) -> Option<i32> {
     ay.into_iter().find(|y| by.contains(y))
 }
 
-// determine where we will place doors
-//
 // where the other room lines up along either the x or y axis, we can draw the corridor
 // without any turns, as long as they share that coordinate and the walls face each other;
 // otherwise, we need 1 or 2 - depending on whether we use the facing wall (2), or one
@@ -112,10 +110,12 @@ fn carve_corridors(blanks: &mut Vec<CoOrdinate>, room_a: &Room, room_b: &Room) {
     let sx = shared_x(rx);
     let sy = shared_y(ry);
 
+    // straight connection along x axis
     if let Some(x) = sx {
         for y in ry[0].y..ry[1].max_y() {
             blanks.push([x, y]);
         }
+    // straight connection along y axis
     } else if let Some(y) = sy {
         for x in rx[0].x..rx[1].max_x() {
             blanks.push([x, y]);
@@ -124,7 +124,8 @@ fn carve_corridors(blanks: &mut Vec<CoOrdinate>, room_a: &Room, room_b: &Room) {
         let x_dist = i32::abs(rx[0].x - rx[1].x);
         let y_dist = i32::abs(ry[0].y - ry[1].y);
 
-        if x_dist > y_dist || true {
+        // dogleg along shorter axis
+        if x_dist > y_dist {
             let x_mid = rx[0].max_x() + x_dist / 2;
             for x in rx[0].max_x()..rx[1].x {
                 match x {
@@ -137,20 +138,29 @@ fn carve_corridors(blanks: &mut Vec<CoOrdinate>, room_a: &Room, room_b: &Room) {
                     _ => blanks.push([x, rx[1].mid_y()]),
                 }
             }
+        } else {
+            let y_mid = ry[0].max_y() + y_dist / 2;
+            for y in ry[0].max_y()..ry[1].y {
+                match y {
+                    _ if y < y_mid => blanks.push([ry[0].mid_x(), y]),
+                    _ if y == y_mid => {
+                        for x in rx[0].mid_x()..rx[1].mid_x() {
+                            blanks.push([x, y]);
+                        }
+                    }
+                    _ => blanks.push([ry[1].mid_x(), y]),
+                }
+            }
         }
-        // else { // doors on N/S
-        // }
     }
 }
 
 pub fn populate_board(
     mut commands: Commands,
     mut board: ResMut<Board>,
-    mut spawn_writer: EventWriter<SpawnPlayerEvent>,
+    mut ev_writer: EventWriter<SpawnPlayerEvent>,
     mut global_rng: ResMut<GlobalChaChaRng>,
 ) {
-    info!("[AppState::InitBoard] populate_board");
-
     let mut rng = RngComponent::from(&mut global_rng);
     let mut rooms: Vec<Room> = vec![];
     let mut blanks: Vec<CoOrdinate> = vec![];
@@ -165,9 +175,11 @@ pub fn populate_board(
             retries += 1;
         }
     }
-    // rooms.sort();
-    warn!(
-        "ROOMS : {:?} of {:?} with {:?} discards :: {:?}",
+
+    rooms.sort();
+
+    info!(
+        "GENERATED ROOMS: {:?} of {:?}, with {:?} discards :: {:?}",
         rooms.len(),
         target_rooms,
         retries,
@@ -175,15 +187,11 @@ pub fn populate_board(
     );
 
     // place Player in first room
-    if let Some(start_room) = rooms.first() {
-        spawn_writer.send(SpawnPlayerEvent(IVec3::new(
-            start_room.x + 1,
-            start_room.y + 1,
-            0,
-        )));
-    }
+    let fst = rooms.first().expect("can't play without a player ...");
+    let initial = IVec3::new(fst.x + 1, fst.y + 1, 0);
+    ev_writer.send(SpawnPlayerEvent(initial));
 
-    // determine where the empty space will go
+    // determine where corridors & doors go
     let mut prev_room: Option<Room> = None;
     for room in rooms {
         if let Some(prev) = prev_room {
@@ -192,8 +200,6 @@ pub fn populate_board(
         carve_room(&room, &mut blanks);
         prev_room = Some(room);
     }
-
-    warn!("{:?} -- {:?}", blanks.len(), blanks);
 
     // create cells
     commands.spawn_empty().with_children(|parent| {
@@ -220,42 +226,3 @@ pub fn populate_board(
         }
     });
 }
-// TODO place Player in middle of room
-
-// pub fn populate_board(
-//     mut commands: Commands,
-//     mut board: ResMut<Board>,
-//     mut ev_writer: EventWriter<AppInitEvent>,
-//     mut rng: ResMut<GlobalChaChaRng>,
-// ) {
-//     info!("[AppState::InitBoard] populate_board");
-
-//     let mut walls: Vec<(Entity, [i32; 3])> = vec![];
-
-//     commands.spawn_empty().with_children(|cells_entity| {
-//         for pos in board.coords().iter() {
-//             let [x, y, z] = pos.to_array();
-//             let cell = Cell::new(x, y, z);
-//             let floor = Floor::new(x, y, z, Material::default());
-//             let vis = PlayerCellVisibility::new(x, y, z);
-
-//             let cell_entity: Entity = cells_entity.spawn((cell, vis, floor)).id();
-
-//             board.cell_store.set(*pos, cell_entity);
-//             board.floor_store.set(*pos, cell_entity);
-//             board.visibility_store.set(*pos, cell_entity);
-
-//             if (y % 10 == 0 && x % 6 != 0) || (x % 5 == 0 && y % 3 != 0) {
-//                 walls.push((cell_entity, [x, y, z]));
-//             }
-//         }
-//     });
-
-//     for (entity, [x, y, z]) in walls.iter() {
-//         let wall = Wall::new(*x, *y, *z, Material::default());
-//         commands.entity(*entity).insert(wall.clone()); // would be nice to avoid cloning
-//         board.wall_store.set(wall.position, *entity);
-//     }
-
-//     ev_writer.send(AppInitEvent::SetAppState(AppState::InitPlayer(IVec3::ZERO)));
-// }

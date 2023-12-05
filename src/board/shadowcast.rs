@@ -3,6 +3,9 @@
 use crate::typical::*;
 #[allow(unused_imports)]
 use crate::{BOARD_SIZE_X, BOARD_SIZE_Y};
+use num_rational::*;
+
+type F = Ratio<i32>;
 
 type DepthColVec = IVec2;
 type XyVec = IVec2;
@@ -16,7 +19,7 @@ pub fn shadowcast_visibility_2d<'a>(
 
     for cardinal in CARDINALS {
         let quadrant: Quadrant = Quadrant::new(cardinal, &IVec2::from_array(origin));
-        let first_row = Row::new(1, -1.0, 1.0);
+        let first_row = Row::new(1, F::from_integer(-1), F::from_integer(1));
         visible.append(&mut scan_rows(
             first_row,
             IVec2::from_array(origin),
@@ -31,11 +34,20 @@ fn scan_rows(
     mut prev_tile: DepthColVec,
     quadrant: &Quadrant,
     walls: &HashSet<[i32; 2]>,
+    // gizmos: Gizmos,
+    // query: Query<&TileMap>,
 ) -> Vec<[i32; 2]> {
     let mut visible = Vec::new();
     let is_wall = |x, y| walls.contains(&[x, y]);
     let is_floor = |x, y| !walls.contains(&[x, y]);
     let mut rows: Vec<Row> = vec![row];
+
+    // if let Some(tile_map) = query.get_single() {
+    //     for wall in walls {
+    //         let [x,y,x] = tile_map.
+    //         gizmos.ray(Vec3::from_array(x,y,z))
+    //     }
+    // }
 
     while rows.len() > 0 {
         // check if all tiles are out of bounds
@@ -44,13 +56,23 @@ fn scan_rows(
 
         for tile in row.tiles().iter() {
             let (x, y) = quadrant.transform(tile);
-            if oob {
-                oob &= out_of_bounds(x, y);
-            }
-
             let (prev_x, prev_y) = quadrant.transform(&prev_tile);
 
+            if oob {
+                oob &= out_of_bounds(x, y); // only check if we haven't seen a valid tile in this row
+            }
+
+            // FIXME stop x-ray vision through certain walls
+            // ?? check if the tile between this + origin is a wall?
+            /*    ***** <-- should not be visible
+            ######****# <-- should be visible
+            # @       #
+            #         ###
+
+            */
+            // is_wall(x, y) && (outer edge visible / adjacent to floor
             if is_wall(x, y) || is_symmetric(&row, tile) {
+                // if is_symmetric(&row, tile) || (is_wall(x, y) && is_floor(prev_x, prev_y)) {
                 visible.push([x, y]);
             }
 
@@ -65,17 +87,12 @@ fn scan_rows(
             }
             prev_tile = *tile;
         }
-        let (px, py) = quadrant.transform(&prev_tile);
-
-        if is_floor(px, py) {
-            // proceed if any tiles in row were valid
-            if !oob {
-                let next_row = row.next();
-                rows.push(next_row);
-            }
+        let (prev_x, prev_y) = quadrant.transform(&prev_tile);
+        if is_floor(prev_x, prev_y) && !oob {
+            let next_row = row.next();
+            rows.push(next_row);
         }
     }
-
     visible
 }
 
@@ -83,31 +100,32 @@ fn out_of_bounds(x: i32, y: i32) -> bool {
     x < 0 || y < 0 || x > BOARD_SIZE_X || y > BOARD_SIZE_Y
 }
 
-// is_symmetric: checks if a given floor tile can be seen symmetrically from the origin. It returns
+// checks if a given floor tile can be seen symmetrically from the origin. It returns
 // true if the central point of the tile is in the sector swept out by the row’s start and end slopes.
 // Otherwise, it returns false.
 fn is_symmetric(row: &Row, tile: &DepthColVec) -> bool {
-    let col = tile.to_array()[1] as f32;
-    let depth = row.depth as f32;
-    col >= depth * row.start_slope && col <= depth * row.end_slope
+    let col = tile.to_array()[1];
+    let depth = row.depth;
+    col >= (F::from_integer(depth) * row.start_slope).to_integer()
+        && col <= (F::from_integer(depth) * row.end_slope).to_integer()
 }
 
-fn slope(tile: &DepthColVec) -> f32 {
+fn slope(tile: &DepthColVec) -> F {
     let [row_depth, col] = tile.to_array();
-    (2.0 * col as f32 - 1.0) / (2.0 * row_depth as f32)
+    F::new(2 * col - 1, 2 * row_depth)
 }
 
-// round_ties_up and round_ties_down round n to the nearest integer. If n ends in .5, round_ties_up
-// rounds up and round_ties_down rounds down. Note: round_ties_up is not the same as Python’s round.
-// Python’s round will round away from 0, resulting in unwanted behavior for negative numbers.
-// TODO: verify this is necessary with Rust
+// round n to the nearest integer, with choice of up or down for halway values.
+// round() will round away from 0, resulting in unwanted behavior for negative numbers.
 
-fn round_ties_up(n: f32) -> i32 {
-    f32::floor(n + 0.5) as i32
+fn round_fraction_up(n: F) -> i32 {
+    let f = n + F::new(1, 2);
+    f.floor().to_integer()
 }
 
-fn round_ties_down(n: f32) -> i32 {
-    f32::ceil(n - 0.5) as i32
+fn round_fraction_down(n: F) -> i32 {
+    let f = n - F::new(1, 2);
+    f.ceil().to_integer()
 }
 
 struct Quadrant {
@@ -141,12 +159,12 @@ impl Quadrant {
 #[derive(Debug, Clone)]
 struct Row {
     depth: i32,
-    start_slope: f32,
-    end_slope: f32,
+    start_slope: F,
+    end_slope: F,
 }
 
 impl Row {
-    fn new(depth: i32, start_slope: f32, end_slope: f32) -> Self {
+    fn new(depth: i32, start_slope: F, end_slope: F) -> Self {
         Row {
             depth,
             start_slope,
@@ -155,14 +173,17 @@ impl Row {
     }
 
     fn tiles(&self) -> Vec<DepthColVec> {
-        let mut ts = vec![];
-        let min_col = round_ties_up(self.depth as f32 * self.start_slope);
-        let max_col = round_ties_down(self.depth as f32 * self.end_slope);
+        let min_col = round_fraction_up(self.depth_fr() * self.start_slope);
+        let max_col = round_fraction_down(self.depth_fr() * self.end_slope);
 
-        for col in min_col..=max_col {
-            ts.push(IVec2::new(self.depth, col));
-        }
-        ts
+        (min_col..=max_col)
+            .into_iter()
+            .map(|col| IVec2::new(self.depth, col as i32))
+            .collect()
+    }
+
+    fn depth_fr(&self) -> F {
+        F::from_integer(self.depth)
     }
 
     fn next(&self) -> Self {
