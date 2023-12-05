@@ -6,7 +6,6 @@ pub enum AppState {
     #[default]
     InitAssets,
     InitBoard,
-    InitPlayer,
     InitStage,
     LoadAssets,
     InitUI,
@@ -30,7 +29,7 @@ pub fn handle_app_init_event(
         match ev {
             AppInitEvent::SetAppState(ns) => {
                 let current_state = state.get();
-                info!("State Transition: {:?} --> {:?}", current_state, ns);
+                warn!("State Transition: {:?} --> {:?}", current_state, ns);
                 next_state.set(*ns);
             }
             AppInitEvent::SetAppStateDeferred(_ns, _delay) => (),

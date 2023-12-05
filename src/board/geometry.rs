@@ -1,4 +1,4 @@
-use std::f32::consts::TAU;
+// use std::f32::consts::TAU;
 
 use crate::typical::*;
 
@@ -78,18 +78,18 @@ pub fn fov_facing(centre: &IVec3, facing: Direction, radius: f32) -> HashSet<[i3
     )
 }
 
-// untested / ported from red blob article
+// untested ports from red blob article:
 
-// fn modl(value: f32, modulo: f32) -> f32 {
+// fn _mod(value: f32, modulo: f32) -> f32 {
 //     return ((value * modulo) + modulo) % modulo;
 // }
 
 // pub fn degrees_left(start_deg: f32, end_deg: f32) -> f32 {
-//     modl(end_deg - start_deg, 360.0)
+//     _mod(end_deg - start_deg, 360.0)
 // }
 
 // pub fn degrees_right(start_deg: f32, end_deg: f32) -> f32 {
-//     modl(start_deg - end_deg, 360.0)
+//     _mod(start_deg - end_deg, 360.0)
 // }
 
 // pub fn degrees_apart(start_deg: f32, end_deg: f32) -> f32 {
@@ -104,7 +104,12 @@ pub fn angle_between_2d(a: &IVec2, b: &IVec2) -> f32 {
     abs_radians(f32::atan2(x2 - x1, y2 - y1))
 }
 
-fn abs_radians(a: f32) -> f32 {
+// pub fn angle_between_2d(a: &[i32; 2], b: &[i32; 2]) -> f32 {
+//     let (x1, y1, x2, y2) = (a[0] as f32, a[1] as f32, b[0] as f32, b[1] as f32);
+//     abs_radians(f32::atan2(x2 - x1, y2 - y1))
+// }
+
+pub fn abs_radians(a: f32) -> f32 {
     if a < 0. {
         f32::to_radians(360.) + a
     } else {
@@ -112,6 +117,13 @@ fn abs_radians(a: f32) -> f32 {
     }
 }
 
+pub fn abs_degrees(a: f32) -> f32 {
+    if a < 0. {
+        360. + a
+    } else {
+        a
+    }
+}
 // https://www.redblobgames.com/grids/line-drawing/
 //
 pub fn line(p0: IVec3, p1: IVec3) -> Vec<IVec3> {

@@ -8,31 +8,12 @@ const CELL_DIMENSIONS_METRES: [f32; 3] = [0.5, 0.5, 2.0];
 
 #[derive(PartialEq, Clone, Debug, Component)]
 pub struct Cell {
-    // pub material: Option<Entity
-    // pub floor: Option<Entity>,
-    // pub feature: Option<Entity>, // door, trap, statue, well, etc
-    // pub items: Option<Entity>,
-
     // pub material_blocks_visibility: bool,
     // pub blocks_visibility_computed: bool,
     // pub light_intensity: f64,
     // pub light_color: Color,
     pub position: IVec3,
 }
-
-/*
-TODO experiment with a Cell which references other entities for:
-    - cell wall / material
-    - cell floor
-    - items
-    - light source
-    - cell feature
-    - illumination
-
-
-we'd want a CellBundle ...
-
-*/
 
 // #[derive(Component)]
 // type MaybeCellFillMaterial = Option<CellFillMaterial>;

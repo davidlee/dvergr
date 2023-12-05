@@ -83,54 +83,6 @@ pub fn load_tileset(
 const I_FLOOR: usize = 843;
 const I_WALL: usize = 0;
 
-#[derive(Component, Debug)]
-pub struct LinearAnim {
-    initial: f32,
-    target: f32,
-    steps: u8,
-    current_step: u8,
-}
-
-// TODO roll this and MobMoveAnim into a trait
-impl LinearAnim {
-    fn new(from: f32, to: f32, steps: u8) -> Self {
-        Self {
-            initial: from,
-            target: to,
-            steps,
-            current_step: 0,
-        }
-    }
-
-    fn delta(&self) -> f32 {
-        (self.target - self.initial) / (self.steps as f32)
-    }
-
-    fn current(&self) -> f32 {
-        self.initial + self.delta() * self.current_step as f32
-    }
-
-    fn next(&mut self) -> u8 {
-        self.current_step += 1;
-        self.current_step
-    }
-
-    fn done(&self) -> bool {
-        self.current_step >= self.steps
-    }
-
-    fn noop(&self) -> bool {
-        self.steps == 0
-    }
-
-    fn reset(&mut self) -> () {
-        self.initial = 0.;
-        self.target = 0.;
-        self.steps = 0;
-        self.current_step = 0;
-    }
-}
-
 // systems
 
 pub fn spawn_tile_map(
@@ -174,7 +126,7 @@ pub fn update_tiles_for_player_cell_visibility(
     mut commands: Commands,
     tileset: Res<Tileset>,
     mut tile_map_query: Query<(Entity, &mut TileMap)>,
-    mut sprite_query: Query<(&mut TextureAtlasSprite, Option<&mut LinearAnim>)>,
+    mut sprite_query: Query<(&mut TextureAtlasSprite, Option<&mut Lerpf32>)>,
     cell_query: Query<
         (&Cell, &mut PlayerCellVisibility, Option<&Wall>),
         Changed<PlayerCellVisibility>,
@@ -229,8 +181,7 @@ pub fn update_tiles_for_player_cell_visibility(
                 // newly obscured
                 match tile_map.entities.get(&cell.position) {
                     Some(e) => {
-                        if let Ok((mut sprite, _)) = sprite_query.get_mut(*e) {
-                            // sprite.color.set_a(0.1);
+                        if let Ok((_sprite, _maybe_anim)) = sprite_query.get_mut(*e) {
                             fade_entites.push(*e);
                         }
                     }
@@ -244,13 +195,13 @@ pub fn update_tiles_for_player_cell_visibility(
 
     // add component to fade alpha of component
     fade_entites.iter().for_each(|e| {
-        commands.entity(*e).insert(LinearAnim::new(1.0, 0.1, 120));
+        commands.entity(*e).insert(Lerpf32::new(1.0, 0.1, 120));
     });
 }
 
 pub fn anim_fade_sprite_alpha(
     // mut commands: Commands,
-    mut query: Query<(Entity, &mut LinearAnim, &mut TextureAtlasSprite)>,
+    mut query: Query<(Entity, &mut Lerpf32, &mut TextureAtlasSprite)>,
 ) {
     for (_, mut anim, mut sprite) in query.iter_mut() {
         if anim.noop() {

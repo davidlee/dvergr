@@ -35,16 +35,17 @@ fn scan_rows(
     let mut visible = Vec::new();
     let is_wall = |x, y| walls.contains(&[x, y]);
     let is_floor = |x, y| !walls.contains(&[x, y]);
-    //
     let mut rows: Vec<Row> = vec![row];
+
     while rows.len() > 0 {
+        // check if all tiles are out of bounds
+        let mut oob = true;
         let mut row = rows.pop().unwrap();
 
         for tile in row.tiles().iter() {
             let (x, y) = quadrant.transform(tile);
-            if out_of_bounds(x, y) {
-                // would be better to do this less often.
-                return visible;
+            if oob {
+                oob &= out_of_bounds(x, y);
             }
 
             let (prev_x, prev_y) = quadrant.transform(&prev_tile);
@@ -67,8 +68,11 @@ fn scan_rows(
         let (px, py) = quadrant.transform(&prev_tile);
 
         if is_floor(px, py) {
-            let next_row = row.next();
-            rows.push(next_row);
+            // proceed if any tiles in row were valid
+            if !oob {
+                let next_row = row.next();
+                rows.push(next_row);
+            }
         }
     }
 
@@ -76,8 +80,7 @@ fn scan_rows(
 }
 
 fn out_of_bounds(x: i32, y: i32) -> bool {
-    // x < -10 || y < -10 || x > BOARD_SIZE_X + 10 || y > BOARD_SIZE_Y + 10
-    x < -10 || y < -10 || x > BOARD_SIZE_X + 10 || y > BOARD_SIZE_Y + 10
+    x < 0 || y < 0 || x > BOARD_SIZE_X || y > BOARD_SIZE_Y
 }
 
 // is_symmetric: checks if a given floor tile can be seen symmetrically from the origin. It returns
@@ -98,6 +101,7 @@ fn slope(tile: &DepthColVec) -> f32 {
 // rounds up and round_ties_down rounds down. Note: round_ties_up is not the same as Python’s round.
 // Python’s round will round away from 0, resulting in unwanted behavior for negative numbers.
 // TODO: verify this is necessary with Rust
+
 fn round_ties_up(n: f32) -> i32 {
     f32::floor(n + 0.5) as i32
 }

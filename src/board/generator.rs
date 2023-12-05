@@ -1,0 +1,261 @@
+use crate::player::SpawnPlayerEvent;
+use crate::typical::*;
+use bevy_turborand::prelude::*;
+use std::cmp::Ordering;
+
+type CoOrdinate = [i32; 2];
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+struct Room {
+    x: i32,
+    y: i32,
+    width: i32,
+    height: i32,
+    doors: Vec<CoOrdinate>,
+}
+
+impl Ord for Room {
+    fn cmp(&self, other: &Self) -> Ordering {
+        [self.x, self.y].cmp(&[other.x, other.y])
+    }
+}
+
+impl PartialOrd for Room {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        [self.x, self.y].partial_cmp(&[other.x, other.y])
+    }
+}
+
+const EDGE: i32 = 2;
+const MARGIN: i32 = 2;
+
+impl Room {
+    fn random(rng: &mut RngComponent) -> Self {
+        let width = rng.i32(6..12);
+        let height = rng.i32(4..6);
+        let x = rng.i32(EDGE..(BOARD_SIZE_X - width - EDGE));
+        let y = rng.i32(EDGE..(BOARD_SIZE_Y - height - EDGE));
+        Room {
+            x,
+            y,
+            width,
+            height,
+            doors: vec![],
+        }
+    }
+
+    fn max_x(&self) -> i32 {
+        self.x + self.width
+    }
+
+    fn max_y(&self) -> i32 {
+        self.y + self.height
+    }
+
+    fn mid_x(&self) -> i32 {
+        self.x + (self.width / 2)
+    }
+
+    fn mid_y(&self) -> i32 {
+        self.y + (self.height / 2)
+    }
+}
+
+fn collision_free(room: &Room, rooms: &Vec<Room>) -> bool {
+    rooms.iter().all(|r| {
+        false
+            || (r.max_x() + MARGIN) < room.x
+            || (r.max_y() + MARGIN) < room.y
+            || (room.max_x() + MARGIN) < r.x
+            || (room.max_y() + MARGIN) < r.y
+    })
+}
+
+fn carve_room(room: &Room, blanks: &mut Vec<CoOrdinate>) {
+    for y in room.y..=room.max_y() {
+        for x in room.x..=room.max_x() {
+            blanks.push([x, y]);
+        }
+    }
+}
+
+fn shared_x(rs: [&Room; 2]) -> Option<i32> {
+    let ax = rs[0].x..rs[0].max_x();
+    let bx = rs[1].x..rs[1].max_x();
+    ax.into_iter().find(|x| bx.contains(x))
+}
+
+fn shared_y(rs: [&Room; 2]) -> Option<i32> {
+    let ay = rs[0].y..rs[0].max_y();
+    let by = rs[1].y..rs[1].max_y();
+    ay.into_iter().find(|y| by.contains(y))
+}
+
+// determine where we will place doors
+//
+// where the other room lines up along either the x or y axis, we can draw the corridor
+// without any turns, as long as they share that coordinate and the walls face each other;
+// otherwise, we need 1 or 2 - depending on whether we use the facing wall (2), or one
+// pointing sideways in the correct direction (1)
+
+fn carve_corridors(blanks: &mut Vec<CoOrdinate>, room_a: &Room, room_b: &Room) {
+    // let [facing_a, facing_b] = connected_room_facing(room_a, room_b);
+
+    let mut rx = [room_a, room_b];
+    rx.sort_by(|a, b| a.x.cmp(&b.x));
+
+    let mut ry = [room_a, room_b];
+    ry.sort_by(|a, b| a.y.cmp(&b.y));
+
+    let (rx, ry) = (rx, ry);
+
+    let sx = shared_x(rx);
+    let sy = shared_y(ry);
+
+    if let Some(x) = sx {
+        for y in ry[0].y..ry[1].max_y() {
+            blanks.push([x, y]);
+        }
+    } else if let Some(y) = sy {
+        for x in rx[0].x..rx[1].max_x() {
+            blanks.push([x, y]);
+        }
+    } else {
+        let x_dist = i32::abs(rx[0].x - rx[1].x);
+        let y_dist = i32::abs(ry[0].y - ry[1].y);
+
+        if x_dist > y_dist || true {
+            let x_mid = rx[0].max_x() + x_dist / 2;
+            for x in rx[0].max_x()..rx[1].x {
+                match x {
+                    _ if x < x_mid => blanks.push([x, rx[0].mid_y()]),
+                    _ if x == x_mid => {
+                        for y in ry[0].mid_y()..ry[1].mid_y() {
+                            blanks.push([x, y]);
+                        }
+                    }
+                    _ => blanks.push([x, rx[1].mid_y()]),
+                }
+            }
+        }
+        // else { // doors on N/S
+        // }
+    }
+}
+
+pub fn populate_board(
+    mut commands: Commands,
+    mut board: ResMut<Board>,
+    mut spawn_writer: EventWriter<SpawnPlayerEvent>,
+    mut global_rng: ResMut<GlobalChaChaRng>,
+) {
+    info!("[AppState::InitBoard] populate_board");
+
+    let mut rng = RngComponent::from(&mut global_rng);
+    let mut rooms: Vec<Room> = vec![];
+    let mut blanks: Vec<CoOrdinate> = vec![];
+    let mut retries: usize = 0;
+    let target_rooms: usize = rng.usize(5..10);
+
+    while rooms.len() < target_rooms && retries < 1024 {
+        let room = Room::random(&mut rng);
+        if collision_free(&room, &rooms) {
+            rooms.push(room);
+        } else {
+            retries += 1;
+        }
+    }
+    // rooms.sort();
+    warn!(
+        "ROOMS : {:?} of {:?} with {:?} discards :: {:?}",
+        rooms.len(),
+        target_rooms,
+        retries,
+        rooms
+    );
+
+    // place Player in first room
+    if let Some(start_room) = rooms.first() {
+        spawn_writer.send(SpawnPlayerEvent(IVec3::new(
+            start_room.x + 1,
+            start_room.y + 1,
+            0,
+        )));
+    }
+
+    // determine where the empty space will go
+    let mut prev_room: Option<Room> = None;
+    for room in rooms {
+        if let Some(prev) = prev_room {
+            carve_corridors(&mut blanks, &room, &prev);
+        }
+        carve_room(&room, &mut blanks);
+        prev_room = Some(room);
+    }
+
+    warn!("{:?} -- {:?}", blanks.len(), blanks);
+
+    // create cells
+    commands.spawn_empty().with_children(|parent| {
+        for pos in board.coords().iter() {
+            let [x, y, z] = pos.to_array();
+            let cell = Cell::new(x, y, z);
+            let floor = Floor::new(x, y, z, Material::default());
+            let vis = PlayerCellVisibility::new(x, y, z);
+
+            let entity: Entity;
+            if blanks.contains(&[x, y]) {
+                entity = parent.spawn((cell, vis, floor)).id();
+                false
+            } else {
+                let wall = Wall::new(x, y, z, Material::default());
+                entity = parent.spawn((cell, vis, floor, wall)).id();
+                board.wall_store.set(*pos, entity);
+                true
+            };
+
+            board.cell_store.set(*pos, entity);
+            board.floor_store.set(*pos, entity);
+            board.visibility_store.set(*pos, entity);
+        }
+    });
+}
+// TODO place Player in middle of room
+
+// pub fn populate_board(
+//     mut commands: Commands,
+//     mut board: ResMut<Board>,
+//     mut ev_writer: EventWriter<AppInitEvent>,
+//     mut rng: ResMut<GlobalChaChaRng>,
+// ) {
+//     info!("[AppState::InitBoard] populate_board");
+
+//     let mut walls: Vec<(Entity, [i32; 3])> = vec![];
+
+//     commands.spawn_empty().with_children(|cells_entity| {
+//         for pos in board.coords().iter() {
+//             let [x, y, z] = pos.to_array();
+//             let cell = Cell::new(x, y, z);
+//             let floor = Floor::new(x, y, z, Material::default());
+//             let vis = PlayerCellVisibility::new(x, y, z);
+
+//             let cell_entity: Entity = cells_entity.spawn((cell, vis, floor)).id();
+
+//             board.cell_store.set(*pos, cell_entity);
+//             board.floor_store.set(*pos, cell_entity);
+//             board.visibility_store.set(*pos, cell_entity);
+
+//             if (y % 10 == 0 && x % 6 != 0) || (x % 5 == 0 && y % 3 != 0) {
+//                 walls.push((cell_entity, [x, y, z]));
+//             }
+//         }
+//     });
+
+//     for (entity, [x, y, z]) in walls.iter() {
+//         let wall = Wall::new(*x, *y, *z, Material::default());
+//         commands.entity(*entity).insert(wall.clone()); // would be nice to avoid cloning
+//         board.wall_store.set(wall.position, *entity);
+//     }
+
+//     ev_writer.send(AppInitEvent::SetAppState(AppState::InitPlayer(IVec3::ZERO)));
+// }

@@ -11,6 +11,9 @@ pub struct Player {
     pub positions_visible: HashSet<[i32; 2]>,
 }
 
+#[derive(Event, Debug)]
+pub struct SpawnPlayerEvent(pub IVec3);
+
 impl Default for Player {
     fn default() -> Self {
         Player {
@@ -51,25 +54,28 @@ pub fn spawn_player(
     mut commands: Commands,
     mut board: ResMut<Board>,
     mut ev_writer: EventWriter<AppInitEvent>,
+    mut ev_reader: EventReader<SpawnPlayerEvent>,
 ) {
-    let player_position = IVec3 { x: 3, y: 3, z: 0 };
-    let position = Position::Point(player_position);
-    let player_bundle = PlayerBundle {
-        creature: CreatureBundle {
-            locus: Locus {
-                position,
+    warn!("Spawn Player");
+    for SpawnPlayerEvent(pos) in ev_reader.read() {
+        let position = Position::Point(*pos);
+        warn!("Spawn Player {:?}", position);
+        let player_bundle = PlayerBundle {
+            creature: CreatureBundle {
+                locus: Locus {
+                    position,
+                    ..default()
+                },
                 ..default()
             },
             ..default()
-        },
-        ..default()
-    };
-    let player_entity = commands.spawn(player_bundle).id();
+        };
+        let player_entity = commands.spawn(player_bundle).id();
 
-    board
-        .creature_store
-        .add_single(player_entity, player_position)
-        .unwrap();
-
-    ev_writer.send(AppInitEvent::SetAppState(AppState::InitStage))
+        board
+            .creature_store
+            .add_single(player_entity, *pos)
+            .unwrap();
+        ev_writer.send(AppInitEvent::SetAppState(AppState::InitStage));
+    }
 }

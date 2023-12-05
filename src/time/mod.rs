@@ -1,5 +1,8 @@
-use crate::typical::*;
-// use bevy::prelude::{App, Plugin, ResMut, Resource};
+// use std::fmt::{format, Arguments};
+
+// use crate::typical::*;
+// use crate::ui::layout::*;
+use bevy::prelude::*;
 
 pub mod f64 {
     pub const SECONDS_PER_MINUTE: f64 = 60.0;
@@ -55,11 +58,10 @@ impl Seconds {
     }
 }
 
-#[allow(dead_code)]
-#[derive(Resource)]
+#[derive(Resource, Debug)]
 pub struct Clock {
     seconds: f64,
-    paused: bool,
+    // paused: bool,
     current_frame: u32,
     current_turn: u32,
 }
@@ -68,7 +70,7 @@ impl Default for Clock {
     fn default() -> Self {
         Clock {
             seconds: 0.,
-            paused: true,
+            // paused: true,
             current_frame: 0,
             current_turn: 0,
         }
@@ -122,11 +124,47 @@ impl Clock {
     pub fn current_frame(&self) -> u32 {
         self.current_frame
     }
+
+    pub fn display(&self) -> String {
+        format!(
+            "Time: {:?}:{:?}:{:?} :: Turn :: [{:?}]\n",
+            self.hours(),
+            self.minutes(),
+            self.seconds,
+            self.current_turn,
+        )
+    }
 }
 
-pub fn clock_frame_tick(mut clock: ResMut<Clock>) {
+pub fn clock_frame_tick(
+    mut clock: ResMut<Clock>,
+    // commands: Commands,
+    // asset_server: Res<AssetServer>,
+    // mut ui_query: Query<(&mut Text, &UIConsole)>,
+) {
     clock.frame_tick();
+
+    // if clock.current_frame % 100 == 0 {
+    //     if let Ok((mut text, _console)) = ui_query.get_single_mut() {
+    //         text.sections.push(mk_console_time_text_section(
+    //             clock.as_ref(),
+    //             asset_server.load("font/BigBlueTerminalPlus.ttf"),
+    //         ));
+    //     }
+    // }
 }
+
+// fn mk_console_time_text_section(clock: &Clock, font: Handle<Font>) -> TextSection {
+//     // update something
+//     let text_style = TextStyle {
+//         font,
+//         font_size: 11.0,
+//         color: Color::rgb(0.9, 0.9, 0.9),
+//     };
+//     let mut section = TextSection::from_style(text_style);
+//     section.value = clock.display();
+//     section
+// }
 
 // timers
 // events

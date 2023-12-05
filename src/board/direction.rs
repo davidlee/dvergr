@@ -1,3 +1,4 @@
+// use crate::board::geometry::*;
 use crate::typical::*;
 
 use std::f32::consts::TAU;
@@ -15,6 +16,9 @@ pub enum Direction {
     West,
     NorthWest,
 }
+use Direction::*;
+
+use super::geometry::abs_degrees;
 
 impl Direction {
     const DIRECTION_NUM: usize = 8;
@@ -60,6 +64,32 @@ impl Direction {
     pub fn to_radians(self) -> f32 {
         DIRECTION_RADIANS[self as usize]
     }
+
+    pub fn closest_cardinal(degrees: f32) -> Direction {
+        println!("{:?}^{:?}", degrees, abs_degrees(degrees));
+        match abs_degrees(degrees) {
+            // _ if (degrees > abs_degrees(-45.0) && degrees < 360.0) || degrees <= 45.0 => North,
+            a if a >= 45.0 && a <= 135.0 => East,
+            a if a >= 135.0 && a <= 225.0 => South,
+            a if a >= 225.0 && a <= 315.0 => West,
+            _ => North,
+        }
+    }
+}
+
+#[test]
+fn test_closest_cardinal() {
+    assert_eq!(Direction::closest_cardinal(1.0), North);
+    assert_eq!(Direction::closest_cardinal(87.0), East);
+    assert_eq!(Direction::closest_cardinal(93.0), East);
+    assert_eq!(Direction::closest_cardinal(179.0), South);
+    assert_eq!(Direction::closest_cardinal(183.0), South);
+    assert_eq!(Direction::closest_cardinal(270.0), West);
+    assert_eq!(Direction::closest_cardinal(286.0), West);
+    assert_eq!(Direction::closest_cardinal(320.0), North);
+    assert_eq!(Direction::closest_cardinal(-15.0), North);
+    assert_eq!(Direction::closest_cardinal(-94.3), West);
+    assert_eq!(Direction::closest_cardinal(-186.3), South);
 }
 
 pub const DIRECTIONS: [Direction; 8] = [

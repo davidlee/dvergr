@@ -1,4 +1,4 @@
-use crate::graphics::move_anim::MobMoveAnimation;
+use crate::graphics::anim::LerpVec3;
 use crate::player::movement::DirectionalInput;
 use crate::typical::*;
 
@@ -7,7 +7,7 @@ use bevy::prelude::{Entity, EventWriter, Input, KeyCode, Query, Res, Transform};
 pub fn keybindings(
     mut ev_player_move: EventWriter<DirectionalInput>,
     keys: Res<Input<KeyCode>>,
-    sprite_query: Query<(Entity, &MobMoveAnimation, &Transform)>,
+    sprite_query: Query<(Entity, &LerpVec3, &Transform)>,
 ) {
     if sprite_query.get_single().is_ok() {
         // ignore any player movement input while animation is in progress

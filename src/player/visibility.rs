@@ -4,7 +4,7 @@ use crate::board::geometry::*;
 use crate::board::shadowcast::*;
 use crate::typical::*;
 
-const PLAYER_VISIBILITY_RANGE: f32 = 24.5; // FIXME add light sources
+// const PLAYER_VISIBILITY_RANGE: f32 = 24.5; // FIXME add light sources
 
 // https://www.albertford.com/shadowcasting/#symmetry
 // https://www.roguebasin.com/index.php/FOV_using_recursive_shadowcasting

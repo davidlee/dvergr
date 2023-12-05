@@ -1,6 +1,7 @@
 pub const TILEMAP_ASSET_PATH: &str = "img/or16w_t.png";
 pub const SPRITESHEET_ASSET_PATH: &str = "vettlingr/dwarves.png";
 
+pub mod anim;
 pub mod asset_loading;
 pub mod components;
 pub mod mobs;
@@ -10,6 +11,7 @@ pub mod player_decoration;
 pub mod tilemap;
 
 pub mod typical {
+    pub use super::anim::{LerpVec3, Lerpf32, SimpleTimer};
     pub use super::asset_loading::AssetsLoading;
     pub use super::components::{GridSize, PixelSize, Stage, TileSize};
     pub use super::mobs::{CreatureEntityRef, DwarfSpritesheet};

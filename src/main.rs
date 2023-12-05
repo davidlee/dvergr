@@ -78,24 +78,21 @@ fn main() {
             })
             .set(ImagePlugin::default_nearest()),)) // no blurry sprites
         .insert_resource(ClearColor(Color::rgb(0.0, 0.05, 0.15)))
+        .init_resource::<Board>()
         .add_state::<AppState>()
-        // .add_event::<creature::movement::BeginUpdateLocus>()
+        .add_event::<player::movement::DirectionalInput>()
+        .add_event::<state::AppInitEvent>()
+        .add_event::<player::SpawnPlayerEvent>()
         .add_event::<events::begin_action::UpdateLocus>()
         // plugins
         .add_plugins(FpsCounterPlugin)
         .add_plugins(PanCamPlugin)
         .add_plugins(RngPlugin::default())
         .add_plugins(time::TimePlugin)
-        .add_plugins(board::plugin::BoardPlugin)
         .add_plugins(graphics::asset_loading::AssetLoadingPlugin)
         //
         // INITIALIZATION
         .add_systems(Startup, ui::spawn_camera)
-        .add_systems(
-            Update,
-            graphics::components::spawn_stage.run_if(state_exists_and_equals(AppState::InitStage)),
-        )
-        .add_systems(OnEnter(AppState::InitUI), ui::spawn_layout)
         .add_systems(
             OnEnter(AppState::InitAssets),
             (
@@ -103,6 +100,18 @@ fn main() {
                 graphics::mobs::load_spritesheet.after(graphics::tilemap::load_tileset),
             ),
         )
+        .add_systems(
+            OnEnter(AppState::InitBoard),
+            (
+                board::generator::populate_board,
+                player::spawn_player.after(board::generator::populate_board),
+            ),
+        )
+        .add_systems(
+            Update,
+            graphics::components::spawn_stage.run_if(state_exists_and_equals(AppState::InitStage)),
+        )
+        .add_systems(OnEnter(AppState::InitUI), ui::spawn_layout)
         .add_systems(
             PostUpdate,
             graphics::asset_loading::ensure_assets_loaded
@@ -112,7 +121,7 @@ fn main() {
             OnEnter(AppState::InitTileMap),
             graphics::tilemap::spawn_tile_map,
         )
-        .add_systems(OnEnter(AppState::InitPlayer), player::spawn_player)
+        // .add_systems(OnEnter(AppState::InitPlayer), player::spawn_player)
         .add_systems(
             OnEnter(AppState::InitMobs),
             graphics::player_avatar::spawn_player_avatar,
@@ -173,8 +182,6 @@ fn main() {
         .add_systems(PostUpdate, state::handle_app_init_event) // TODO REMOVE AFTER INIT COMPLETE
         .add_systems(PostUpdate, time::clock_frame_tick)
         // EVENTS
-        .add_event::<player::movement::DirectionalInput>()
-        .add_event::<state::AppInitEvent>()
         // ok, ready?
         .run();
 }

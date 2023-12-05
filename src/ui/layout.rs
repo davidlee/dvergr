@@ -3,7 +3,16 @@ use crate::typical::*;
 use bevy::prelude::*;
 
 #[derive(Component, Debug)]
-pub struct MapViewPanel;
+pub struct UIMapViewPanel;
+
+#[derive(Component, Debug)]
+pub struct UISideBar;
+
+#[derive(Component, Debug)]
+pub struct UIFooter;
+
+#[derive(Component, Debug)]
+pub struct UIConsole;
 
 //
 // UI Layout
@@ -18,14 +27,11 @@ const COLORS: [Color; 4] = [
                                   //
 ];
 
-#[allow(dead_code)]
 pub fn spawn_layout(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut ev_writer: EventWriter<AppInitEvent>,
 ) {
-    info!("this is where we load the UI for real, disabled because I don't know how to mount the map into it");
-
     let heading_style = TextStyle {
         font: asset_server.load("font/BigBlueTerminalPlus.ttf"),
         font_size: 22.0,
@@ -95,8 +101,10 @@ pub fn spawn_layout(
                             ..Default::default()
                         })
                         .with_children(|parent| {
-                            parent
-                                .spawn(TextBundle::from_section("Sidebar", heading_style.clone()));
+                            parent.spawn((
+                                UISideBar,
+                                TextBundle::from_section("Sidebar", heading_style.clone()),
+                            ));
                         });
                     // Main Content Container
                     parent
@@ -114,7 +122,7 @@ pub fn spawn_layout(
                         .with_children(|parent| {
                             parent
                                 .spawn((
-                                    MapViewPanel,
+                                    UIMapViewPanel,
                                     NodeBundle {
                                         // Map Area
                                         style: Style {
@@ -129,7 +137,7 @@ pub fn spawn_layout(
                                 ))
                                 .with_children(|parent| {
                                     parent.spawn(TextBundle::from_section(
-                                        "ASCII Map Goes Here",
+                                        "The Map:",
                                         text_style.clone(),
                                     ));
                                 });
@@ -146,9 +154,12 @@ pub fn spawn_layout(
                                     ..Default::default()
                                 })
                                 .with_children(|parent| {
-                                    parent.spawn(TextBundle::from_section(
-                                        "Console Output",
-                                        text_style.clone(),
+                                    parent.spawn((
+                                        UIConsole,
+                                        TextBundle::from_section(
+                                            "Console Output",
+                                            text_style.clone(),
+                                        ),
                                     ));
                                 });
                         });
@@ -168,7 +179,10 @@ pub fn spawn_layout(
                     ..Default::default()
                 })
                 .with_children(|parent| {
-                    parent.spawn(TextBundle::from_section("Footer", heading_style.clone()));
+                    parent.spawn((
+                        UIFooter,
+                        TextBundle::from_section("Footer", heading_style.clone()),
+                    ));
                 });
         });
 

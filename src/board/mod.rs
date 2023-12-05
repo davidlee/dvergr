@@ -2,6 +2,7 @@ pub mod cell;
 pub mod cell_store;
 pub mod creature_store;
 pub mod direction;
+pub mod generator;
 pub mod geometry;
 pub mod lighting;
 pub mod plugin;
@@ -10,8 +11,6 @@ pub mod shadowcast;
 
 pub use cell_store::*;
 pub use creature_store::*;
-// pub use lighting::*;
-// pub use shadowcast::*;
 
 pub const BOARD_SIZE_X: i32 = 48;
 pub const BOARD_SIZE_Y: i32 = 24;
