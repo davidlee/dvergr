@@ -57,3 +57,30 @@ pub fn keybindings(
         })
     }
 }
+use crate::graphics::typical::*;
+// use bevy::input::mouse::MouseButtonInput;
+use bevy::prelude::{MouseButton, Window};
+use bevy::window::PrimaryWindow;
+
+// FIXME cool, now we have to account for the offset from panning.
+//
+pub fn mousey_mousey(
+    q_windows: Query<&Window, With<PrimaryWindow>>,
+    buttons: Res<Input<MouseButton>>,
+    // board: Res<Board>,
+    tm_query: Query<&TileMap>,
+    // mut cursor_evr: EventReader<CursorMoved>,
+    // mut scroll_evr: EventReader<MouseWheel>,
+) {
+    if buttons.pressed(MouseButton::Left) {
+        info!("left mouse currently pressed");
+        if let Some(cursor_position) = q_windows.single().cursor_position() {
+            // TODO
+            // let corrected_cursor = cursor_position - pancam_thingy.translation ..
+            //
+            info!("Mousey cursor: {:?}", cursor_position);
+            let pos = tm_query.single().from_pixels(&cursor_position);
+            warn!("MOUSE CLICK: {:?}", pos);
+        }
+    }
+}

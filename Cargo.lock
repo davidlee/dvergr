@@ -3,6 +3,18 @@
 version = 3
 
 [[package]]
+name = "Dvergr"
+version = "0.1.1"
+dependencies = [
+ "bevy",
+ "bevy-fps-counter",
+ "bevy_ecs_tilemap",
+ "bevy_pancam",
+ "bevy_turborand",
+ "num-rational",
+]
+
+[[package]]
 name = "ab_glyph"
 version = "0.2.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1169,18 +1181,6 @@ dependencies = [
  "cc",
  "cfg-if",
  "constant_time_eq",
-]
-
-[[package]]
-name = "blit"
-version = "0.1.0"
-dependencies = [
- "bevy",
- "bevy-fps-counter",
- "bevy_ecs_tilemap",
- "bevy_pancam",
- "bevy_turborand",
- "num-rational",
 ]
 
 [[package]]

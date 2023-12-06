@@ -14,7 +14,7 @@ pub fn render_gizmos(
         let tile_map = tile_map_q.get_single().unwrap();
 
         if let Position::Point(pos) = locus.position {
-            let player_centre = tile_map.translate(pos);
+            let player_centre = tile_map.translate(&pos);
             let alpha = (clock.current_frame() % 120) as f32 / 120.0;
 
             for ray_vector in locus.facing.arc_vectors(1) {

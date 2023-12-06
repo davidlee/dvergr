@@ -1,8 +1,8 @@
 pub mod anatomy;
 pub mod board;
 pub mod character;
+pub mod combat;
 pub mod creature;
-pub mod damage;
 pub mod dice;
 pub mod events;
 pub mod graphics;
@@ -130,7 +130,8 @@ fn main() {
         // MOVEMENT
         .add_systems(
             PreUpdate,
-            input::keybindings.run_if(state_exists_and_equals(AppState::Game)),
+            (input::keybindings, input::mousey_mousey)
+                .run_if(state_exists_and_equals(AppState::Game)),
         )
         .add_systems(
             PreUpdate,

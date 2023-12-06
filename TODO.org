@@ -1,19 +1,16 @@
 * TODO
 
-** Bugs / Refactoring / Questions
-*** shouldn't the tilemap origin be top left?
 
 ** Graphics
-*** render map inside UI
-*** movement: animation & input state machine
-*** 
+*** BUG shadowcasting: no see through wall glitch
 
 ** Logic
-*** Generate Rooms / Map
+*** BUG - Generate Rooms / Map
 *** Collision detection (mobs; items; ...)
-*** Line of Sight
 *** Lighting
 *** pathfinding
+**** baby steps .. move to unobstructed space on click
+ - mouse_pos -> square
 
 ** Action
 *** Terrain destruction (dig)

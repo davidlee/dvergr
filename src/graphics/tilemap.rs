@@ -48,10 +48,16 @@ impl TileMap {
         }
     }
 
-    pub fn translate(&self, board_pos: IVec3) -> Vec2 {
+    pub fn translate(&self, board_pos: &IVec3) -> Vec2 {
         let x = (self.tile_size.width * board_pos.x as f32) + self.center_offset.x;
         let y = (self.tile_size.height * board_pos.y as f32) + self.center_offset.y;
         Vec2::new(x, y)
+    }
+
+    pub fn from_pixels(&self, cursor_pos: &Vec2) -> IVec3 {
+        let x = (cursor_pos.x - self.center_offset.x) / self.tile_size.width;
+        let y = (cursor_pos.y - self.center_offset.y) / self.tile_size.height;
+        IVec3::new(x as i32, y as i32, 0)
     }
 }
 

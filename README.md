@@ -1,7 +1,8 @@
-# Blit > DVERGR
+# DVERGR
 
 - Learn me a Rust / Bevy / ECS / gamedev
 - Make me a roguelike
+- Be Dwarf
 
 ## Dev Resources
 - [bevy learning resources](https://bevyengine.org/assets/)
