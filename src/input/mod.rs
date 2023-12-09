@@ -2,7 +2,7 @@ use crate::graphics::anim::LerpVec3;
 use crate::player::movement::DirectionalInput;
 use crate::typical::*;
 
-use bevy::prelude::{Entity, EventWriter, Input, KeyCode, Query, Res, Transform};
+use bevy::prelude::{Camera2d, Entity, EventWriter, Input, KeyCode, Query, Res, Transform};
 
 pub fn keybindings(
     mut ev_player_move: EventWriter<DirectionalInput>,
@@ -69,8 +69,10 @@ pub fn mousey_mousey(
     buttons: Res<Input<MouseButton>>,
     // board: Res<Board>,
     tm_query: Query<&TileMap>,
-    // mut cursor_evr: EventReader<CursorMoved>,
-    // mut scroll_evr: EventReader<MouseWheel>,
+    cam_query: Query<(&Camera2d, &Transform)>, // pancam entity
+
+                                               // mut cursor_evr: EventReader<CursorMoved>,
+                                               // mut scroll_evr: EventReader<MouseWheel>,
 ) {
     if buttons.pressed(MouseButton::Left) {
         info!("left mouse currently pressed");
@@ -79,8 +81,12 @@ pub fn mousey_mousey(
             // let corrected_cursor = cursor_position - pancam_thingy.translation ..
             //
             info!("Mousey cursor: {:?}", cursor_position);
-            let pos = tm_query.single().from_pixels(&cursor_position);
-            warn!("MOUSE CLICK: {:?}", pos);
+            if let Ok((_, transform)) = cam_query.get_single() {
+                let c =
+                    cursor_position - Vec2::new(transform.translation.x, transform.translation.y);
+                let pos = tm_query.single().from_pixels(&c);
+                warn!("MOUSE CLICK: {:?} -> {:?}", pos, c);
+            }
         }
     }
 }
