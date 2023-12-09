@@ -51,6 +51,7 @@ use bevy_turborand::prelude::RngPlugin;
 use bevy::log::LogPlugin;
 use bevy::prelude::*;
 use bevy::utils::tracing::Level;
+use player::SpawnPlayerEvent;
 use typical::*;
 
 fn main() {
@@ -129,7 +130,7 @@ fn main() {
         //     OnEnter(AppState::InitTileMap),
         //     graphics::tilemap::spawn_tile_map,
         // )
-        // .add_systems(OnEnter(AppState::InitPlayer), player::spawn_player)
+        // .add_systems(StartUp(AppState::InitPlayer), player::spawn_player)
         // .add_systems(
         //     OnEnter(AppState::InitMobs),
         //     graphics::player_avatar::spawn_player_avatar,
@@ -199,7 +200,7 @@ fn spawn_camera(mut commands: Commands, board: Res<Board>) {
     let x = 0. - board.size.width as f32 / 2.0;
     let y = 0. - board.size.height as f32 / 2.0;
     commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(x, y, 50.0).looking_at(Vec3::new(x, y, 0.), Vec3::Y),
+        transform: Transform::from_xyz(x, y, 40.0).looking_at(Vec3::new(x, y, 0.), Vec3::Y),
         ..default()
     });
 }
@@ -218,7 +219,8 @@ fn spawn_voxel_map(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     asset_server: ResMut<AssetServer>,
-    query: Query<(&Wall)>,
+    // query: Query<&Locus>,
+    mut ev: EventReader<SpawnPlayerEvent>,
 ) {
     // ..
     let map = commands.spawn_empty().id();
@@ -233,6 +235,7 @@ fn spawn_voxel_map(
         base_color_texture: Some(texture_handle),
         ..default()
     });
+
     let shape = meshes.add(shape::Cube::default().into());
 
     let bx = 0.0 - board.size.width as f32;
@@ -275,39 +278,41 @@ fn spawn_voxel_map(
             }
         });
 
-    // makes some lights
+    for SpawnPlayerEvent(position) in ev.read() {
+        commands.spawn(PointLightBundle {
+            point_light: PointLight {
+                intensity: 5000.0,
+                range: 100.,
+                shadows_enabled: true,
+                color: Color::GOLD,
+                ..default()
+            },
+            transform: Transform::from_xyz(bx + position.x as f32, by + position.y as f32, 0.3),
+            ..default()
+        });
+    }
 
-    commands.spawn(PointLightBundle {
-        point_light: PointLight {
-            intensity: 4000.0,
-            range: 100.,
-            shadows_enabled: true,
-            color: Color::RED,
-            ..default()
-        },
-        transform: Transform::from_xyz(bx / 2.0, by / 2.0, 4.0),
-        ..default()
-    });
-    commands.spawn(PointLightBundle {
-        point_light: PointLight {
-            intensity: 4000.0,
-            range: 100.,
-            shadows_enabled: true,
-            color: Color::GREEN,
-            ..default()
-        },
-        transform: Transform::from_xyz(bx + 15., by + 15., 4.0),
-        ..default()
-    });
-    commands.spawn(PointLightBundle {
-        point_light: PointLight {
-            intensity: 5000.0,
-            range: 100.,
-            shadows_enabled: true,
-            color: Color::BLUE,
-            ..default()
-        },
-        transform: Transform::from_xyz(bx, by, 4.),
-        ..default()
-    });
+    // if let Ok(x) = query.get_single() {
+    //     let position = match x.position {
+    //         Position::Point(pos) => pos,
+    //         _ => IVec3::ZERO,
+    //     };
+
+    //     warn!("###### {:?}", position);
+    //     // makes some lights
+
+    //     commands.spawn(PointLightBundle {
+    //         point_light: PointLight {
+    //             intensity: 5000.0,
+    //             range: 100.,
+    //             shadows_enabled: true,
+    //             color: Color::GOLD,
+    //             ..default()
+    //         },
+    //         transform: Transform::from_xyz(bx + position.x as f32, by + position.y as f32, 15.),
+    //         ..default()
+    //     });
+    // } else {
+
+    // }
 }
