@@ -6,7 +6,7 @@ pub mod creature;
 pub mod dice;
 pub mod events;
 pub mod graphics;
-pub mod input;
+// pub mod input;
 pub mod player;
 pub mod state;
 pub mod time;
@@ -49,34 +49,37 @@ use bevy_pancam::PanCamPlugin;
 use bevy_turborand::prelude::RngPlugin;
 
 use bevy::log::LogPlugin;
+use bevy::prelude::*;
 use bevy::utils::tracing::Level;
 use typical::*;
 
 fn main() {
     App::new()
-        .add_plugins((DefaultPlugins
-            .set(WindowPlugin {
-                primary_window: Some(Window {
-                    title: "~= D V E R G R =~".into(),
-                    resolution: WindowResolution::new(2800.0, 1400.0),
-                    present_mode: PresentMode::AutoVsync,
-                    // Tells wasm to resize the window according to the available canvas
-                    fit_canvas_to_parent: true,
-                    // Tells wasm not to override default event handling, like F5, Ctrl+R etc.
-                    prevent_default_event_handling: false,
-                    window_theme: Some(WindowTheme::Dark),
+        .add_plugins(
+            (DefaultPlugins
+                .set(WindowPlugin {
+                    primary_window: Some(Window {
+                        title: "~= D V E R G R =~".into(),
+                        resolution: WindowResolution::new(2800.0, 1400.0),
+                        present_mode: PresentMode::AutoVsync,
+                        // Tells wasm to resize the window according to the available canvas
+                        fit_canvas_to_parent: true,
+                        // Tells wasm not to override default event handling, like F5, Ctrl+R etc.
+                        prevent_default_event_handling: false,
+                        window_theme: Some(WindowTheme::Dark),
+                        ..default()
+                    }),
                     ..default()
-                }),
-                ..default()
-            })
-            .set(LogPlugin {
-                // level: Level::TRACE,
-                // level: Level::INFO,
-                level: Level::WARN,
-                filter: "wgpu=warn,bevy_ecs=info".to_string(),
-                ..default()
-            })
-            .set(ImagePlugin::default_nearest()),)) // no blurry sprites
+                })
+                .set(LogPlugin {
+                    // level: Level::TRACE,
+                    // level: Level::INFO,
+                    level: Level::WARN,
+                    filter: "wgpu=warn,bevy_ecs=info".to_string(),
+                    ..default()
+                })),
+        )
+        // .set(ImagePlugin::default_nearest()),)) // no blurry sprites
         .insert_resource(ClearColor(Color::rgb(0.0, 0.05, 0.15)))
         .init_resource::<Board>()
         .add_state::<AppState>()
@@ -89,100 +92,222 @@ fn main() {
         .add_plugins(PanCamPlugin)
         .add_plugins(RngPlugin::default())
         .add_plugins(time::TimePlugin)
-        .add_plugins(graphics::asset_loading::AssetLoadingPlugin)
+        // .add_plugins(graphics::asset_loading::AssetLoadingPlugin)
         //
         // INITIALIZATION
-        .add_systems(Startup, ui::spawn_camera)
+        // .add_systems(Startup, spawn_camera)
+        // .add_systems(
+        //     OnEnter(AppState::InitAssets),
+        //     (
+        //         // graphics::tilemap::load_tileset,
+        //         // graphics::mobs::load_spritesheet.after(graphics::tilemap::load_tileset),
+        //     ),
+        // )
         .add_systems(
-            OnEnter(AppState::InitAssets),
-            (
-                graphics::tilemap::load_tileset,
-                graphics::mobs::load_spritesheet.after(graphics::tilemap::load_tileset),
-            ),
-        )
-        .add_systems(
-            OnEnter(AppState::InitBoard),
+            Startup,
             (
                 board::generator::populate_board,
                 player::spawn_player.after(board::generator::populate_board),
             ),
         )
         .add_systems(
-            Update,
-            graphics::components::spawn_stage.run_if(state_exists_and_equals(AppState::InitStage)),
+            Startup,
+            ((spawn_camera, spawn_voxel_map).after(player::spawn_player),),
         )
-        .add_systems(OnEnter(AppState::InitUI), ui::spawn_layout)
-        .add_systems(
-            PostUpdate,
-            graphics::asset_loading::ensure_assets_loaded
-                .run_if(state_exists_and_equals(AppState::LoadAssets)),
-        )
-        .add_systems(
-            OnEnter(AppState::InitTileMap),
-            graphics::tilemap::spawn_tile_map,
-        )
+        // .add_systems(
+        //     Update,
+        //     graphics::components::spawn_stage.run_if(state_exists_and_equals(AppState::InitStage)),
+        // )
+        // .add_systems(OnEnter(AppState::InitUI), ui::spawn_layout)
+        // .add_systems(
+        //     PostUpdate,
+        //     graphics::asset_loading::ensure_assets_loaded
+        //         .run_if(state_exists_and_equals(AppState::LoadAssets)),
+        // )
+        // .add_systems(OnEnter(AppState::InitTileMap), spawn_voxel_map)
+        // .add_systems(
+        //     OnEnter(AppState::InitTileMap),
+        //     graphics::tilemap::spawn_tile_map,
+        // )
         // .add_systems(OnEnter(AppState::InitPlayer), player::spawn_player)
-        .add_systems(
-            OnEnter(AppState::InitMobs),
-            graphics::player_avatar::spawn_player_avatar,
-        )
+        // .add_systems(
+        //     OnEnter(AppState::InitMobs),
+        //     graphics::player_avatar::spawn_player_avatar,
+        // )
         //
         // MOVEMENT
-        .add_systems(
-            PreUpdate,
-            (input::keybindings, input::mousey_mousey)
-                .run_if(state_exists_and_equals(AppState::Game)),
-        )
-        .add_systems(
-            PreUpdate,
-            (player::movement::validate_directional_input.after(input::keybindings))
-                .run_if(state_exists_and_equals(AppState::Game)),
-        )
-        .add_systems(
-            PreUpdate,
-            (creature::movement::process_movement
-                .after(player::movement::validate_directional_input))
-            .run_if(state_exists_and_equals(AppState::Game)),
-        )
-        .add_systems(
-            Update,
-            graphics::move_anim::add_changed_creature_mob_move_anim
-                .run_if(state_exists_and_equals(AppState::Game)),
-        )
-        .add_systems(
-            Update,
-            (graphics::move_anim::mob_movement
-                .after(graphics::move_anim::add_changed_creature_mob_move_anim))
-            .run_if(state_exists_and_equals(AppState::Game)),
-        )
+        // .add_systems(
+        //     PreUpdate,
+        //     // (input::keybindings, input::mousey_mousey)
+        //         .run_if(state_exists_and_equals(AppState::Game)),
+        // )
+        // .add_systems(
+        //     PreUpdate,
+        //     (player::movement::validate_directional_input.after(input::keybindings))
+        //         .run_if(state_exists_and_equals(AppState::Game)),
+        // )
+        // .add_systems(
+        //     PreUpdate,
+        //     (creature::movement::process_movement
+        //         .after(player::movement::validate_directional_input))
+        //     .run_if(state_exists_and_equals(AppState::Game)),
+        // )
+        // .add_systems(
+        //     Update,
+        //     graphics::move_anim::add_changed_creature_mob_move_anim
+        //         .run_if(state_exists_and_equals(AppState::Game)),
+        // )
+        // .add_systems(
+        //     Update,
+        //     (graphics::move_anim::mob_movement
+        //         .after(graphics::move_anim::add_changed_creature_mob_move_anim))
+        //     .run_if(state_exists_and_equals(AppState::Game)),
+        // )
         //
         // VISIBILITY
         .add_systems(
             Update,
-            (player::visibility::mark_player_visible_cells
-                .after(graphics::move_anim::mob_movement))
-            .run_if(state_exists_and_equals(AppState::Game)),
-        )
-        .add_systems(
-            Update,
-            (
-                graphics::tilemap::update_tiles_for_player_cell_visibility,
-                graphics::tilemap::anim_fade_sprite_alpha,
-            )
-                .after(player::visibility::mark_player_visible_cells)
+            player::visibility::mark_player_visible_cells
+                // .after(graphics::move_anim::mob_movement))
                 .run_if(state_exists_and_equals(AppState::Game)),
         )
+        // .add_systems(
+        //     Update,
+        //     (
+        //         graphics::tilemap::update_tiles_for_player_cell_visibility,
+        //         graphics::tilemap::anim_fade_sprite_alpha,
+        //     )
+        //         .after(player::visibility::mark_player_visible_cells)
+        //         .run_if(state_exists_and_equals(AppState::Game)),
+        // )
         // MISC
         //
         //
-        .add_systems(
-            Update,
-            graphics::render_gizmos.run_if(state_exists_and_equals(AppState::Game)),
-        )
+        // .add_systems(
+        //     Update,
+        //     graphics::render_gizmos.run_if(state_exists_and_equals(AppState::Game)),
+        // )
         .add_systems(Update, bevy::window::close_on_esc)
         .add_systems(PostUpdate, state::handle_app_init_event) // TODO REMOVE AFTER INIT COMPLETE
         .add_systems(PostUpdate, time::clock_frame_tick)
         // EVENTS
         // ok, ready?
         .run();
+}
+
+fn spawn_camera(mut commands: Commands, board: Res<Board>) {
+    let x = 0. - board.size.width as f32 / 2.0;
+    let y = 0. - board.size.height as f32 / 2.0;
+    commands.spawn(Camera3dBundle {
+        transform: Transform::from_xyz(x, y, 50.0).looking_at(Vec3::new(x, y, 0.), Vec3::Y),
+        ..default()
+    });
+}
+
+#[derive(Component, Debug)]
+struct Map;
+
+#[derive(Component, Debug)]
+struct CameraMarker;
+
+const IMAGE_PATH: &str = "sq.png";
+
+fn spawn_voxel_map(
+    mut commands: Commands,
+    board: Res<Board>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    asset_server: ResMut<AssetServer>,
+    query: Query<(&Wall)>,
+) {
+    // ..
+    let map = commands.spawn_empty().id();
+    let texture_handle: Handle<Image> = asset_server.load(IMAGE_PATH);
+    let debug_material = materials.add(StandardMaterial {
+        base_color_texture: Some(texture_handle),
+        ..default()
+    });
+
+    let texture_handle: Handle<Image> = asset_server.load("bg.png");
+    let bg_material = materials.add(StandardMaterial {
+        base_color_texture: Some(texture_handle),
+        ..default()
+    });
+    let shape = meshes.add(shape::Cube::default().into());
+
+    let bx = 0.0 - board.size.width as f32;
+    let by = 0.0 - board.size.height as f32;
+
+    warn!("voxelating");
+    commands
+        .spawn((
+            Map,
+            TransformBundle {
+                local: Transform::from_xyz(bx, by, 0.),
+                ..default()
+            },
+            Visibility::Inherited,
+            InheritedVisibility::default(),
+        ))
+        .with_children(|ch| {
+            for (ivec, e) in board.cell_store.iter() {
+                let [x, y, z] = ivec.to_array();
+
+                // haxx: floor
+                ch.spawn((PbrBundle {
+                    mesh: shape.clone(),
+                    material: bg_material.clone(),
+                    transform: Transform::from_xyz(x as f32, y as f32, z as f32 - 1.0),
+                    ..default()
+                },));
+            }
+
+            for (ivec, e) in board.wall_store.iter() {
+                let [x, y, z] = ivec.to_array();
+
+                // haxx: floor
+                ch.spawn((PbrBundle {
+                    mesh: shape.clone(),
+                    material: debug_material.clone(),
+                    transform: Transform::from_xyz(x as f32, y as f32, z as f32),
+                    ..default()
+                },));
+            }
+        });
+
+    // makes some lights
+
+    commands.spawn(PointLightBundle {
+        point_light: PointLight {
+            intensity: 4000.0,
+            range: 100.,
+            shadows_enabled: true,
+            color: Color::RED,
+            ..default()
+        },
+        transform: Transform::from_xyz(bx / 2.0, by / 2.0, 4.0),
+        ..default()
+    });
+    commands.spawn(PointLightBundle {
+        point_light: PointLight {
+            intensity: 4000.0,
+            range: 100.,
+            shadows_enabled: true,
+            color: Color::GREEN,
+            ..default()
+        },
+        transform: Transform::from_xyz(bx + 15., by + 15., 4.0),
+        ..default()
+    });
+    commands.spawn(PointLightBundle {
+        point_light: PointLight {
+            intensity: 5000.0,
+            range: 100.,
+            shadows_enabled: true,
+            color: Color::BLUE,
+            ..default()
+        },
+        transform: Transform::from_xyz(bx, by, 4.),
+        ..default()
+    });
 }

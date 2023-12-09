@@ -8,9 +8,9 @@ pub enum AppState {
     InitBoard,
     InitStage,
     LoadAssets,
-    InitUI,
+    // InitUI,
     InitTileMap,
-    InitMobs,
+    // InitMobs,
     Game,
 }
 
