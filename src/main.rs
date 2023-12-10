@@ -225,27 +225,25 @@ fn spawn_voxel_map(
 ) {
     // ..
     let map = commands.spawn_empty().id();
-    let texture_handle: Handle<Image> = asset_server.load(IMAGE_PATH);
-    let debug_material = materials.add(StandardMaterial {
+    let texture_handle: Handle<Image> = asset_server.load("dirt.png");
+    let my_material = materials.add(StandardMaterial {
+        occlusion_texture: Some(texture_handle.clone()),
         base_color_texture: Some(texture_handle),
-        emissive: Color::WHITE,
-        perceptual_roughness: 1.0,
-        metallic: 0.0,
-        reflectance: 0.0,
-        opaque_render_method: bevy::pbr::OpaqueRendererMethod::Deferred,
-        // fog_enabled: false,
-        diffuse_transmission: 0.0,
         attenuation_color: Color::WHITE,
-        specular_transmission: 0.0,
+        attenuation_distance: 10.0,
+        // base_color_texture: Some(texture_handle),
+        emissive: Color::NONE,
+        perceptual_roughness: 0.9,
+        // metallic: 0.0,
+        reflectance: 0.1,
+        opaque_render_method: bevy::pbr::OpaqueRendererMethod::Auto,
+        // fog_enabled: true,
+        // diffuse_transmission: 0.1,
+        // attenuation_color: Color::BLACK,
+        // specular_transmission: 0.1,
         // unlit: true,
         alpha_mode: AlphaMode::Opaque,
-        // base_color: Color::NONE,
-        ..default()
-    });
-
-    let texture_handle: Handle<Image> = asset_server.load("bg.png");
-    let bg_material = materials.add(StandardMaterial {
-        base_color_texture: Some(texture_handle),
+        base_color: Color::WHITE,
         ..default()
     });
 
@@ -272,7 +270,7 @@ fn spawn_voxel_map(
                 // haxx: floor
                 ch.spawn((PbrBundle {
                     mesh: shape.clone(),
-                    material: bg_material.clone(),
+                    material: my_material.clone(),
                     transform: Transform::from_xyz(x as f32, y as f32, z as f32 - 1.0),
                     ..default()
                 },));
@@ -284,7 +282,7 @@ fn spawn_voxel_map(
                 // haxx: floor
                 ch.spawn((PbrBundle {
                     mesh: shape.clone(),
-                    material: debug_material.clone(),
+                    material: my_material.clone(),
                     transform: Transform::from_xyz(x as f32, y as f32, z as f32),
                     ..default()
                 },));
