@@ -43,6 +43,7 @@ pub mod typical {
 }
 
 use bevy::prelude::{ClearColor, Color, DefaultPlugins, ImagePlugin, PluginGroup};
+use bevy::render::render_resource::SurfaceTexture;
 use bevy::window::{PresentMode, Window, WindowPlugin, WindowResolution, WindowTheme};
 use bevy_fps_counter::FpsCounterPlugin;
 use bevy_pancam::PanCamPlugin;
@@ -227,6 +228,18 @@ fn spawn_voxel_map(
     let texture_handle: Handle<Image> = asset_server.load(IMAGE_PATH);
     let debug_material = materials.add(StandardMaterial {
         base_color_texture: Some(texture_handle),
+        emissive: Color::WHITE,
+        perceptual_roughness: 1.0,
+        metallic: 0.0,
+        reflectance: 0.0,
+        opaque_render_method: bevy::pbr::OpaqueRendererMethod::Deferred,
+        // fog_enabled: false,
+        diffuse_transmission: 0.0,
+        attenuation_color: Color::WHITE,
+        specular_transmission: 0.0,
+        // unlit: true,
+        alpha_mode: AlphaMode::Opaque,
+        // base_color: Color::NONE,
         ..default()
     });
 
@@ -282,7 +295,7 @@ fn spawn_voxel_map(
         commands.spawn(PointLightBundle {
             point_light: PointLight {
                 intensity: 5000.0,
-                range: 100.,
+                range: 75.,
                 shadows_enabled: true,
                 color: Color::GOLD,
                 ..default()
