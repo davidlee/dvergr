@@ -4,7 +4,7 @@ pub trait SimpleTimer {
     fn next(&mut self) -> u32;
     fn done(&self) -> bool;
     fn noop(&self) -> bool;
-    fn reset(&mut self) -> ();
+    fn reset(&mut self);
 }
 
 #[derive(Component, Debug)]
@@ -50,7 +50,7 @@ impl SimpleTimer for Lerpf32 {
         self.total_frames == 0
     }
 
-    fn reset(&mut self) -> () {
+    fn reset(&mut self) {
         self.initial = 0.;
         self.target = 0.;
         self.total_frames = 0;
@@ -72,7 +72,7 @@ impl SimpleTimer for LerpVec3 {
         self.total_frames == 0
     }
 
-    fn reset(&mut self) -> () {
+    fn reset(&mut self) {
         // self.initial = Vec3::ZERO;
         // self.target = Vec3::ZERO;
         self.total_frames = 0;

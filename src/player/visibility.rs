@@ -35,7 +35,6 @@ pub fn mark_player_visible_cells(
 
                 let visible: HashSet<[i32; 2]> = fov_facing(&pos, locus.facing, 28.)
                     .intersection(&unobscured)
-                    .into_iter()
                     .cloned()
                     .collect();
 

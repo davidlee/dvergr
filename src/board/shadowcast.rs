@@ -10,9 +10,9 @@ type F = Ratio<i32>;
 type DepthColVec = IVec2;
 type XyVec = IVec2;
 
-pub fn shadowcast_visibility_2d<'a>(
+pub fn shadowcast_visibility_2d(
     origin: [i32; 2],
-    walls: &'a HashSet<[i32; 2]>,
+    walls: &HashSet<[i32; 2]>,
 ) -> Vec<[i32; 2]> {
     let mut visible = vec![];
     visible.push(origin);
@@ -49,7 +49,7 @@ fn scan_rows(
     //     }
     // }
 
-    while rows.len() > 0 {
+    while !rows.is_empty() {
         // check if all tiles are out of bounds
         let mut oob = true;
         let mut row = rows.pop().unwrap();
@@ -139,10 +139,10 @@ impl Quadrant {
     pub fn transform(&self, tile: &DepthColVec) -> (i32, i32) {
         let [row, col] = tile.to_array();
         match self.cardinal {
-            North => return (self.origin_x + col, self.origin_y - row),
-            South => return (self.origin_x + col, self.origin_y + row),
-            East => return (self.origin_x + row, self.origin_y + col),
-            West => return (self.origin_x - row, self.origin_y + col),
+            North => (self.origin_x + col, self.origin_y - row),
+            South => (self.origin_x + col, self.origin_y + row),
+            East => (self.origin_x + row, self.origin_y + col),
+            West => (self.origin_x - row, self.origin_y + col),
         }
     }
 
@@ -177,8 +177,7 @@ impl Row {
         let max_col = round_fraction_down(self.depth_fr() * self.end_slope);
 
         (min_col..=max_col)
-            .into_iter()
-            .map(|col| IVec2::new(self.depth, col as i32))
+            .map(|col| IVec2::new(self.depth, col))
             .collect()
     }
 

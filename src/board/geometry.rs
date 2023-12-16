@@ -48,17 +48,17 @@ pub fn take_sector(
                 return true;
             }
             // find the angle from the centre to each cell
-            let alpha = angle_of_coords(&centre, &v);
+            let alpha = angle_of_coords(&centre, v);
 
             // find the bounds, either side of the angle
             let (min_a, max_a) = (abs_radians(angle - width / 2.0), angle + width / 2.0);
 
             // normal case
             if min_a < max_a {
-                return alpha >= min_a && alpha <= max_a;
+                alpha >= min_a && alpha <= max_a
             } else {
                 // min / max are either side of 0/360 degrees, as when looking North
-                return alpha <= max_a || alpha >= min_a;
+                alpha <= max_a || alpha >= min_a
             }
         })
         .collect()
@@ -144,5 +144,5 @@ pub fn line(p0: IVec3, p1: IVec3) -> Vec<IVec3> {
 fn distance_between_2d(p0: IVec3, p1: IVec3) -> i32 {
     let dx = p1.x - p0.x;
     let dy = p1.y - p0.y;
-    return i32::max(i32::abs(dx), i32::abs(dy));
+    i32::max(i32::abs(dx), i32::abs(dy))
 }

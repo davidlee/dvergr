@@ -14,7 +14,6 @@ impl EntityPositionStore {
     pub fn as_hashset2d(&self) -> HashSet<[i32; 2]> {
         self.to_entity
             .keys()
-            .into_iter()
             .fold(HashSet::new(), |mut acc, pos| {
                 acc.insert([pos.x, pos.y]);
                 acc

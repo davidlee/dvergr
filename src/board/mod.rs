@@ -75,7 +75,7 @@ impl Board {
             || y > self.size.height
             || z > self.size.depth
         {
-            return Err("out of bounds");
+            Err("out of bounds")
         } else {
             Ok(IVec3::new(x, y, z))
         }

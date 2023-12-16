@@ -69,9 +69,9 @@ impl Direction {
         println!("{:?}^{:?}", degrees, abs_degrees(degrees));
         match abs_degrees(degrees) {
             // _ if (degrees > abs_degrees(-45.0) && degrees < 360.0) || degrees <= 45.0 => North,
-            a if a >= 45.0 && a <= 135.0 => East,
-            a if a >= 135.0 && a <= 225.0 => South,
-            a if a >= 225.0 && a <= 315.0 => West,
+            a if (45.0..=135.0).contains(&a) => East,
+            a if (135.0..=225.0).contains(&a) => South,
+            a if (225.0..=315.0).contains(&a) => West,
             _ => North,
         }
     }
