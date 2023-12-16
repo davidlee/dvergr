@@ -3,18 +3,6 @@
 version = 3
 
 [[package]]
-name = "Dvergr"
-version = "0.1.1"
-dependencies = [
- "bevy",
- "bevy-fps-counter",
- "bevy_ecs_tilemap",
- "bevy_pancam",
- "bevy_turborand",
- "num-rational",
-]
-
-[[package]]
 name = "ab_glyph"
 version = "0.2.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1535,6 +1523,18 @@ name = "downcast-rs"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9ea835d29036a4087793836fa931b08837ad5e957da9e23886b29586fb9b6650"
+
+[[package]]
+name = "dvergr"
+version = "0.1.1"
+dependencies = [
+ "bevy",
+ "bevy-fps-counter",
+ "bevy_ecs_tilemap",
+ "bevy_pancam",
+ "bevy_turborand",
+ "num-rational",
+]
 
 [[package]]
 name = "encase"

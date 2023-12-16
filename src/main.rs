@@ -42,11 +42,10 @@ pub mod typical {
     pub use bevy::utils::{HashMap, HashSet};
 }
 
-use bevy::prelude::{ClearColor, Color, DefaultPlugins, ImagePlugin, PluginGroup};
-use bevy::render::render_resource::SurfaceTexture;
+use bevy::prelude::{ClearColor, Color, DefaultPlugins, PluginGroup};
 use bevy::window::{PresentMode, Window, WindowPlugin, WindowResolution, WindowTheme};
 use bevy_fps_counter::FpsCounterPlugin;
-use bevy_pancam::PanCamPlugin;
+use bevy_pancam::{PanCam, PanCamPlugin};
 use bevy_turborand::prelude::RngPlugin;
 
 use bevy::log::LogPlugin;
@@ -58,7 +57,7 @@ use typical::*;
 fn main() {
     App::new()
         .add_plugins(
-            (DefaultPlugins
+            DefaultPlugins
                 .set(WindowPlugin {
                     primary_window: Some(Window {
                         title: "~= D V E R G R =~".into(),
@@ -79,7 +78,7 @@ fn main() {
                     level: Level::WARN,
                     filter: "wgpu=warn,bevy_ecs=info".to_string(),
                     ..default()
-                })),
+                }),
         )
         // .set(ImagePlugin::default_nearest()),)) // no blurry sprites
         .insert_resource(ClearColor(Color::BLACK))
@@ -200,10 +199,16 @@ fn main() {
 fn spawn_camera(mut commands: Commands, board: Res<Board>) {
     let x = 0. - board.size.width as f32 / 2.0;
     let y = 0. - board.size.height as f32 / 2.0;
-    commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(x, y, 40.0).looking_at(Vec3::new(x, y, 0.), Vec3::Y),
-        ..default()
-    });
+    commands
+        .spawn(Camera3dBundle {
+            transform: Transform::from_xyz(x, y, 40.0).looking_at(Vec3::new(x, y, 0.), Vec3::Y),
+            ..default()
+        })
+        .insert(PanCam {
+            min_scale: 0.1,
+            max_scale: Some(2.),
+            ..default()
+        });
 }
 
 #[derive(Component, Debug)]
@@ -211,8 +216,6 @@ struct Map;
 
 #[derive(Component, Debug)]
 struct CameraMarker;
-
-const IMAGE_PATH: &str = "sq.png";
 
 fn spawn_voxel_map(
     mut commands: Commands,
@@ -224,7 +227,7 @@ fn spawn_voxel_map(
     mut ev: EventReader<SpawnPlayerEvent>,
 ) {
     // ..
-    let map = commands.spawn_empty().id();
+    // let map = commands.spawn_empty().id();
     let texture_handle: Handle<Image> = asset_server.load("dirt.png");
     let my_material = materials.add(StandardMaterial {
         occlusion_texture: Some(texture_handle.clone()),
@@ -264,7 +267,7 @@ fn spawn_voxel_map(
             InheritedVisibility::default(),
         ))
         .with_children(|ch| {
-            for (ivec, e) in board.cell_store.iter() {
+            for (ivec, _e) in board.cell_store.iter() {
                 let [x, y, z] = ivec.to_array();
 
                 // haxx: floor
@@ -276,7 +279,7 @@ fn spawn_voxel_map(
                 },));
             }
 
-            for (ivec, e) in board.wall_store.iter() {
+            for (ivec, _e) in board.wall_store.iter() {
                 let [x, y, z] = ivec.to_array();
 
                 // haxx: floor
