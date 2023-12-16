@@ -15,6 +15,5 @@ edition = "2021"
 bevy = "0.12"
 bevy_turborand = { version = "0.7.0", features = ["chacha"] }
 bevy_ecs_tilemap = { git = "https://github.com/divark/bevy_ecs_tilemap", branch = "0.12-fixes" }
-bevy_pancam = "0.10.0"
 bevy-fps-counter = "0.3.0"
 num-rational = "0.4.1"

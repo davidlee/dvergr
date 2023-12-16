@@ -45,7 +45,6 @@ pub mod typical {
 use bevy::prelude::{ClearColor, Color, DefaultPlugins, PluginGroup};
 use bevy::window::{PresentMode, Window, WindowPlugin, WindowResolution, WindowTheme};
 use bevy_fps_counter::FpsCounterPlugin;
-use bevy_pancam::{PanCam, PanCamPlugin};
 use bevy_turborand::prelude::RngPlugin;
 
 use bevy::log::LogPlugin;
@@ -90,7 +89,6 @@ fn main() {
         .add_event::<events::begin_action::UpdateLocus>()
         // plugins
         .add_plugins(FpsCounterPlugin)
-        .add_plugins(PanCamPlugin)
         .add_plugins(RngPlugin::default())
         .add_plugins(time::TimePlugin)
         // .add_plugins(graphics::asset_loading::AssetLoadingPlugin)
@@ -202,11 +200,6 @@ fn spawn_camera(mut commands: Commands, board: Res<Board>) {
     commands
         .spawn(Camera3dBundle {
             transform: Transform::from_xyz(x, y, 40.0).looking_at(Vec3::new(x, y, 0.), Vec3::Y),
-            ..default()
-        })
-        .insert(PanCam {
-            min_scale: 0.1,
-            max_scale: Some(2.),
             ..default()
         });
 }
