@@ -82,7 +82,7 @@ fn main() {
                 })),
         )
         // .set(ImagePlugin::default_nearest()),)) // no blurry sprites
-        .insert_resource(ClearColor(Color::rgb(0.0, 0.05, 0.15)))
+        .insert_resource(ClearColor(Color::BLACK))
         .init_resource::<Board>()
         .add_state::<AppState>()
         .add_event::<player::movement::DirectionalInput>()
