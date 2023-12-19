@@ -6,11 +6,11 @@ pub mod creature;
 pub mod dice;
 pub mod events;
 pub mod graphics;
-// pub mod input;
+pub mod input;
 pub mod player;
 pub mod state;
 pub mod time;
-pub mod ui;
+// pub mod ui;
 
 pub mod typical {
     pub use crate::board::{
@@ -39,9 +39,11 @@ pub mod typical {
     };
     pub use bevy::utils::tracing::{debug, error, info, trace, warn, Level};
 
+    pub use crate::{CameraMarker, MapMarker};
     pub use bevy::utils::{HashMap, HashSet};
 }
 
+use bevy::core_pipeline::clear_color::ClearColorConfig;
 use bevy::prelude::{ClearColor, Color, DefaultPlugins, PluginGroup};
 use bevy::window::{PresentMode, Window, WindowPlugin, WindowResolution, WindowTheme};
 use bevy_fps_counter::FpsCounterPlugin;
@@ -50,6 +52,8 @@ use bevy_turborand::prelude::RngPlugin;
 use bevy::log::LogPlugin;
 use bevy::prelude::*;
 use bevy::utils::tracing::Level;
+// use board::generator;
+use graphics::player_avatar::PlayerAvatar;
 use player::SpawnPlayerEvent;
 use typical::*;
 
@@ -72,11 +76,8 @@ fn main() {
                     ..default()
                 })
                 .set(LogPlugin {
-                    // level: Level::TRACE,
-                    // level: Level::INFO,
-                    level: Level::WARN,
+                    level: Level::INFO,
                     filter: "wgpu=warn,bevy_ecs=info".to_string(),
-                    ..default()
                 }),
         )
         // .set(ImagePlugin::default_nearest()),)) // no blurry sprites
@@ -91,27 +92,19 @@ fn main() {
         .add_plugins(FpsCounterPlugin)
         .add_plugins(RngPlugin::default())
         .add_plugins(time::TimePlugin)
-        // .add_plugins(graphics::asset_loading::AssetLoadingPlugin)
-        //
-        // INITIALIZATION
-        // .add_systems(Startup, spawn_camera)
-        // .add_systems(
-        //     OnEnter(AppState::InitAssets),
-        //     (
-        //         // graphics::tilemap::load_tileset,
-        //         // graphics::mobs::load_spritesheet.after(graphics::tilemap::load_tileset),
-        //     ),
-        // )
         .add_systems(
             Startup,
             (
+                // graphics::mobs::load_spritesheet,
                 board::generator::populate_board,
-                player::spawn_player.after(board::generator::populate_board),
+                player::spawn.after(board::generator::populate_board),
+                spawn_voxel_map.after(player::spawn),
+                // graphics::player_avatar::spawn.after(spawn_voxel_map),
             ),
         )
         .add_systems(
-            Startup,
-            ((spawn_camera, spawn_voxel_map).after(player::spawn_player),),
+            OnEnter(AppState::SpawnPlayer),
+            graphics::player_avatar::spawn,
         )
         // .add_systems(
         //     Update,
@@ -168,7 +161,7 @@ fn main() {
             Update,
             player::visibility::mark_player_visible_cells
                 // .after(graphics::move_anim::mob_movement))
-                .run_if(state_exists_and_equals(AppState::Game)),
+                .run_if(state_exists_and_equals(AppState::Ready)),
         )
         // .add_systems(
         //     Update,
@@ -194,21 +187,11 @@ fn main() {
         .run();
 }
 
-fn spawn_camera(mut commands: Commands, board: Res<Board>) {
-    let x = 0. - board.size.width as f32 / 2.0;
-    let y = 0. - board.size.height as f32 / 2.0;
-    commands
-        .spawn(Camera3dBundle {
-            transform: Transform::from_xyz(x, y, 40.0).looking_at(Vec3::new(x, y, 0.), Vec3::Y),
-            ..default()
-        });
-}
+#[derive(Component, Debug)]
+pub struct MapMarker;
 
 #[derive(Component, Debug)]
-struct Map;
-
-#[derive(Component, Debug)]
-struct CameraMarker;
+pub struct CameraMarker;
 
 fn spawn_voxel_map(
     mut commands: Commands,
@@ -222,36 +205,29 @@ fn spawn_voxel_map(
     // ..
     // let map = commands.spawn_empty().id();
     let texture_handle: Handle<Image> = asset_server.load("dirt.png");
+
     let my_material = materials.add(StandardMaterial {
-        occlusion_texture: Some(texture_handle.clone()),
-        base_color_texture: Some(texture_handle),
-        attenuation_color: Color::WHITE,
-        attenuation_distance: 10.0,
-        // base_color_texture: Some(texture_handle),
-        emissive: Color::NONE,
-        perceptual_roughness: 0.9,
-        // metallic: 0.0,
         reflectance: 0.1,
-        opaque_render_method: bevy::pbr::OpaqueRendererMethod::Auto,
-        // fog_enabled: true,
-        // diffuse_transmission: 0.1,
+        // attenuation_distance: 0.1,
         // attenuation_color: Color::BLACK,
-        // specular_transmission: 0.1,
-        // unlit: true,
+        // thickness: 1.0,
+        base_color_texture: Some(texture_handle),
+        emissive: Color::NONE,
         alpha_mode: AlphaMode::Opaque,
         base_color: Color::WHITE,
+
         ..default()
     });
 
-    let shape = meshes.add(shape::Cube::default().into());
+    // slightly larger than 1.0 so the overlap prevents bleed through
+    let shape = meshes.add(shape::Cube { size: 1.04 }.into());
 
     let bx = 0.0 - board.size.width as f32;
     let by = 0.0 - board.size.height as f32;
 
-    warn!("voxelating");
     commands
         .spawn((
-            Map,
+            MapMarker,
             TransformBundle {
                 local: Transform::from_xyz(bx, by, 0.),
                 ..default()
@@ -286,17 +262,39 @@ fn spawn_voxel_map(
         });
 
     for SpawnPlayerEvent(position) in ev.read() {
-        commands.spawn(PointLightBundle {
-            point_light: PointLight {
-                intensity: 5000.0,
-                range: 75.,
-                shadows_enabled: true,
-                color: Color::GOLD,
-                ..default()
-            },
-            transform: Transform::from_xyz(bx + position.x as f32, by + position.y as f32, 0.3),
-            ..default()
-        });
+        let x = bx + position.x as f32;
+        let y = by + position.y as f32;
+
+        commands
+            .spawn((
+                PointLightBundle {
+                    point_light: PointLight {
+                        intensity: 3500.0,
+                        range: 45.,
+                        shadows_enabled: true,
+                        color: Color::GOLD,
+                        ..default()
+                    },
+                    transform: Transform::from_xyz(x, y, 0.5),
+                    ..default()
+                },
+                PlayerAvatar,
+            ))
+            .with_children(|player| {
+                player.spawn((
+                    CameraMarker,
+                    Camera3dBundle {
+                        transform: Transform::from_xyz(0., 0., 40.0)
+                            .looking_at(Vec3::new(0., 0., 0.), Vec3::Y),
+                        camera_3d: Camera3d {
+                            clear_color: ClearColorConfig::None,
+                            // order: 0,
+                            ..default()
+                        },
+                        ..default()
+                    },
+                ));
+            });
     }
 
     // if let Ok(x) = query.get_single() {

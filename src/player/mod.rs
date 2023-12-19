@@ -50,7 +50,7 @@ impl Default for PlayerBundle {
     }
 }
 
-pub fn spawn_player(
+pub fn spawn(
     mut commands: Commands,
     mut board: ResMut<Board>,
     mut ev_writer: EventWriter<AppInitEvent>,
@@ -76,6 +76,6 @@ pub fn spawn_player(
             .creature_store
             .add_single(player_entity, *pos)
             .unwrap();
-        ev_writer.send(AppInitEvent::SetAppState(AppState::InitStage));
+        ev_writer.send(AppInitEvent::SetAppState(AppState::SpawnPlayer));
     }
 }

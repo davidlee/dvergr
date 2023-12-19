@@ -2,7 +2,7 @@ use crate::graphics::anim::LerpVec3;
 use crate::player::movement::DirectionalInput;
 use crate::typical::*;
 
-use bevy::prelude::{Camera2d, Entity, EventWriter, Input, KeyCode, Query, Res, Transform};
+use bevy::prelude::{Entity, EventWriter, Input, KeyCode, Query, Res, Transform};
 
 pub fn keybindings(
     mut ev_player_move: EventWriter<DirectionalInput>,
@@ -57,36 +57,36 @@ pub fn keybindings(
         })
     }
 }
-use crate::graphics::typical::*;
-// use bevy::input::mouse::MouseButtonInput;
-use bevy::prelude::{MouseButton, Window};
-use bevy::window::PrimaryWindow;
+// use crate::graphics::typical::*;
+// // use bevy::input::mouse::MouseButtonInput;
+// use bevy::prelude::{MouseButton, Window};
+// use bevy::window::PrimaryWindow;
 
-// FIXME cool, now we have to account for the offset from panning.
-//
-pub fn mousey_mousey(
-    q_windows: Query<&Window, With<PrimaryWindow>>,
-    buttons: Res<Input<MouseButton>>,
-    // board: Res<Board>,
-    tm_query: Query<&TileMap>,
-    cam_query: Query<(&Camera2d, &Transform)>, // pancam entity
+// // FIXME cool, now we have to account for the offset from panning.
+// // //
+// pub fn mousey_mousey(
+//     q_windows: Query<&Window, With<PrimaryWindow>>,
+//     buttons: Res<Input<MouseButton>>,
+//     // board: Res<Board>,
+//     // tm_query: Query<&TileMap>,
+//     cam_query: Query<(&Camera2d, &Transform)>, // pancam entity
 
-                                               // mut cursor_evr: EventReader<CursorMoved>,
-                                               // mut scroll_evr: EventReader<MouseWheel>,
-) {
-    if buttons.pressed(MouseButton::Left) {
-        info!("left mouse currently pressed");
-        if let Some(cursor_position) = q_windows.single().cursor_position() {
-            // TODO
-            // let corrected_cursor = cursor_position - pancam_thingy.translation ..
-            //
-            info!("Mousey cursor: {:?}", cursor_position);
-            if let Ok((_, transform)) = cam_query.get_single() {
-                let c =
-                    cursor_position - Vec2::new(transform.translation.x, transform.translation.y);
-                let pos = tm_query.single().from_pixels(&c);
-                warn!("MOUSE CLICK: {:?} -> {:?}", pos, c);
-            }
-        }
-    }
-}
+//                                                // mut cursor_evr: EventReader<CursorMoved>,
+//                                                // mut scroll_evr: EventReader<MouseWheel>,
+// ) {
+//     if buttons.pressed(MouseButton::Left) {
+//         info!("left mouse currently pressed");
+//         if let Some(cursor_position) = q_windows.single().cursor_position() {
+//             // TODO
+//             // let corrected_cursor = cursor_position - pancam_thingy.translation ..
+//             //
+//             info!("Mousey cursor: {:?}", cursor_position);
+//             if let Ok((_, transform)) = cam_query.get_single() {
+//                 let c =
+//                     cursor_position - Vec2::new(transform.translation.x, transform.translation.y);
+//                 let pos = tm_query.single().from_pixels(&c);
+//                 warn!("MOUSE CLICK: {:?} -> {:?}", pos, c);
+//             }
+//         }
+//     }
+// }

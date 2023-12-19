@@ -1,11 +1,19 @@
 * TODO
-
-
 ** Graphics
-*** BUG shadowcasting: no see through wall glitch
+*** Try: toggle 3PV
+*** mobs
+**** camera follows player
+**** TODO start on player
+**** Add monsters
+**** add player sprite - 2D? 
+*** 3d visibility:
+**** shader: mask player LOS w/ light sources
+
 
 ** Logic
-*** BUG - Generate Rooms / Map
+*** Fix dungeon generation
+**** then - add Z axis
+
 *** Collision detection (mobs; items; ...)
 *** Lighting
 *** pathfinding

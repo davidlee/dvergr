@@ -4,14 +4,15 @@ use bevy::prelude::*;
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, States)]
 pub enum AppState {
     #[default]
-    InitAssets,
-    InitBoard,
-    InitStage,
-    LoadAssets,
+    Init,
+    SpawnPlayer,
+    Ready,
+    // InitBoard,
+    // InitStage,
+    // LoadAssets,
     // InitUI,
-    InitTileMap,
+    // InitTileMap,
     // InitMobs,
-    Game,
 }
 
 #[derive(Debug, Event)]
