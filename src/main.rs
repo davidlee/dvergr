@@ -184,6 +184,10 @@ pub struct CameraMarker;
 
 use crate::graphics::CreatureEntityRef;
 
+// slightly larger than 1.0 so the overlap prevents bleed through
+const VOXEL_CUBE_SIZE: f32 = 1.0;
+const VOXEL_CUBE_MARGIN: f32 = 0.08;
+
 fn spawn_voxel_map(
     board: Res<Board>,
     mut commands: Commands,
@@ -198,17 +202,47 @@ fn spawn_voxel_map(
     // ..
     let texture_handle: Handle<Image> = asset_server.load("dirt.png");
 
-    let my_material = materials.add(StandardMaterial {
-        reflectance: 0.1,
-        base_color_texture: Some(texture_handle),
+    let mask_material = materials.add(StandardMaterial {
+        reflectance: 0.00,
+        emissive: Color::NONE,
+        alpha_mode: AlphaMode::Opaque,
+        base_color: Color::BLACK,
+        ..default()
+    });
+
+    let floor_material = materials.add(StandardMaterial {
+        reflectance: 0.00,
+        base_color_texture: Some(texture_handle.clone()),
         emissive: Color::NONE,
         alpha_mode: AlphaMode::Opaque,
         base_color: Color::WHITE,
         ..default()
     });
 
-    // slightly larger than 1.0 so the overlap prevents bleed through
-    let shape = meshes.add(shape::Cube { size: 1.04 }.into());
+    let wall_material = materials.add(StandardMaterial {
+        reflectance: 0.00,
+        base_color_texture: Some(texture_handle),
+        emissive: Color::NONE,
+        alpha_mode: AlphaMode::Opaque,
+        // base_color: Color::NONE,
+        ..default()
+    });
+
+    let margin = f32::EPSILON * 2.0;
+
+    let shape = meshes.add(
+        shape::Cube {
+            size: VOXEL_CUBE_SIZE,
+        }
+        .into(),
+    );
+
+    let mask_shape = meshes.add(
+        shape::Cube {
+            size: VOXEL_CUBE_SIZE + 2.0 * VOXEL_CUBE_MARGIN,
+        }
+        .into(),
+    );
 
     let bx = 0.0 - board.size.width as f32;
     let by = 0.0 - board.size.height as f32;
@@ -229,11 +263,15 @@ fn spawn_voxel_map(
             for (ivec, _e) in board.cell_store.iter() {
                 let [x, y, z] = ivec.to_array();
 
-                // haxx: floor
+                // floor
                 ch.spawn((PbrBundle {
                     mesh: shape.clone(),
-                    material: my_material.clone(),
-                    transform: Transform::from_xyz(x as f32, y as f32, z as f32 - 1.0),
+                    material: floor_material.clone(),
+                    transform: Transform::from_xyz(
+                        x as f32 - margin,
+                        y as f32 - margin,
+                        z as f32 - 1.0,
+                    ),
                     ..default()
                 },));
             }
@@ -241,13 +279,21 @@ fn spawn_voxel_map(
             for (ivec, _e) in board.wall_store.iter() {
                 let [x, y, z] = ivec.to_array();
 
-                // haxx: floor
+                // wall
                 ch.spawn((PbrBundle {
                     mesh: shape.clone(),
-                    material: my_material.clone(),
+                    material: wall_material.clone(),
                     transform: Transform::from_xyz(x as f32, y as f32, z as f32),
                     ..default()
                 },));
+
+                // haxx: mask
+                // ch.spawn((PbrBundle {
+                //     mesh: mask_shape.clone(),
+                //     material: wall_material.clone(),
+                //     transform: Transform::from_xyz(x as f32, y as f32, z as f32 + 1.0),
+                //     ..default()
+                // },));
             }
 
             for SpawnPlayerEvent(position) in ev.read() {
@@ -268,13 +314,13 @@ fn spawn_voxel_map(
                         // lights ...
                         player.spawn(PointLightBundle {
                             point_light: PointLight {
-                                intensity: 3500.0,
-                                range: 45.,
+                                intensity: 1500.0,
+                                range: 15.,
                                 shadows_enabled: true,
                                 color: Color::GOLD,
                                 ..default()
                             },
-                            transform: Transform::from_xyz(0., 0., 0.5),
+                            transform: Transform::from_xyz(0., 0., 0.25),
                             ..default()
                         });
                         // camera ...

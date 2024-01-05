@@ -28,21 +28,30 @@ pub fn add_changed_creature_mob_move_anim(
 pub fn player_movement(
     mut commands: Commands,
     mut avatar_query: Query<(Entity, &PlayerAvatar, &mut LerpVec3, &mut Transform)>,
+    mut sprite_query: Query<(
+        Entity,
+        &TextureAtlasSprite,
+        &mut Transform,
+        Without<PlayerAvatar>,
+    )>,
 ) {
-    for (avatar_entity, _avatar, mut anim, mut transform) in avatar_query.iter_mut() {
-        commands.entity(avatar_entity).log_components();
-        dbg!(&anim);
-        if anim.current_frame == 1 {
-            transform.translation = anim.target;
-            transform.scale = Vec3::new(1.0, 1.0, 1.0);
-            commands.entity(avatar_entity).remove::<LerpVec3>();
-        } else {
-            transform.translation.x += anim.delta.x;
-            transform.translation.y += anim.delta.y;
-            let k = anim.total_frames as f32 / 2.0;
-            let scale_factor = (k - (anim.current_frame as f32 - k).abs()).abs() / 35.0 + 1.0; // FIXME WTF is 35.0 here??
-            transform.scale = Vec3::new(scale_factor, scale_factor, scale_factor);
-            anim.current_frame -= 1;
+    if let Ok((sprite_entity, _sprite, mut sprite_transform, _)) = sprite_query.get_single_mut() {
+        for (avatar_entity, _avatar, mut anim, mut player_transform) in avatar_query.iter_mut() {
+            println!("{:?} // {:?}", sprite_entity, avatar_entity);
+            commands.entity(avatar_entity).log_components();
+            dbg!(&anim);
+            if anim.current_frame == 1 {
+                player_transform.translation = anim.target;
+                sprite_transform.scale = Vec3::new(1.0, 1.0, 1.0);
+                commands.entity(avatar_entity).remove::<LerpVec3>();
+            } else {
+                player_transform.translation.x += anim.delta.x;
+                player_transform.translation.y += anim.delta.y;
+                let k = anim.total_frames as f32 / 2.0;
+                let scale_factor = (k - (anim.current_frame as f32 - k).abs()).abs() / 35.0 + 1.0; // FIXME WTF is 35.0 here??
+                sprite_transform.scale = Vec3::new(scale_factor, scale_factor, scale_factor);
+                anim.current_frame -= 1;
+            }
         }
     }
 }

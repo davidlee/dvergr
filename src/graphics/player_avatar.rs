@@ -57,10 +57,5 @@ pub fn spawn(
                 ..default()
             });
         });
-
-    // commands.insert_resource(PlayerAvatarRes {
-    //     entity: avatar_entity,
-    // });
-
     ev_writer.send(AppInitEvent::SetAppState(AppState::Ready));
 }
