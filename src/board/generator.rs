@@ -159,6 +159,7 @@ pub fn populate_board(
     mut commands: Commands,
     mut board: ResMut<Board>,
     mut ev_writer: EventWriter<SpawnPlayerEvent>,
+    mut state_writer: EventWriter<AppInitEvent>,
     mut global_rng: ResMut<GlobalChaChaRng>,
 ) {
     let mut rng = RngComponent::from(&mut global_rng);
@@ -225,4 +226,6 @@ pub fn populate_board(
             board.visibility_store.set(*pos, entity);
         }
     });
+
+    state_writer.send(AppInitEvent::SetAppState(AppState::SpawnPlayerAvatar));
 }

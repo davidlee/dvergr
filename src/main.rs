@@ -24,7 +24,7 @@ pub mod typical {
     pub use crate::character::{Character, CharacterBundle, Equipment, Pace};
     pub use crate::creature::{species::Species, Attributes, Creature, CreatureSize, Locus};
     pub use crate::events::*;
-    pub use crate::player::Player;
+    pub use crate::player::{Player, PlayerRes};
     pub use crate::state::{AppInitEvent, AppState};
     pub use crate::time::Clock;
     pub use bevy::math::{IVec2, IVec3, UVec2, UVec3};
@@ -53,7 +53,7 @@ use bevy::log::LogPlugin;
 use bevy::prelude::*;
 use bevy::utils::tracing::Level;
 // use board::generator;
-use graphics::player_avatar::PlayerAvatar;
+use graphics::player_avatar::{PlayerAvatar, PlayerAvatarRes};
 use player::SpawnPlayerEvent;
 use typical::*;
 
@@ -80,7 +80,6 @@ fn main() {
                     filter: "wgpu=warn,bevy_ecs=info".to_string(),
                 }),
         )
-        // .set(ImagePlugin::default_nearest()),)) // no blurry sprites
         .insert_resource(ClearColor(Color::BLACK))
         .init_resource::<Board>()
         .add_state::<AppState>()
@@ -95,17 +94,24 @@ fn main() {
         .add_systems(
             Startup,
             (
-                // graphics::mobs::load_spritesheet,
                 board::generator::populate_board,
-                player::spawn.after(board::generator::populate_board),
-                spawn_voxel_map.after(player::spawn),
-                // graphics::player_avatar::spawn.after(spawn_voxel_map),
-            ),
+                player::spawn,
+                apply_deferred,
+                spawn_voxel_map,
+                apply_deferred,
+                graphics::player_avatar::spawn,
+            )
+                .chain(),
         )
-        .add_systems(
-            OnEnter(AppState::SpawnPlayer),
-            graphics::player_avatar::spawn,
-        )
+        // .add_systems(OnEnter(AppState::SpawnPlayer), player::spawn)
+        // .add_systems(
+        //     OnEnter(AppState::BuildMap),
+        //     board::generator::populate_board,
+        // )
+        // .add_systems(
+        //     OnEnter(AppState::SpawnPlayerAvatar),
+        //     graphics::player_avatar::spawn,
+        // )
         // .add_systems(
         //     Update,
         //     graphics::components::spawn_stage.run_if(state_exists_and_equals(AppState::InitStage)),
@@ -128,57 +134,32 @@ fn main() {
         // )
         //
         // MOVEMENT
-        // .add_systems(
-        //     PreUpdate,
-        //     // (input::keybindings, input::mousey_mousey)
-        //         .run_if(state_exists_and_equals(AppState::Game)),
-        // )
-        // .add_systems(
-        //     PreUpdate,
-        //     (player::movement::validate_directional_input.after(input::keybindings))
-        //         .run_if(state_exists_and_equals(AppState::Game)),
-        // )
-        // .add_systems(
-        //     PreUpdate,
-        //     (creature::movement::process_movement
-        //         .after(player::movement::validate_directional_input))
-        //     .run_if(state_exists_and_equals(AppState::Game)),
-        // )
-        // .add_systems(
-        //     Update,
-        //     graphics::move_anim::add_changed_creature_mob_move_anim
-        //         .run_if(state_exists_and_equals(AppState::Game)),
-        // )
-        // .add_systems(
-        //     Update,
-        //     (graphics::move_anim::mob_movement
-        //         .after(graphics::move_anim::add_changed_creature_mob_move_anim))
-        //     .run_if(state_exists_and_equals(AppState::Game)),
-        // )
-        //
-        // VISIBILITY
         .add_systems(
-            Update,
-            player::visibility::mark_player_visible_cells
-                // .after(graphics::move_anim::mob_movement))
+            PreUpdate,
+            input::keybindings.run_if(state_exists_and_equals(AppState::Ready)),
+        )
+        .add_systems(
+            PreUpdate,
+            (player::movement::validate_directional_input.after(input::keybindings))
                 .run_if(state_exists_and_equals(AppState::Ready)),
         )
-        // .add_systems(
-        //     Update,
-        //     (
-        //         graphics::tilemap::update_tiles_for_player_cell_visibility,
-        //         graphics::tilemap::anim_fade_sprite_alpha,
-        //     )
-        //         .after(player::visibility::mark_player_visible_cells)
-        //         .run_if(state_exists_and_equals(AppState::Game)),
-        // )
-        // MISC
-        //
-        //
-        // .add_systems(
-        //     Update,
-        //     graphics::render_gizmos.run_if(state_exists_and_equals(AppState::Game)),
-        // )
+        .add_systems(
+            PreUpdate,
+            (creature::movement::process_movement
+                .after(player::movement::validate_directional_input))
+            .run_if(state_exists_and_equals(AppState::Ready)),
+        )
+        .add_systems(
+            Update,
+            graphics::move_anim::add_changed_creature_mob_move_anim
+                .run_if(state_exists_and_equals(AppState::Ready)),
+        )
+        .add_systems(
+            Update,
+            (graphics::move_anim::player_movement
+                .after(graphics::move_anim::add_changed_creature_mob_move_anim))
+            .run_if(state_exists_and_equals(AppState::Ready)),
+        )
         .add_systems(Update, bevy::window::close_on_esc)
         .add_systems(PostUpdate, state::handle_app_init_event) // TODO REMOVE AFTER INIT COMPLETE
         .add_systems(PostUpdate, time::clock_frame_tick)
@@ -190,32 +171,39 @@ fn main() {
 #[derive(Component, Debug)]
 pub struct MapMarker;
 
+// TODO organise map contents inside containers?
+
+// #[derive(Component, Debug)]
+// pub struct MapCubesMarker;
+
+// #[derive(Component, Debug)]
+// pub struct MapMobsMarker;
+
 #[derive(Component, Debug)]
 pub struct CameraMarker;
 
+use crate::graphics::CreatureEntityRef;
+
 fn spawn_voxel_map(
-    mut commands: Commands,
     board: Res<Board>,
+    mut commands: Commands,
+    mut cmd: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     asset_server: ResMut<AssetServer>,
-    // query: Query<&Locus>,
     mut ev: EventReader<SpawnPlayerEvent>,
+    // player_query: Query<(Entity, &Player)>,
+    player_ref: Res<PlayerRes>,
 ) {
     // ..
-    // let map = commands.spawn_empty().id();
     let texture_handle: Handle<Image> = asset_server.load("dirt.png");
 
     let my_material = materials.add(StandardMaterial {
         reflectance: 0.1,
-        // attenuation_distance: 0.1,
-        // attenuation_color: Color::BLACK,
-        // thickness: 1.0,
         base_color_texture: Some(texture_handle),
         emissive: Color::NONE,
         alpha_mode: AlphaMode::Opaque,
         base_color: Color::WHITE,
-
         ..default()
     });
 
@@ -224,6 +212,8 @@ fn spawn_voxel_map(
 
     let bx = 0.0 - board.size.width as f32;
     let by = 0.0 - board.size.height as f32;
+
+    let player_entity = player_ref.entity;
 
     commands
         .spawn((
@@ -259,65 +249,53 @@ fn spawn_voxel_map(
                     ..default()
                 },));
             }
-        });
 
-    for SpawnPlayerEvent(position) in ev.read() {
-        let x = bx + position.x as f32;
-        let y = by + position.y as f32;
-
-        commands
-            .spawn((
-                PointLightBundle {
-                    point_light: PointLight {
-                        intensity: 3500.0,
-                        range: 45.,
-                        shadows_enabled: true,
-                        color: Color::GOLD,
-                        ..default()
-                    },
-                    transform: Transform::from_xyz(x, y, 0.5),
-                    ..default()
-                },
-                PlayerAvatar,
-            ))
-            .with_children(|player| {
-                player.spawn((
-                    CameraMarker,
-                    Camera3dBundle {
-                        transform: Transform::from_xyz(0., 0., 40.0)
-                            .looking_at(Vec3::new(0., 0., 0.), Vec3::Y),
-                        camera_3d: Camera3d {
-                            clear_color: ClearColorConfig::None,
-                            // order: 0,
+            for SpawnPlayerEvent(position) in ev.read() {
+                let player_avatar_entity = ch
+                    .spawn((
+                        PlayerAvatar,
+                        CreatureEntityRef(player_entity),
+                        SpatialBundle {
+                            transform: Transform::from_xyz(
+                                position.x as f32,
+                                position.y as f32,
+                                0.,
+                            ),
                             ..default()
                         },
-                        ..default()
-                    },
-                ));
-            });
-    }
-
-    // if let Ok(x) = query.get_single() {
-    //     let position = match x.position {
-    //         Position::Point(pos) => pos,
-    //         _ => IVec3::ZERO,
-    //     };
-
-    //     warn!("###### {:?}", position);
-    //     // makes some lights
-
-    //     commands.spawn(PointLightBundle {
-    //         point_light: PointLight {
-    //             intensity: 5000.0,
-    //             range: 100.,
-    //             shadows_enabled: true,
-    //             color: Color::GOLD,
-    //             ..default()
-    //         },
-    //         transform: Transform::from_xyz(bx + position.x as f32, by + position.y as f32, 15.),
-    //         ..default()
-    //     });
-    // } else {
-
-    // }
+                    ))
+                    .with_children(|player| {
+                        // lights ...
+                        player.spawn(PointLightBundle {
+                            point_light: PointLight {
+                                intensity: 3500.0,
+                                range: 45.,
+                                shadows_enabled: true,
+                                color: Color::GOLD,
+                                ..default()
+                            },
+                            transform: Transform::from_xyz(0., 0., 0.5),
+                            ..default()
+                        });
+                        // camera ...
+                        player.spawn((
+                            CameraMarker,
+                            Camera3dBundle {
+                                transform: Transform::from_xyz(0., 0., 40.0)
+                                    .looking_at(Vec3::new(0., 0., 0.), Vec3::Y),
+                                camera_3d: Camera3d {
+                                    clear_color: ClearColorConfig::None,
+                                    ..default()
+                                },
+                                ..default()
+                            },
+                        ));
+                    })
+                    .id();
+                // create resource so we can access the entitity elsewhere
+                cmd.insert_resource(PlayerAvatarRes {
+                    entity: player_avatar_entity,
+                });
+            }
+        });
 }

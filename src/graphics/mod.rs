@@ -4,7 +4,7 @@ pub const SPRITESHEET_ASSET_PATH: &str = "vettlingr/dwarves.png";
 pub mod anim;
 pub mod components;
 // pub mod mobs;
-// pub mod move_anim;
+pub mod move_anim;
 pub mod player_avatar;
 // pub mod player_decoration;
 use bevy::prelude::*;

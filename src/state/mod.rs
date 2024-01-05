@@ -1,11 +1,13 @@
 use bevy::prelude::*;
 
+use crate::graphics::player_avatar::PlayerAvatarRes;
+
 // State
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, States)]
 pub enum AppState {
     #[default]
     Init,
-    SpawnPlayer,
+    SpawnPlayerAvatar,
     Ready,
     // InitBoard,
     // InitStage,
@@ -37,3 +39,11 @@ pub fn handle_app_init_event(
         }
     }
 }
+
+// pub fn set_state_spawn_player_avatar(
+//     mut ev_writer: EventWriter<AppInitEvent>,
+//     avatar_ref: Res<PlayerAvatarRes>,
+// ) {
+//     // dbg(avatar_ref.entity);
+//     ev_writer.send(AppInitEvent::SetAppState(AppState::SpawnPlayerAvatar));
+// }

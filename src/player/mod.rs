@@ -11,6 +11,11 @@ pub struct Player {
     pub positions_visible: HashSet<[i32; 2]>,
 }
 
+#[derive(Resource, Debug, Clone)]
+pub struct PlayerRes {
+    pub entity: Entity,
+}
+
 #[derive(Event, Debug)]
 pub struct SpawnPlayerEvent(pub IVec3);
 
@@ -18,7 +23,6 @@ impl Default for Player {
     fn default() -> Self {
         Player {
             positions_visible: HashSet::new(),
-            // movement delta?
         }
     }
 }
@@ -76,6 +80,12 @@ pub fn spawn(
             .creature_store
             .add_single(player_entity, *pos)
             .unwrap();
-        ev_writer.send(AppInitEvent::SetAppState(AppState::SpawnPlayer));
+
+        dbg!("inserting PlayerRes");
+        commands.insert_resource(PlayerRes {
+            entity: player_entity,
+        });
+
+        // ev_writer.send(AppInitEvent::SetAppState(AppState::BuildMap));
     }
 }
