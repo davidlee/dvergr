@@ -3,6 +3,7 @@ use bevy::prelude::*;
 
 use crate::graphics::typical::*;
 use crate::typical::*;
+use crate::TorchMarker;
 
 #[derive(Component, Debug, Default)]
 pub struct PlayerAvatar;
@@ -49,8 +50,10 @@ pub fn spawn(
                     clear_color: ClearColorConfig::None,
                     ..default()
                 },
-                transform: Transform::from_xyz(0., 0., -40.),
+                transform: Transform::from_xyz(0., 0., -20.),
                 camera: Camera {
+                    // disables camera:
+                    // output_mode: bevy::render::camera::CameraOutputMode::Skip,
                     order: 1,
                     ..default()
                 },
@@ -58,4 +61,12 @@ pub fn spawn(
             });
         });
     ev_writer.send(AppInitEvent::SetAppState(AppState::Ready));
+}
+
+pub fn flicker_torches(mut query: Query<(Entity, &TorchMarker, &mut PointLight)>) {
+    for x in query.iter_mut() {
+        if let (_, _, mut light) = x {
+            // random
+        }
+    }
 }

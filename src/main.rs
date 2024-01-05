@@ -44,7 +44,11 @@ pub mod typical {
 }
 
 use bevy::core_pipeline::clear_color::ClearColorConfig;
+use bevy::core_pipeline::core_3d::{Camera3dDepthLoadOp, Camera3dDepthTextureUsage};
+use bevy::pbr::OpaqueRendererMethod;
 use bevy::prelude::{ClearColor, Color, DefaultPlugins, PluginGroup};
+use bevy::render::camera::CameraRenderGraph;
+use bevy::render::view::{ColorGrading, VisibleEntities};
 use bevy::window::{PresentMode, Window, WindowPlugin, WindowResolution, WindowTheme};
 use bevy_fps_counter::FpsCounterPlugin;
 use bevy_turborand::prelude::RngPlugin;
@@ -171,6 +175,9 @@ fn main() {
 #[derive(Component, Debug)]
 pub struct MapMarker;
 
+#[derive(Component, Debug)]
+pub struct TorchMarker;
+
 // TODO organise map contents inside containers?
 
 // #[derive(Component, Debug)]
@@ -196,58 +203,70 @@ fn spawn_voxel_map(
     mut materials: ResMut<Assets<StandardMaterial>>,
     asset_server: ResMut<AssetServer>,
     mut ev: EventReader<SpawnPlayerEvent>,
+    // mut ambient_light: Res<AmbientLight>,
     // player_query: Query<(Entity, &Player)>,
     player_ref: Res<PlayerRes>,
 ) {
     // ..
     let texture_handle: Handle<Image> = asset_server.load("dirt.png");
+    // ambient_light.color = Color::BLACK;
 
-    let mask_material = materials.add(StandardMaterial {
-        reflectance: 0.00,
-        emissive: Color::NONE,
-        alpha_mode: AlphaMode::Opaque,
-        base_color: Color::BLACK,
-        ..default()
-    });
+    // let mask_material = materials.add(StandardMaterial {
+    //     reflectance: 0.05,
+    //     emissive: Color::NONE,
+    //     alpha_mode: AlphaMode::Opaque,
+    //     base_color: Color::BLACK,
+    //     ..default()
+    // });
 
     let floor_material = materials.add(StandardMaterial {
-        reflectance: 0.00,
+        reflectance: 0.01,
+        perceptual_roughness: 1.0,
+        diffuse_transmission: 0.0,
         base_color_texture: Some(texture_handle.clone()),
-        emissive: Color::NONE,
+
+        // normal_map_texture: None,
+        metallic: 0.0,
+        // parallax_mapping_method: ParallaxMappingMethod::Relief { max_steps: 3 },
+        ior: 1.0,
+
+        thickness: 1.0,
+        specular_transmission: 0.2,
+        attenuation_distance: 0.01,
+        attenuation_color: Color::BLACK,
+        emissive: Color::BLACK,
         alpha_mode: AlphaMode::Opaque,
-        base_color: Color::WHITE,
+        opaque_render_method: OpaqueRendererMethod::Deferred,
+        fog_enabled: false,
+        double_sided: true,
         ..default()
     });
 
-    let wall_material = materials.add(StandardMaterial {
-        reflectance: 0.00,
-        base_color_texture: Some(texture_handle),
-        emissive: Color::NONE,
-        alpha_mode: AlphaMode::Opaque,
-        // base_color: Color::NONE,
-        ..default()
-    });
-
-    let margin = f32::EPSILON * 2.0;
+    // let margin = f32::EPSILON * 2.0;
 
     let shape = meshes.add(
         shape::Cube {
-            size: VOXEL_CUBE_SIZE,
+            size: VOXEL_CUBE_SIZE + f32::EPSILON,
         }
         .into(),
     );
 
-    let mask_shape = meshes.add(
-        shape::Cube {
-            size: VOXEL_CUBE_SIZE + 2.0 * VOXEL_CUBE_MARGIN,
-        }
-        .into(),
-    );
+    // let mask_shape = meshes.add(
+    //     shape::Cube {
+    //         size: VOXEL_CUBE_SIZE + 2.0 * VOXEL_CUBE_MARGIN,
+    //     }
+    //     .into(),
+    // );
 
     let bx = 0.0 - board.size.width as f32;
     let by = 0.0 - board.size.height as f32;
 
     let player_entity = player_ref.entity;
+
+    commands.insert_resource(AmbientLight {
+        color: Color::BLACK,
+        brightness: 0.0,
+    });
 
     commands
         .spawn((
@@ -268,12 +287,13 @@ fn spawn_voxel_map(
                     mesh: shape.clone(),
                     material: floor_material.clone(),
                     transform: Transform::from_xyz(
-                        x as f32 - margin,
-                        y as f32 - margin,
+                        x as f32,
+                        y as f32,
                         z as f32 - 1.0,
                     ),
                     ..default()
                 },));
+
             }
 
             for (ivec, _e) in board.wall_store.iter() {
@@ -282,7 +302,7 @@ fn spawn_voxel_map(
                 // wall
                 ch.spawn((PbrBundle {
                     mesh: shape.clone(),
-                    material: wall_material.clone(),
+                    material: floor_material.clone(),
                     transform: Transform::from_xyz(x as f32, y as f32, z as f32),
                     ..default()
                 },));
@@ -312,25 +332,46 @@ fn spawn_voxel_map(
                     ))
                     .with_children(|player| {
                         // lights ...
-                        player.spawn(PointLightBundle {
+                        player.spawn((PointLightBundle {
                             point_light: PointLight {
-                                intensity: 1500.0,
-                                range: 15.,
+                                // shadow_depth_bias: 0.0,
+                                // shadow_normal_bias: 1.0,
+                                intensity: 850.,
+                                range: 120.,
                                 shadows_enabled: true,
-                                color: Color::GOLD,
+                                color: Color::rgba_linear(0.8, 0.3, 0.05, 1.0),
                                 ..default()
                             },
                             transform: Transform::from_xyz(0., 0., 0.25),
                             ..default()
-                        });
+                        }, TorchMarker));
+
                         // camera ...
                         player.spawn((
                             CameraMarker,
                             Camera3dBundle {
-                                transform: Transform::from_xyz(0., 0., 40.0)
+                                // projection: Projection::Perspective()
+
+                                // tonemapping: bevy::core_pipeline::tonemapping::Tonemapping::TonyMcMapface,
+
+                                tonemapping: bevy::core_pipeline::tonemapping::Tonemapping::TonyMcMapface,
+
+                                color_grading: ColorGrading {
+                                    exposure: 0.5,
+                                    gamma: 1.4,
+                                    pre_saturation: 0.4,
+                                    post_saturation: 1.0,
+                                    // pre_saturation: 1.4,
+                                    // post_saturation: 0.4,
+                                },
+
+                                transform: Transform::from_xyz(0., 0., 20.0)
                                     .looking_at(Vec3::new(0., 0., 0.), Vec3::Y),
                                 camera_3d: Camera3d {
-                                    clear_color: ClearColorConfig::None,
+                                    clear_color: ClearColorConfig::Custom(Color::BLACK),
+                                    screen_space_specular_transmission_steps: 3,
+                                    screen_space_specular_transmission_quality: bevy::core_pipeline::core_3d::ScreenSpaceTransmissionQuality::Ultra,
+                                    // depth_load_op: Camera3dDepthLoadOp::Clear(0.0),
                                     ..default()
                                 },
                                 ..default()
