@@ -1,9 +1,13 @@
+use crate::typical::*;
 use bevy::core_pipeline::clear_color::ClearColorConfig;
 use bevy::prelude::*;
+use bevy_turborand::prelude::*;
+use bevy_turborand::GlobalChaChaRng;
+use bevy_turborand::RngComponent;
 
 use crate::graphics::typical::*;
-use crate::typical::*;
-use crate::TorchMarker;
+// use crate::TorchMarker;
+use crate::TorchSecondaryLightMarker;
 
 #[derive(Component, Debug, Default)]
 pub struct PlayerAvatar;
@@ -16,6 +20,7 @@ pub struct PlayerAvatarRes {
 use super::SPRITESHEET_ASSET_PATH;
 const TILE_SIZE_W: f32 = 32.0;
 const TILE_SIZE_H: f32 = 32.0;
+const SPRITE_SCALE: f32 = 0.6;
 
 pub fn spawn(
     mut commands: Commands,
@@ -42,6 +47,7 @@ pub fn spawn(
                 texture_atlas: texture_atlas_handle,
                 sprite: TextureAtlasSprite::new(0),
                 transform: Transform::from_xyz(0., 0., 0.),
+                //.with_scale(Vec3::new(10.,10.,10.)),
                 ..default()
             },));
 
@@ -50,10 +56,8 @@ pub fn spawn(
                     clear_color: ClearColorConfig::None,
                     ..default()
                 },
-                transform: Transform::from_xyz(0., 0., -20.),
+                transform: Transform::from_xyz(0., 0., -1.).with_scale(Vec3::splat(SPRITE_SCALE)),
                 camera: Camera {
-                    // disables camera:
-                    // output_mode: bevy::render::camera::CameraOutputMode::Skip,
                     order: 1,
                     ..default()
                 },
@@ -63,10 +67,45 @@ pub fn spawn(
     ev_writer.send(AppInitEvent::SetAppState(AppState::Ready));
 }
 
-pub fn flicker_torches(mut query: Query<(Entity, &TorchMarker, &mut PointLight)>) {
-    for x in query.iter_mut() {
-        if let (_, _, mut light) = x {
-            // random
+pub fn flicker_torches(
+    mut commands: Commands,
+    // primary_query: Query<(Entity, &TorchMarker, &PointLight)>,
+    mut secondary_query: Query<(
+        Entity,
+        &TorchSecondaryLightMarker,
+        &Parent,
+        Option<&mut PointLight>,
+    )>,
+    mut global_rng: ResMut<GlobalChaChaRng>,
+) {
+    let mut rng = RngComponent::from(&mut global_rng);
+
+    for x in secondary_query.iter_mut() {
+        // TODO get parent, use attributes for intensity range
+
+        let intensity = rng.usize(15..25) as f32;
+        dbg!("flicker", x.0, intensity);
+
+        commands.entity(x.0).log_components();
+
+        if let Some(mut light) = x.3 {
+            light.intensity = intensity;
+            light.range = intensity * 10.;
+        } else {
+            commands.entity(x.0).try_insert((
+                PointLightBundle {
+                    point_light: PointLight {
+                        intensity,
+                        range: 120.,
+                        shadows_enabled: true,
+                        color: Color::GOLD,
+                        ..default()
+                    },
+                    // transform: Transform::from_xyz(0., 0., 0.1),
+                    ..default()
+                },
+                // SpatialBundle::default(),
+            ));
         }
     }
 }

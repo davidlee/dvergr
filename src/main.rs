@@ -44,11 +44,10 @@ pub mod typical {
 }
 
 use bevy::core_pipeline::clear_color::ClearColorConfig;
-use bevy::core_pipeline::core_3d::{Camera3dDepthLoadOp, Camera3dDepthTextureUsage};
+// use bevy::core_pipeline::core_3d::{Camera3dDepthLoadOp, Camera3dDepthTextureUsage};
 use bevy::pbr::OpaqueRendererMethod;
 use bevy::prelude::{ClearColor, Color, DefaultPlugins, PluginGroup};
-use bevy::render::camera::CameraRenderGraph;
-use bevy::render::view::{ColorGrading, VisibleEntities};
+use bevy::render::view::{ColorGrading};
 use bevy::window::{PresentMode, Window, WindowPlugin, WindowResolution, WindowTheme};
 use bevy_fps_counter::FpsCounterPlugin;
 use bevy_turborand::prelude::RngPlugin;
@@ -85,6 +84,7 @@ fn main() {
                 }),
         )
         .insert_resource(ClearColor(Color::BLACK))
+        .insert_resource(Msaa::default())
         .init_resource::<Board>()
         .add_state::<AppState>()
         .add_event::<player::movement::DirectionalInput>()
@@ -107,37 +107,7 @@ fn main() {
             )
                 .chain(),
         )
-        // .add_systems(OnEnter(AppState::SpawnPlayer), player::spawn)
-        // .add_systems(
-        //     OnEnter(AppState::BuildMap),
-        //     board::generator::populate_board,
-        // )
-        // .add_systems(
-        //     OnEnter(AppState::SpawnPlayerAvatar),
-        //     graphics::player_avatar::spawn,
-        // )
-        // .add_systems(
-        //     Update,
-        //     graphics::components::spawn_stage.run_if(state_exists_and_equals(AppState::InitStage)),
-        // )
-        // .add_systems(OnEnter(AppState::InitUI), ui::spawn_layout)
-        // .add_systems(
-        //     PostUpdate,
-        //     graphics::asset_loading::ensure_assets_loaded
-        //         .run_if(state_exists_and_equals(AppState::LoadAssets)),
-        // )
-        // .add_systems(OnEnter(AppState::InitTileMap), spawn_voxel_map)
-        // .add_systems(
-        //     OnEnter(AppState::InitTileMap),
-        //     graphics::tilemap::spawn_tile_map,
-        // )
-        // .add_systems(StartUp(AppState::InitPlayer), player::spawn_player)
-        // .add_systems(
-        //     OnEnter(AppState::InitMobs),
-        //     graphics::player_avatar::spawn_player_avatar,
-        // )
-        //
-        // MOVEMENT
+         // MOVEMENT
         .add_systems(
             PreUpdate,
             input::keybindings.run_if(state_exists_and_equals(AppState::Ready)),
@@ -164,6 +134,11 @@ fn main() {
                 .after(graphics::move_anim::add_changed_creature_mob_move_anim))
             .run_if(state_exists_and_equals(AppState::Ready)),
         )
+        .add_systems(
+            Update,
+                graphics::player_avatar::flicker_torches
+            .run_if(state_exists_and_equals(AppState::Ready)),
+        )
         .add_systems(Update, bevy::window::close_on_esc)
         .add_systems(PostUpdate, state::handle_app_init_event) // TODO REMOVE AFTER INIT COMPLETE
         .add_systems(PostUpdate, time::clock_frame_tick)
@@ -177,6 +152,9 @@ pub struct MapMarker;
 
 #[derive(Component, Debug)]
 pub struct TorchMarker;
+
+#[derive(Component, Debug)]
+pub struct TorchSecondaryLightMarker;
 
 // TODO organise map contents inside containers?
 
@@ -194,7 +172,8 @@ use crate::graphics::CreatureEntityRef;
 // slightly larger than 1.0 so the overlap prevents bleed through
 const VOXEL_CUBE_SIZE: f32 = 1.0;
 const VOXEL_CUBE_MARGIN: f32 = 0.08;
-
+                        const FOV:f32 = 120.;
+const CAMERA3D_Z_POS:f32 = 20.;
 fn spawn_voxel_map(
     board: Res<Board>,
     mut commands: Commands,
@@ -211,13 +190,6 @@ fn spawn_voxel_map(
     let texture_handle: Handle<Image> = asset_server.load("dirt.png");
     // ambient_light.color = Color::BLACK;
 
-    // let mask_material = materials.add(StandardMaterial {
-    //     reflectance: 0.05,
-    //     emissive: Color::NONE,
-    //     alpha_mode: AlphaMode::Opaque,
-    //     base_color: Color::BLACK,
-    //     ..default()
-    // });
 
     let floor_material = materials.add(StandardMaterial {
         reflectance: 0.01,
@@ -250,13 +222,6 @@ fn spawn_voxel_map(
         }
         .into(),
     );
-
-    // let mask_shape = meshes.add(
-    //     shape::Cube {
-    //         size: VOXEL_CUBE_SIZE + 2.0 * VOXEL_CUBE_MARGIN,
-    //     }
-    //     .into(),
-    // );
 
     let bx = 0.0 - board.size.width as f32;
     let by = 0.0 - board.size.height as f32;
@@ -307,13 +272,6 @@ fn spawn_voxel_map(
                     ..default()
                 },));
 
-                // haxx: mask
-                // ch.spawn((PbrBundle {
-                //     mesh: mask_shape.clone(),
-                //     material: wall_material.clone(),
-                //     transform: Transform::from_xyz(x as f32, y as f32, z as f32 + 1.0),
-                //     ..default()
-                // },));
             }
 
             for SpawnPlayerEvent(position) in ev.read() {
@@ -334,9 +292,7 @@ fn spawn_voxel_map(
                         // lights ...
                         player.spawn((PointLightBundle {
                             point_light: PointLight {
-                                // shadow_depth_bias: 0.0,
-                                // shadow_normal_bias: 1.0,
-                                intensity: 850.,
+                                intensity: 950.,
                                 range: 120.,
                                 shadows_enabled: true,
                                 color: Color::rgba_linear(0.8, 0.3, 0.05, 1.0),
@@ -344,35 +300,32 @@ fn spawn_voxel_map(
                             },
                             transform: Transform::from_xyz(0., 0., 0.25),
                             ..default()
-                        }, TorchMarker));
+                        }, TorchMarker)).with_children( |torch| { 
+                            torch.spawn((TorchSecondaryLightMarker, SpatialBundle::default())
+                            ); 
+                        });
 
                         // camera ...
+                    
+                        
                         player.spawn((
                             CameraMarker,
                             Camera3dBundle {
-                                // projection: Projection::Perspective()
-
-                                // tonemapping: bevy::core_pipeline::tonemapping::Tonemapping::TonyMcMapface,
-
-                                tonemapping: bevy::core_pipeline::tonemapping::Tonemapping::TonyMcMapface,
-
-                                color_grading: ColorGrading {
-                                    exposure: 0.5,
-                                    gamma: 1.4,
-                                    pre_saturation: 0.4,
-                                    post_saturation: 1.0,
-                                    // pre_saturation: 1.4,
-                                    // post_saturation: 0.4,
-                                },
-
-                                transform: Transform::from_xyz(0., 0., 20.0)
+                                projection: Projection::Perspective(PerspectiveProjection { fov: FOV, ..default() }),
+                                transform: Transform::from_xyz(0., 0., CAMERA3D_Z_POS)
                                     .looking_at(Vec3::new(0., 0., 0.), Vec3::Y),
                                 camera_3d: Camera3d {
                                     clear_color: ClearColorConfig::Custom(Color::BLACK),
                                     screen_space_specular_transmission_steps: 3,
                                     screen_space_specular_transmission_quality: bevy::core_pipeline::core_3d::ScreenSpaceTransmissionQuality::Ultra,
-                                    // depth_load_op: Camera3dDepthLoadOp::Clear(0.0),
                                     ..default()
+                                },
+                                tonemapping: bevy::core_pipeline::tonemapping::Tonemapping::TonyMcMapface,
+                                color_grading: ColorGrading {
+                                    exposure: 0.5,
+                                    gamma: 1.4,
+                                    pre_saturation: 0.8,
+                                    post_saturation: 0.6,
                                 },
                                 ..default()
                             },
