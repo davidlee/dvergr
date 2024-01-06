@@ -67,6 +67,7 @@ pub fn spawn(
     ev_writer.send(AppInitEvent::SetAppState(AppState::Ready));
 }
 
+// TODO get parent, use attributes for intensity range
 pub fn flicker_torches(
     mut commands: Commands,
     // primary_query: Query<(Entity, &TorchMarker, &PointLight)>,
@@ -81,31 +82,28 @@ pub fn flicker_torches(
     let mut rng = RngComponent::from(&mut global_rng);
 
     for x in secondary_query.iter_mut() {
-        // TODO get parent, use attributes for intensity range
+        if rng.usize(0..10) < 6 {
+            return;
+        }
 
-        let intensity = rng.usize(15..25) as f32;
-        dbg!("flicker", x.0, intensity);
+        let a = rng.usize(250..850) as f32;
+        let b = rng.usize(250..850) as f32;
 
-        commands.entity(x.0).log_components();
+        let intensity = a + b;
 
         if let Some(mut light) = x.3 {
             light.intensity = intensity;
-            light.range = intensity * 10.;
         } else {
-            commands.entity(x.0).try_insert((
-                PointLightBundle {
-                    point_light: PointLight {
-                        intensity,
-                        range: 120.,
-                        shadows_enabled: true,
-                        color: Color::GOLD,
-                        ..default()
-                    },
-                    // transform: Transform::from_xyz(0., 0., 0.1),
+            commands.entity(x.0).insert((PointLightBundle {
+                point_light: PointLight {
+                    intensity,
+                    range: 120.,
+                    shadows_enabled: true,
+                    color: Color::GOLD,
                     ..default()
                 },
-                // SpatialBundle::default(),
-            ));
+                ..default()
+            },));
         }
     }
 }

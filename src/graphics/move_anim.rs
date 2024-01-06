@@ -16,7 +16,6 @@ pub fn add_changed_creature_mob_move_anim(
 
                     let anim =
                         LerpVec3::from_translation(transform.translation, target.translation, 6); // 6 frames
-                    dbg!(&anim);
                     commands.entity(_mob_entity).insert(anim);
                 }
                 _ => panic!("doesn't support area yet"),
@@ -35,11 +34,8 @@ pub fn player_movement(
         Without<PlayerAvatar>,
     )>,
 ) {
-    if let Ok((sprite_entity, _sprite, mut sprite_transform, _)) = sprite_query.get_single_mut() {
+    if let Ok((_sprite_entity, _sprite, mut sprite_transform, _)) = sprite_query.get_single_mut() {
         for (avatar_entity, _avatar, mut anim, mut player_transform) in avatar_query.iter_mut() {
-            println!("{:?} // {:?}", sprite_entity, avatar_entity);
-            commands.entity(avatar_entity).log_components();
-            dbg!(&anim);
             if anim.current_frame == 1 {
                 player_transform.translation = anim.target;
                 sprite_transform.scale = Vec3::new(1.0, 1.0, 1.0);
