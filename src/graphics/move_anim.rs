@@ -1,5 +1,9 @@
+use std::ops::Add;
+
+use bevy::prelude::SpotLight;
+
 use super::{player_avatar::PlayerAvatar, typical::*};
-use crate::typical::*;
+use crate::{typical::*, TorchMarker};
 
 pub fn add_changed_creature_mob_move_anim(
     mut commands: Commands,
@@ -12,7 +16,9 @@ pub fn add_changed_creature_mob_move_anim(
             match locus.position {
                 Position::Point(pos) => {
                     let [x, y, _] = pos.as_vec3().to_array();
-                    let target = Transform::from_xyz(x, y, 0.);
+                    let [facing_x, facing_y] = locus.facing.offset2df().to_array();
+                    let target = Transform::from_xyz(x, y, 0.)
+                        .looking_at(Vec3::new(facing_x, facing_y, 0.), Vec3::splat(0.));
 
                     let anim =
                         LerpVec3::from_translation(transform.translation, target.translation, 6); // 6 frames
@@ -34,6 +40,8 @@ pub fn player_movement(
         Without<PlayerAvatar>,
     )>,
 ) {
+    // TODO lerp facing / facing of spotlight
+
     if let Ok((_sprite_entity, _sprite, mut sprite_transform, _)) = sprite_query.get_single_mut() {
         for (avatar_entity, _avatar, mut anim, mut player_transform) in avatar_query.iter_mut() {
             if anim.current_frame == 1 {
@@ -49,5 +57,20 @@ pub fn player_movement(
                 anim.current_frame -= 1;
             }
         }
+    }
+}
+
+pub fn move_head(
+    // mut commands: Commands,
+    player_query: Query<(Entity, &Player, &Locus)>,
+    mut query: Query<(Entity, &TorchMarker, &SpotLight, &mut Transform)>,
+) {
+    const K: f32 = 6.0;
+    let (_, _, locus) = player_query.get_single().unwrap();
+    let target = Transform::from_xyz(0., 0., 0.)
+        .looking_at(locus.direction.offset().as_vec3(), Vec3::new(-1., -1., -1.));
+    for (_, _, _, mut transform) in query.iter_mut() {
+        let delta = (target.rotation - transform.rotation) / K;
+        transform.rotation = transform.rotation.add(delta);
     }
 }

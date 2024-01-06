@@ -139,6 +139,7 @@ fn main() {
                 graphics::player_avatar::flicker_torches
             .run_if(state_exists_and_equals(AppState::Ready)),
         )
+        .add_systems(Update, graphics::move_anim::move_head)
         .add_systems(Update, bevy::window::close_on_esc)
         .add_systems(PostUpdate, state::handle_app_init_event) // TODO REMOVE AFTER INIT COMPLETE
         .add_systems(PostUpdate, time::clock_frame_tick)
@@ -290,15 +291,28 @@ fn spawn_voxel_map(
                     ))
                     .with_children(|player| {
                         // lights ...
-                        player.spawn((PointLightBundle {
-                            point_light: PointLight {
+                        // player.spawn((PointLightBundle {
+                        //     point_light: PointLight {
+                        //         intensity: 950.,
+                        //         range: 120.,
+                        //         shadows_enabled: true,
+                        //         color: Color::rgba_linear(0.8, 0.3, 0.05, 1.0),
+                        //         ..default()
+                        //     },
+                        //     transform: Transform::from_xyz(0., 0., 0.25),
+                        //     ..default()
+                        
+                        player.spawn((SpotLightBundle {
+                            spot_light: SpotLight {
                                 intensity: 950.,
                                 range: 120.,
                                 shadows_enabled: true,
                                 color: Color::rgba_linear(0.8, 0.3, 0.05, 1.0),
+                                outer_angle: 2.5,
+                                inner_angle: 0.2,
                                 ..default()
                             },
-                            transform: Transform::from_xyz(0., 0., 0.25),
+                            transform: Transform::from_xyz(0., 0., 0.25).looking_at(Vec3::new(0.0, 1.0, 0.), Vec3::splat(0.)),
                             ..default()
                         }, TorchMarker)).with_children( |torch| { 
                             torch.spawn((TorchSecondaryLightMarker, SpatialBundle::default())
