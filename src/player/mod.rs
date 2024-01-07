@@ -57,7 +57,7 @@ impl Default for PlayerBundle {
 pub fn spawn(
     mut commands: Commands,
     mut board: ResMut<Board>,
-    mut ev_writer: EventWriter<AppInitEvent>,
+    // mut ev_writer: EventWriter<AppInitEvent>,
     mut ev_reader: EventReader<SpawnPlayerEvent>,
 ) {
     warn!("Spawn Player");

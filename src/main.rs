@@ -47,7 +47,7 @@ use bevy::core_pipeline::clear_color::ClearColorConfig;
 // use bevy::core_pipeline::core_3d::{Camera3dDepthLoadOp, Camera3dDepthTextureUsage};
 use bevy::pbr::OpaqueRendererMethod;
 use bevy::prelude::{ClearColor, Color, DefaultPlugins, PluginGroup};
-use bevy::render::view::{ColorGrading};
+use bevy::render::view::ColorGrading;
 use bevy::window::{PresentMode, Window, WindowPlugin, WindowResolution, WindowTheme};
 use bevy_fps_counter::FpsCounterPlugin;
 use bevy_turborand::prelude::RngPlugin;
@@ -172,7 +172,7 @@ use crate::graphics::CreatureEntityRef;
 
 // slightly larger than 1.0 so the overlap prevents bleed through
 const VOXEL_CUBE_SIZE: f32 = 1.0;
-const VOXEL_CUBE_MARGIN: f32 = 0.08;
+// const VOXEL_CUBE_MARGIN: f32 = 0.08;
                         const FOV:f32 = 120.;
 const CAMERA3D_Z_POS:f32 = 20.;
 fn spawn_voxel_map(

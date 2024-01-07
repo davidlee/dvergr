@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::graphics::player_avatar::PlayerAvatarRes;
+// use crate::graphics::player_avatar::PlayerAvatarRes;
 
 // State
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, States)]
