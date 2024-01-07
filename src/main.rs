@@ -312,7 +312,8 @@ fn spawn_voxel_map(
                                 inner_angle: 0.2,
                                 ..default()
                             },
-                            transform: Transform::from_xyz(0., 0., 0.25).looking_at(Vec3::new(0.0, 1.0, 0.), Vec3::splat(0.)),
+                            // transform: Transform::from_xyz(0., 0., 0.25).looking_at(Vec3::new(0.0, 1.0, 0.), Vec3::splat(0.)),
+                            transform: Transform::from_xyz(0., 0., 0.25).looking_at(Vec3::new(0., 0., 0.), Vec3::new(0., 0., 0.)),
                             ..default()
                         }, TorchMarker)).with_children( |torch| { 
                             torch.spawn((TorchSecondaryLightMarker, SpatialBundle::default())

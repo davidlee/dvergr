@@ -40,8 +40,6 @@ pub fn player_movement(
         Without<PlayerAvatar>,
     )>,
 ) {
-    // TODO lerp facing / facing of spotlight
-
     if let Ok((_sprite_entity, _sprite, mut sprite_transform, _)) = sprite_query.get_single_mut() {
         for (avatar_entity, _avatar, mut anim, mut player_transform) in avatar_query.iter_mut() {
             if anim.current_frame == 1 {
@@ -61,14 +59,20 @@ pub fn player_movement(
 }
 
 pub fn move_head(
-    // mut commands: Commands,
     player_query: Query<(Entity, &Player, &Locus)>,
+    // mut avatar_query: Query<(Entity, &PlayerAvatar, &mut LerpVec3, &mut Transform)>,
     mut query: Query<(Entity, &TorchMarker, &SpotLight, &mut Transform)>,
 ) {
     const K: f32 = 6.0;
     let (_, _, locus) = player_query.get_single().unwrap();
-    let target = Transform::from_xyz(0., 0., 0.)
-        .looking_at(locus.direction.offset().as_vec3(), Vec3::new(-1., -1., -1.));
+    // FIXME this'll do for now but 135' angle transitions are goofy
+    let target = match locus.direction {
+        Direction::North | Direction::South => Transform::from_xyz(0., 0., 0.)
+            .looking_at(locus.direction.offset().as_vec3(), Vec3::new(-1., -1., 0.)),
+        _ => Transform::from_xyz(0., 0., 0.)
+            .looking_at(locus.direction.offset().as_vec3(), Vec3::new(0., 0., 0.)),
+    };
+
     for (_, _, _, mut transform) in query.iter_mut() {
         let delta = (target.rotation - transform.rotation) / K;
         transform.rotation = transform.rotation.add(delta);
