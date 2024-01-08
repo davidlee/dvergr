@@ -5,21 +5,18 @@ pub mod condition;
 pub mod locus;
 pub mod movement;
 pub mod phenotype;
-pub mod species;
 
 pub use attributes::*;
 pub use condition::*;
 pub use locus::*;
 pub use movement::*;
 pub use phenotype::*;
-pub use species::*;
 
 #[allow(dead_code)]
 #[derive(Bundle, Debug, Clone)]
 pub struct CreatureBundle {
     pub creature: Creature,
     pub attributes: Attributes,
-    pub species: Species,
     pub phenotype: Phenotype,
     pub size: CreatureSize,
     pub condition: CreatureCondition,
@@ -41,11 +38,10 @@ impl Default for CreatureBundle {
         Self {
             creature: Creature::default(),
             attributes: Attributes::new(),
-            species: Species::human(),
             phenotype: Phenotype::default(),
-            size: CreatureSize::Medium,
             condition: CreatureCondition::default(),
             locus: Locus::default(),
+            size: CreatureSize::Medium,
             // tempo: Tempo::
             actions: Actions::default(),
         }

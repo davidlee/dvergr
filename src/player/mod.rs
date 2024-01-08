@@ -4,7 +4,6 @@ use bevy::prelude::*;
 use bevy::utils::HashSet;
 
 pub mod movement;
-pub mod visibility;
 
 #[derive(Component, Debug, Clone)]
 pub struct Player {
@@ -47,7 +46,6 @@ impl Default for PlayerBundle {
             },
             character: CharacterBundle {
                 character: Character,
-                equipment: Equipment::default(),
                 pace: Pace::default(),
             },
         }

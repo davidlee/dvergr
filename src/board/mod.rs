@@ -5,9 +5,7 @@ pub mod direction;
 pub mod generator;
 pub mod geometry;
 pub mod lighting;
-pub mod plugin;
 pub mod primitives;
-pub mod shadowcast;
 
 pub use cell_store::*;
 pub use creature_store::*;

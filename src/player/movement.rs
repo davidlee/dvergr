@@ -6,6 +6,8 @@ pub struct DirectionalInput {
     pub direction: Direction,
 }
 
+// TODO
+
 pub fn validate_directional_input(
     mut ev_input: EventReader<DirectionalInput>,
     mut ev_move: EventWriter<UpdateLocus>,

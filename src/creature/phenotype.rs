@@ -5,7 +5,6 @@ use crate::typical::*;
 #[derive(Component, Debug, Clone, Default, Eq, PartialEq)]
 #[allow(dead_code)]
 pub struct Phenotype {
-    species: Species,
     size: CreatureSize,
     anatomy_template: (),
 
@@ -24,7 +23,6 @@ pub struct Phenotype {
 impl Phenotype {
     fn default() -> Self {
         Phenotype {
-            species: Species::default(),
             size: CreatureSize::default(),
             anatomy_template: (),
 

@@ -102,6 +102,13 @@ pub enum Size {
  - level
  - experience points
 
+ - pace
+ - stance
+ - ? movement state
+
+ - command_in_progress
+ - command_queue
+
  - list of attributes
  - locus & position
  - appearance / sprite
@@ -128,6 +135,7 @@ pub enum Size {
     - Worn items (Vec<Location>)
         - containers ...
     - Natural Armour
+    - Natural Weapons
     - Computed Armour
  - hands (Vec<Location>)
     - 2 x CarryableSlotStatus

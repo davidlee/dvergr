@@ -4,6 +4,12 @@ use crate::typical::*;
 
 use bevy::prelude::{Entity, EventWriter, Input, KeyCode, Query, Res, Transform};
 
+// TODO
+//
+// Define a common grammar for commands
+// issue a movement command
+// have it progress time
+
 pub fn keybindings(
     mut ev_player_move: EventWriter<DirectionalInput>,
     keys: Res<Input<KeyCode>>,
