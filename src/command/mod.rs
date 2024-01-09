@@ -2,15 +2,21 @@ use crate::typical::*;
 
 pub struct Meta {
     entity: Entity,
+    issuer: Issuer,
     target: Option<Entity>,
 }
 
-trait CommandDictionary {}
+enum Issuer {
+    Player,
+    Character,
+    Creature,
+}
 
-enum CreatureCommand {
+#[derive(Event, Debug, Clone)]
+enum Command {
     WaitSeconds {
-        entity: Entity,
-        seconds: f32,
+        meta: Meta,
+        seconds: f64,
     }, // seconds
     Move {
         entity: Entity,
@@ -19,30 +25,25 @@ enum CreatureCommand {
     },
     Attack {
         // ?
-        entity: Entity,
+        meta: Meta,
         direction: Direction,
         target: Entity,
-        maneuver: (),
-        weapon: (),
+        // maneuver: (),
+        // weapon: (),
     },
     Drink {
-        entity: Entity,
+        meta: Meta,
         target: Entity,
     },
 }
 
-impl CommandDictionary for CreatureCommand {}
-
-enum PlayerCommand {}
-impl CommandDictionary for PlayerCommand {}
-
-enum Command<T: Component> {
+enum ValidatedCommand {
     Valid {
-        command: CreatureCommand<T>,
-        seconds: f32,
+        command: CreatureCommand,
+        seconds: f64,
     }, // seconds
     Invalid {
-        command: CreatureCommand<T>,
+        command: CreatureCommand,
         message: String,
     },
 }

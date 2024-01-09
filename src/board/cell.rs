@@ -1,3 +1,4 @@
+use crate::material::*;
 use crate::typical::*;
 // use bevy::prelude::Color;
 // Cell
@@ -8,34 +9,33 @@ const CELL_DIMENSIONS_METRES: [f32; 3] = [0.5, 0.5, 2.0];
 
 #[derive(PartialEq, Clone, Debug, Component)]
 pub struct Cell {
-    // pub material_blocks_visibility: bool,
-    // pub blocks_visibility_computed: bool,
-    // pub light_intensity: f64,
-    // pub light_color: Color,
     pub position: IVec3,
 }
-
-// #[derive(Component)]
-// type MaybeCellFillMaterial = Option<CellFillMaterial>;
 
 #[derive(Bundle, Debug, Clone, PartialEq)]
 pub struct CellWallBundle {
     pub cell: Cell,
-    pub player_visibility: PlayerCellVisibility,
     pub cell_material: Wall,
-    // can have floor
     pub cell_items: CellItems,
 }
 
+// TODO allow empty cells with neighbouring wall cells to have items / features on the wall itself
+// maybe with a HashMap of Direction => Entity
+//
 pub struct CellFloorBundle {
     pub cell: Cell,
-    pub player_visibility: PlayerCellVisibility,
     pub cell_floor: Floor,
     pub cell_items: CellItems,
-    // can have feature
+    pub cell_wall_features: (),
+    pub cell_wall_items: (),
 }
 
-// TODO cell with no material / floor cannot have items; they fall through
+// TODO implement gravity
+// a cell without floor or material underneath can only contain items temporarily; they'll fall through
+pub struct CellEmptyBundle {
+    pub cell: Cell,
+    pub cell_items: CellItems,
+}
 
 impl Cell {
     pub fn new(x: i32, y: i32, z: i32) -> Self {
@@ -110,17 +110,4 @@ impl Floor {
         let position = IVec3::new(x, y, z);
         Self { position, material }
     }
-}
-
-// Material
-//
-#[derive(Component, Default, Eq, PartialEq, Clone, Debug, PartialOrd, Ord)]
-pub enum Material {
-    #[default]
-    Dirt,
-    Sandstone,
-    Granite,
-    Marble,
-    Quartz,
-    Sand,
 }

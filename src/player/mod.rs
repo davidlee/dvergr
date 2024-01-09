@@ -45,8 +45,17 @@ impl Default for PlayerBundle {
                 ..default()
             },
             character: CharacterBundle {
-                character: Character,
+                character: Character {
+                    name: None,
+                    level: CharacterLevel(1),
+                    skills: (),
+                    abilities: (),
+                    spells: (),
+                },
                 pace: Pace::default(),
+                age: Age(22),
+                gender: crate::anatomy::Gender::Male,
+                species: Species::Dwarf,
             },
         }
     }

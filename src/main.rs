@@ -10,12 +10,16 @@ pub mod input;
 pub mod player;
 pub mod state;
 pub mod time;
+pub mod material;
+pub mod inventory;
+
 // pub mod ui;
 
 pub mod typical {
+    pub use crate::material::*;
     pub use crate::board::{
         cell::{
-            Cell, CellFeature, CellFloorBundle, CellItems, CellWallBundle, Floor, Material, Wall,
+            Cell, CellFeature, CellFloorBundle, CellItems, CellWallBundle, Floor, Wall,
         },
         direction::{Direction, CARDINAL_DIRECTIONS, COMPASS_DEGREES, DIRECTION_OFFSETS},
         primitives::{Area3d, Size3d},

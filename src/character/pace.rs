@@ -14,6 +14,27 @@ pub enum PaceId {
     Reckless,
 }
 
+pub enum Stance {
+    // structure, in fencing lingo
+    //
+}
+
+pub enum Measure {
+    //
+}
+
+pub enum Tempo {
+    // the combat equivalent
+}
+
+pub enum Approach {
+    // the task equivalent
+    Painstaking,
+    Careful,
+    Hurried,
+    Desperate,
+}
+
 pub use PaceId::*;
 
 #[derive(Component, Debug, Clone, Copy)]

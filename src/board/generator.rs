@@ -207,7 +207,7 @@ pub fn populate_board(
         for pos in board.coords().iter() {
             let [x, y, z] = pos.to_array();
             let cell = Cell::new(x, y, z);
-            let floor = Floor::new(x, y, z, Material::default());
+            let floor = Floor::new(x, y, z, Material::Dirt);
             let vis = PlayerCellVisibility::new(x, y, z);
 
             let entity: Entity;
@@ -215,7 +215,7 @@ pub fn populate_board(
                 entity = parent.spawn((cell, vis, floor)).id();
                 false
             } else {
-                let wall = Wall::new(x, y, z, Material::default());
+                let wall = Wall::new(x, y, z, Material::Dirt);
                 entity = parent.spawn((cell, vis, floor, wall)).id();
                 board.wall_store.set(*pos, entity);
                 true

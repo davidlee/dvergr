@@ -92,6 +92,21 @@ pub enum CreatureSize {
     Giant, // two story humanoid; war elephant
     Leviathan(), // show me map tiles
 }
+
+pub enum Size {
+    Bug,    // diminutive
+    Cat,    // tiny
+    Monkey, // small
+    Wolf,   //
+    Man,    // Medium
+    Tiger,  //
+    Bear,   // Large
+    Horse,  //
+    Bison,  // Larger
+    Hippopotamus,
+    Elephant,  //
+    Leviathan, // expressed in map tiles
+}
 // Actions
 //
 #[derive(Component, Debug, Clone, Default)]

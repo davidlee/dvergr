@@ -1,4 +1,13 @@
-use bevy::prelude::Component;
+use bevy::utils::HashMap;
+use std::{
+    fmt::Debug,
+    hash::Hash,
+    ops::{Index, IndexMut},
+};
+
+use crate::Cell;
+use bevy::prelude::{Component, Entity};
+// https://github.com/tomuxmon/bevy_roguelike/blob/main/bevy_inventory/src/lib.rs#L75
 
 // use crate::typical::*;
 
@@ -10,85 +19,54 @@ use bevy::prelude::Component;
 // wounded, treated at ..
 //
 
-// traits for inventory items
-
-pub trait Carryable {}
-pub trait Wearable {}
-pub trait Equipable {}
-pub trait Commodity {}
-pub trait Currency {}
-pub trait Prosthetic {}
-pub trait Container {}
-pub trait Liquid {}
-
-pub enum Consumable {
-    Drinkable,
-    Edible,
-    Poultice,
-    Ointment,
-    Ammunition,
-    SingleUse,
-    LimitedUse,
-    Fragile,
-    // SingleUse,
-    // Charges,
-    // Fragile,
-}
-
-// let's begin with physiology as it relates to inventory
-
-#[derive(Component, Debug, Clone)]
-pub enum WearableSlotStatus {
-    Free,
-    Occupied, // you may be wearing a shirt, but can still layer a gambeson
-    // while full plate might allow a tabard over it, but not a ball gown
-    Covered, // you can't don glasses while wearing a helmt -
-             // but nor does it prevent you wearing them underneath
-}
-
-pub enum CarryableSlotStatus {
-    Free,
-    Occupied,
-}
-
 // https://github.com/veloren/veloren/blob/master/common/src/comp/body/item_drop.rs
 
 // pub mod morphology {/
 
+// usu. bilateral symmetry, as in humans
+
+#[derive(Component, Eq, PartialEq, Copy, Clone, Debug, PartialOrd, Ord, Hash)]
 pub enum APSymmetry {
-    // usu. bilateral symmetry, as in humans
     Back,
     Front,
+    Dorsal, // e.g. spine
     None,
 }
 
-pub enum DVSymmetry {
-    Singular,
+#[derive(Component, Eq, PartialEq, Copy, Clone, Debug, PartialOrd, Ord, Hash)]
+pub enum Side {
     Left,
     Right,
+    Either,       // 1h
+    Both,         // 2h
+    EitherOrBoth, // weapon handedness: 1h or 2h
+    Singular,     // you only have one, e.g. heart
 }
 
+#[derive(Component, Eq, PartialEq, Copy, Clone, Debug, PartialOrd, Ord, Hash)]
 pub enum Gender {
     Male,
     Female,
-    Unspecified,
+    Neither,
+    Other,
 }
 
-pub enum Size {
-    Bug,    //
-    Cat,    // tiny
-    Monkey, // small
-    Wolf,
-    Man, // Medium
-    Tiger,
-    Bear,
-    Horse,
-    Bison,
-    Hippopotamus,
-    Elephant,
+#[derive(Component, Eq, PartialEq, Copy, Clone, Debug, PartialOrd, Ord, Hash)]
+pub enum System {
+    Cardiovascular,
+    Respiratory,
+    Endocrine,
+    ImmuneLymphatic,
+    Digestive,
+    Muscular,
+    Skeletal,
+    Nervous,
+    Integumentary,
+    Renal,
+    Reproductive,
 }
 
-/* Players have a
+/* Players / Characters have a
  - size
  - gender
  - age
@@ -142,23 +120,28 @@ pub enum Size {
     - carried items (Vec<Location>)
 
 */
-
 pub mod humanoid {
-    use super::DVSymmetry;
+    use super::Side;
+    use bevy::prelude::{Component, Entity};
 
+    #[derive(Component, Eq, PartialEq, Copy, Clone, Debug, PartialOrd, Ord, Hash)]
     pub enum Area {
         Head,
         Trunk,
         Limbs,
     }
+    #[derive(Component, Eq, PartialEq, Copy, Clone, Debug, PartialOrd, Ord, Hash)]
     pub enum Finger {
-        Thumb(DVSymmetry),
-        Index(DVSymmetry),
-        Middle(DVSymmetry),
-        Ring(DVSymmetry),
-        Little(DVSymmetry),
+        Thumb(Side),
+        Index(Side),
+        Middle(Side),
+        Ring(Side),
+        Little(Side),
     }
 
+    // we'll want to map this to body parts somehow
+    // as well as using for inventory slots
+    #[derive(Component, Eq, PartialEq, Copy, Clone, Debug, PartialOrd, Ord, Hash)]
     pub enum Location {
         Head,
         Face,
@@ -167,91 +150,81 @@ pub mod humanoid {
         Back,
         Abdomen,
         Groin,
-        Shoulder(DVSymmetry),
-        UpperArm(DVSymmetry),
-        Elbow(DVSymmetry),
-        Forearm(DVSymmetry),
-        Wrist(DVSymmetry),
-        Hand(DVSymmetry),
+        Shoulder(Side),
+        UpperArm(Side),
+        Elbow(Side),
+        Forearm(Side),
+        Wrist(Side),
+        Hand(Side),
         Finger(Finger),
-        Hip(DVSymmetry),
-        Thigh(DVSymmetry),
-        Knee(DVSymmetry),
-        Shin(DVSymmetry),
-        Ankle(DVSymmetry),
-        Foot(DVSymmetry),
+        Hip(Side),
+        Thigh(Side),
+        Knee(Side),
+        Shin(Side),
+        Ankle(Side),
+        Foot(Side),
     }
 
+    // #[derive(Component, Eq, PartialEq, Copy, Clone, Debug, PartialOrd, Ord, Hash)]
+    // pub struct CarryLocation(Location::Hand(Side));
+
+    #[derive(Component, Eq, PartialEq, Copy, Clone, Debug, PartialOrd, Ord, Hash)]
     pub enum Organ {
         // ...
     }
 
+    #[derive(Component, Eq, PartialEq, Copy, Clone, Debug, PartialOrd, Ord, Hash)]
     pub enum Bone {
         // ...
     }
-
-    pub enum System {
-        Cardiovascular,
-        Respiratory,
-        Endocrine,
-        ImmuneLymphatic,
-        Digestive,
-        Muscular,
-        Skeletal,
-        Nervous,
-        Integumentary,
-        Renal,
-        Reproductive,
-    }
-
-    /*
-    - head
-        - skull
-            - brain
-        - face
-            - forehad
-            - jaw
-            - nose
-            - cheek
-            - chin
-            - mouth
-                - teeth
-                - tongue
-            - neck
-                - throat
-                    - larynx
-                    - trachea
-                - spine
-    - trunk
-        - collarbone
-        - shoulders
-            - shoulderblade
-        - ribcage
-            - heart
-            - lungs
-            - esophagus
-            - diaphragm
-    - abdomen
-        - liver
-        - gall bladder
-        - stomach
-        - intestines
-        - spleen
-        - pancreas
-        - kidneys
-        - colon
-    - hips
-
-    - groin
-    - thigh
-    - knee
-    - shin
-    - anke
-
-
-
-    */
 }
+/*
+- head
+    - skull
+        - brain
+    - face
+        - forehad
+        - jaw
+        - nose
+        - cheek
+        - chin
+        - mouth
+            - teeth
+            - tongue
+        - neck
+            - throat
+                - larynx
+                - trachea
+            - spine
+- trunk
+    - collarbone
+    - shoulders
+        - shoulderblade
+    - ribcage
+        - heart
+        - lungs
+        - esophagus
+        - diaphragm
+- abdomen
+    - liver
+    - gall bladder
+    - stomach
+    - intestines
+    - spleen
+    - pancreas
+    - kidneys
+    - colon
+- hips
+
+- groin
+- thigh
+- knee
+- shin
+- anke
+
+
+
+*/
 
 // pub enum Bones {
 //     Skull,
