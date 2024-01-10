@@ -6,6 +6,10 @@ pub mod locus;
 pub mod movement;
 pub mod phenotype;
 
+pub use crate::anatomy::Gender;
+pub use crate::character::pace::*;
+pub use crate::character::*;
+
 pub use attributes::*;
 pub use condition::*;
 pub use locus::*;
@@ -18,18 +22,22 @@ pub struct CreatureBundle {
     pub creature: Creature,
     pub attributes: Attributes,
     pub phenotype: Phenotype,
+    pub species: Species,
+    pub gender: Gender,
+    pub age: Age,
     pub size: CreatureSize,
-    pub condition: CreatureCondition,
+    pub pace: Pace,
+    pub tempo: Tempo,
+    pub stance: Stance,
+    pub approach: Approach,
+    pub condition: ConditionList,
     pub locus: Locus,
-    pub actions: Actions,
-    // tempo: Tempo, // tempo? pace?
+    pub actions: ActionList,
     // // age, disease, subspecies, careers, etc
     // // a geriatric leprous veteran undead wood-elf pirate
-    // // a deranged adolescent amputee ex-slave sprite
+    // // a deranged adolescent amputee ex-slave wood sprite
     // templates: (),
-    // // gear: Equipment,
-    // // attributes
-    // abilities: (),
+    // gear: Equipment,
     // traits: (),
 }
 
@@ -39,11 +47,12 @@ impl Default for CreatureBundle {
             creature: Creature::default(),
             attributes: Attributes::new(),
             phenotype: Phenotype::default(),
-            condition: CreatureCondition::default(),
+            condition: ConditionList::default(),
             locus: Locus::default(),
             size: CreatureSize::Medium,
             // tempo: Tempo::
-            actions: Actions::default(),
+            actions: ActionList::default(),
+            ..default()
         }
     }
 }
@@ -111,10 +120,21 @@ pub enum Size {
 //
 #[derive(Component, Debug, Clone, Default)]
 #[allow(dead_code)]
-pub struct Actions {
-    current: (),
-    queue: (),
+pub struct ActionList {
+    pub current: (),
+    pub queue: (),
     // behaviour_tree: Option<()>,
+}
+#[derive(Component, Debug, Clone, Default)]
+pub struct NeedList {
+    pub hunger: u8,
+    pub thirst: u8,
+    pub sleep: u8,
+    pub morale: u8,
+    pub breath: u8,
+    pub blood: f32, // liters
+    pub hope: u8,
+    pub safety: u8,
 }
 
 // should be a state machine??

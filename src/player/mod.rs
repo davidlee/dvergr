@@ -1,3 +1,4 @@
+use crate::character::*;
 use crate::creature::CreatureBundle;
 use crate::typical::*;
 use bevy::prelude::*;
@@ -42,20 +43,18 @@ impl Default for PlayerBundle {
                     position: Position::Point(IVec3::new(3, 3, 0)),
                     ..default()
                 },
+                pace: Pace::default(),
+                age: Age(22),
+                species: Species::Dwarf,
                 ..default()
             },
             character: CharacterBundle {
                 character: Character {
                     name: None,
                     level: CharacterLevel(1),
-                    skills: (),
-                    abilities: (),
-                    spells: (),
+                    experience: 0,
                 },
-                pace: Pace::default(),
-                age: Age(22),
-                gender: crate::anatomy::Gender::Male,
-                species: Species::Dwarf,
+                ..default()
             },
         }
     }

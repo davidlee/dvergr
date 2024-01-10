@@ -265,13 +265,17 @@ pub struct Liquid {
     pub volume: u16,
 }
 
+#[derive(Debug, Default, Clone, Component, Eq, PartialEq, Hash)]
 pub enum ConsumableUse {
+    #[default]
     SingleUse,
     LimitedUse(u8),
-    Fragile(f32), // random chance consumed on use; avg # of uses until consumed
+    Fragile(u8), // random chance consumed on use; avg # of uses until consumed
 }
 
+#[derive(Debug, Default, Clone, Component, Eq, PartialEq, Hash)]
 pub enum ConsumableMethod {
+    #[default]
     Drinkable,
     Edible,
     Poultice,
@@ -286,7 +290,7 @@ pub enum ConsumableMethod {
     Ritual,  //
 }
 
-#[derive(Debug, Default, Clone, Component, Eq, Hash)]
+#[derive(Debug, Default, Clone, Component, Eq, PartialEq, Hash)]
 struct Consumable {
     uses: ConsumableUse,
     method: ConsumableMethod,

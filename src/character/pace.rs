@@ -14,23 +14,33 @@ pub enum PaceId {
     Reckless,
 }
 
-pub enum Stance {
-    // structure, in fencing lingo
-    //
+#[derive(Component, Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Structure {
+    // structure, in fencing lingo : distance / range?
+    #[default]
+    Normal,
 }
 
+#[derive(Component, Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Measure {
-    //
+    #[default]
+    Normal, //
 }
 
+#[derive(Component, Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Tempo {
     // the combat equivalent
+    #[default]
+    Normal,
 }
 
+#[derive(Component, Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Approach {
     // the task equivalent
     Painstaking,
     Careful,
+    #[default]
+    Casual,
     Hurried,
     Desperate,
 }

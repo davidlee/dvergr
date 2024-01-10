@@ -3,7 +3,7 @@ use crate::typical::*;
 //
 #[derive(Component, Debug, Clone, Default, Eq, PartialEq)]
 #[allow(dead_code)]
-pub struct CreatureCondition {
+pub struct ConditionList {
     needs: (),
     conditions: (),
     injuries: (),
@@ -11,9 +11,9 @@ pub struct CreatureCondition {
 }
 
 #[allow(dead_code)]
-impl CreatureCondition {
+impl ConditionList {
     fn default() -> Self {
-        CreatureCondition {
+        ConditionList {
             needs: (),
             conditions: (),
             injuries: (),
