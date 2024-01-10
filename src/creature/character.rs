@@ -1,10 +1,7 @@
-use crate::anatomy::*;
-use crate::creature::*;
-use crate::typical::*;
-
-pub mod pace;
-
-pub use crate::character::pace::*;
+use super::*;
+// use crate::anatomy::*;
+// use crate::creature::*;
+// use crate::typical::*;
 
 #[derive(Bundle, Debug, Clone)]
 pub struct CharacterBundle {

@@ -1,14 +1,16 @@
 use crate::typical::*;
 
 pub mod attributes;
+pub mod character;
 pub mod condition;
 pub mod locus;
 pub mod movement;
+pub mod pace;
 pub mod phenotype;
 
 pub use crate::anatomy::Gender;
-pub use crate::character::pace::*;
-pub use crate::character::*;
+pub use character::*;
+pub use pace::*;
 
 pub use attributes::*;
 pub use condition::*;

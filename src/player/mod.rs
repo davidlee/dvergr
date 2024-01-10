@@ -1,5 +1,5 @@
-use crate::character::*;
-use crate::creature::CreatureBundle;
+// use crate::character::*;
+use crate::creature::*;
 use crate::typical::*;
 use bevy::prelude::*;
 use bevy::utils::HashSet;
