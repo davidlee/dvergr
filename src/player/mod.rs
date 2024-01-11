@@ -2,14 +2,11 @@
 use crate::creature::*;
 use crate::typical::*;
 use bevy::prelude::*;
-use bevy::utils::HashSet;
 
 pub mod movement;
 
 #[derive(Component, Debug, Clone)]
-pub struct Player {
-    pub positions_visible: HashSet<[i32; 2]>,
-}
+pub struct Player {}
 
 #[derive(Resource, Debug, Clone)]
 pub struct PlayerRes {
@@ -21,9 +18,7 @@ pub struct SpawnPlayerEvent(pub IVec3);
 
 impl Default for Player {
     fn default() -> Self {
-        Player {
-            positions_visible: HashSet::new(),
-        }
+        Player {}
     }
 }
 
@@ -80,6 +75,7 @@ pub fn spawn(
             },
             ..default()
         };
+        warn!("humm");
         let player_entity = commands.spawn(player_bundle).id();
 
         board

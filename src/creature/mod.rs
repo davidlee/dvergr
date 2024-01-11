@@ -1,5 +1,6 @@
 use crate::typical::*;
 
+pub mod anatomy;
 pub mod attributes;
 pub mod character;
 pub mod condition;
@@ -7,8 +8,6 @@ pub mod locus;
 pub mod movement;
 pub mod pace;
 pub mod phenotype;
-
-pub use crate::anatomy::Gender;
 pub use character::*;
 pub use pace::*;
 
@@ -26,13 +25,16 @@ pub struct CreatureBundle {
     pub phenotype: Phenotype,
     pub species: Species,
     pub gender: Gender,
+    pub needs: NeedList,
     pub age: Age,
     pub size: CreatureSize,
+    pub skills: SkillList,
+    pub abilities: AbilityList,
     pub pace: Pace,
     pub tempo: Tempo,
     pub stance: Stance,
     pub approach: Approach,
-    pub condition: ConditionList,
+    pub conditions: ConditionList,
     pub locus: Locus,
     pub actions: ActionList,
     // // age, disease, subspecies, careers, etc
@@ -49,12 +51,20 @@ impl Default for CreatureBundle {
             creature: Creature::default(),
             attributes: Attributes::new(),
             phenotype: Phenotype::default(),
-            condition: ConditionList::default(),
+            species: Species::Dwarf,
+            gender: Gender::Male,
+            needs: NeedList::default(),
+            age: Age(20),
+            size: CreatureSize::default(),
+            skills: SkillList::default(),
+            abilities: AbilityList::default(),
+            pace: Pace::default(),
+            tempo: Tempo::default(),
+            stance: Stance::default(),
+            approach: Approach::default(),
+            conditions: ConditionList::default(),
             locus: Locus::default(),
-            size: CreatureSize::Medium,
-            // tempo: Tempo::
             actions: ActionList::default(),
-            ..default()
         }
     }
 }
@@ -158,6 +168,18 @@ pub enum Stance {
     // Running,
     // Jumping,
 }
+
+#[derive(Component, Debug, Clone, Default)]
+pub struct Age(pub u16);
+
+#[derive(Component, Debug, Clone, Default)]
+pub struct SkillList {}
+
+#[derive(Component, Debug, Clone, Default)]
+pub struct AbilityList {}
+
+#[derive(Component, Debug, Clone, Default)]
+pub struct SpellList {}
 
 // grapple -> state machine?
 

@@ -1,19 +1,18 @@
-// use std::fmt::{format, Arguments};
+// use std::fmt::{format, Arguments};h
+use std::convert::From;
 
 // use crate::typical::*;
-// use crate::ui::layout::*;
-use bevy::prelude::*;
+use bevy::prelude::{App, Component, Plugin, ResMut, Resource};
 
-pub mod f64 {
-    pub const SECONDS_PER_MINUTE: f64 = 60.0;
-    pub const SECONDS_PER_HOUR: f64 = 3600.0;
-    pub const SECONDS_PER_DAY: f64 = 86400.0;
-}
-pub mod u32 {
-    pub const SECONDS_PER_MINUTE: u32 = 60;
-    pub const SECONDS_PER_HOUR: u32 = 3600;
-    pub const SECONDS_PER_DAY: u32 = 86400;
-}
+// at 10 ticks / second, a u32 is enough for 13 years worth of game time.
+// use u32 for everything to avoid casting.
+
+pub const TICKS_PER_SECOND: u32 = 10;
+pub const SECONDS_PER_MINUTE: u32 = 60;
+pub const SECONDS_PER_HOUR: u32 = 3600;
+pub const SECONDS_PER_DAY: u32 = 86_400;
+pub const SECONDS_PER_WEEK: u32 = 604_800;
+pub const SECONDS_PER_YEAR: u32 = 31_536_000;
 
 #[derive(Default)]
 pub struct TimePlugin;
@@ -24,114 +23,138 @@ impl Plugin for TimePlugin {
     }
 }
 
-pub struct Seconds;
-
-impl Seconds {
-    pub fn to_minutes(seconds: f64) -> f64 {
-        seconds / f64::SECONDS_PER_MINUTE
-    }
-
-    pub fn to_hours(seconds: f64) -> f64 {
-        seconds / f64::SECONDS_PER_HOUR
-    }
-
-    pub fn to_days(seconds: f64) -> f64 {
-        seconds / f64::SECONDS_PER_DAY
-    }
-
-    pub fn to_duration(seconds: f64) -> Duration {
-        let days: f64 = Seconds::to_days(seconds);
-        let hours: f64 = Seconds::to_hours(seconds);
-        let minutes: f64 = Seconds::to_minutes(seconds);
-
-        let seconds_rem = seconds
-            - days * f64::SECONDS_PER_DAY
-            - hours * f64::SECONDS_PER_HOUR
-            - minutes * f64::SECONDS_PER_MINUTE;
-
-        Duration {
-            days: days as u32,
-            hours: hours as u32,
-            minutes: minutes as u32,
-            seconds: seconds_rem,
-        }
-    }
+#[derive(Component, Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
+pub enum Duration {
+    Ticks(u32), // 100ms
+    Seconds(u32),
+    Minutes(u32),
+    Hours(u32),
+    Days(u32),
+    Weeks(u32),
+    Years(u32),
 }
-
-#[derive(Resource, Debug)]
-pub struct Clock {
-    seconds: f64,
-    // paused: bool,
-    current_frame: u32,
-    current_turn: u32,
-}
-
-impl Default for Clock {
+impl Default for Duration {
     fn default() -> Self {
-        Clock {
-            seconds: 0.,
-            // paused: true,
-            current_frame: 0,
-            current_turn: 0,
+        Duration::Ticks(0)
+    }
+}
+
+impl Duration {
+    pub fn as_ticks(&self) -> Duration {
+        Duration::Ticks(u32::from(*self))
+    }
+    pub fn as_seconds(&self) -> Duration {
+        Duration::Seconds(u32::from(*self) / TICKS_PER_SECOND)
+    }
+    pub fn as_minutes(&self) -> Duration {
+        Duration::Minutes(u32::from(*self) / TICKS_PER_SECOND / SECONDS_PER_MINUTE)
+    }
+    pub fn as_hours(&self) -> Duration {
+        Duration::Hours(u32::from(*self) / TICKS_PER_SECOND / SECONDS_PER_HOUR)
+    }
+    pub fn as_days(&self) -> Duration {
+        Duration::Days(u32::from(*self) / TICKS_PER_SECOND / SECONDS_PER_DAY)
+    }
+    pub fn as_weeks(&self) -> Duration {
+        Duration::Weeks(u32::from(*self) / TICKS_PER_SECOND / SECONDS_PER_WEEK)
+    }
+    pub fn as_years(&self) -> Duration {
+        Duration::Years(u32::from(*self) / TICKS_PER_SECOND / SECONDS_PER_YEAR)
+    }
+}
+
+impl From<Duration> for u32 {
+    fn from(duration: Duration) -> u32 {
+        match duration {
+            Duration::Ticks(ticks) => ticks,
+            Duration::Seconds(seconds) => seconds * TICKS_PER_SECOND,
+            Duration::Minutes(minutes) => minutes * SECONDS_PER_MINUTE * TICKS_PER_SECOND,
+            Duration::Hours(hours) => hours * SECONDS_PER_HOUR * TICKS_PER_SECOND,
+            Duration::Days(days) => days * SECONDS_PER_DAY * TICKS_PER_SECOND,
+            Duration::Weeks(weeks) => weeks * SECONDS_PER_WEEK * TICKS_PER_SECOND,
+            Duration::Years(years) => years * SECONDS_PER_YEAR * TICKS_PER_SECOND,
         }
     }
+}
+
+impl From<u32> for Duration {
+    fn from(tick: u32) -> Duration {
+        Duration::Ticks(tick)
+    }
+}
+
+#[derive(Resource, Debug, Default)]
+pub struct Clock {
+    tick: u32,
+    second: u32,
+    minute: u32,
+    hour: u32,
+    weekday: u32,
+    week: u32,
+    day_of_year: u32,
+    year: u32,
 }
 
 impl Clock {
-    const SECONDS_PER_TURN: f64 = 0.1;
-    const ONE_SECOND: f64 = 1.0;
-
-    pub fn next_turn(&mut self) {
-        self.seconds += Self::SECONDS_PER_TURN;
-        self.current_turn += 1;
+    pub fn tock(&mut self) {
+        self.tick = self.tick.checked_add(1).unwrap_or(0);
+        match self.tick {
+            _ if self.tick % (SECONDS_PER_YEAR * TICKS_PER_SECOND) == 0 => {
+                self.year += 1;
+                self.week = 0;
+                self.weekday = 0;
+                self.day_of_year = 0;
+                self.hour = 0;
+                self.minute = 0;
+                self.second = 0;
+                // event
+            }
+            _ if self.tick % (SECONDS_PER_WEEK * TICKS_PER_SECOND) == 0 => {
+                self.week += 1;
+                self.weekday = 0;
+                self.hour = 0;
+                self.minute = 0;
+                self.second = 0;
+                // event
+            }
+            _ if self.tick % (SECONDS_PER_DAY * TICKS_PER_SECOND) == 0 => {
+                self.weekday += 1;
+                self.day_of_year += 1;
+                self.hour = 0;
+                self.minute = 0;
+                self.second = 0;
+                // event
+            }
+            _ if self.tick % (SECONDS_PER_HOUR * TICKS_PER_SECOND) == 0 => {
+                self.hour += 1;
+                self.minute = 0;
+                self.second = 0;
+                // event
+            }
+            _ if self.tick % (SECONDS_PER_MINUTE * TICKS_PER_SECOND) == 0 => {
+                self.minute += 1;
+                self.second = 0;
+                // event
+            }
+            _ if self.tick % TICKS_PER_SECOND == 0 => {
+                self.second += 1;
+                dbg!("second", self);
+                // event
+            }
+            _ => (),
+        }
     }
 
-    pub fn next_second(&mut self) {
-        self.seconds += Self::ONE_SECOND;
-        self.current_turn += 10;
-    }
-
-    pub fn advance_turns(&mut self, turns: u32) {
-        self.current_turn = turns;
-        self.seconds += turns as f64 * Self::SECONDS_PER_TURN;
-    }
-
-    pub fn duration(&self) -> Duration {
-        Seconds::to_duration(self.seconds)
-    }
-
-    pub fn minutes(&self) -> f64 {
-        Seconds::to_minutes(self.seconds)
-    }
-
-    pub fn hours(&self) -> f64 {
-        Seconds::to_hours(self.seconds)
-    }
-
-    pub fn days(&self) -> f64 {
-        Seconds::to_days(self.seconds)
-    }
-
-    pub fn frame_tick(&mut self) {
-        trace!("tick, tock ... {:?})", self.current_frame);
-        self.current_frame = self.current_frame.checked_add(1).unwrap_or(0);
-    }
-
-    pub fn current_turn(&self) -> u32 {
-        self.current_turn
-    }
-
-    pub fn current_frame(&self) -> u32 {
-        self.current_frame
+    pub fn advance_by(&mut self, duration: Duration) {
+        for _ in 0..u32::from(duration) {
+            self.tock();
+        }
     }
 
     pub fn display(&self) -> String {
         format!(
             "Time: {:?}:{:?}:{:?} :: Turn :: [{:?}]\n",
-            self.hours(),
-            self.minutes(),
-            self.seconds,
-            self.current_turn,
+            self.hour, self.minute, self.second, self.tick,
         )
     }
 }
@@ -142,7 +165,7 @@ pub fn clock_frame_tick(
     // asset_server: Res<AssetServer>,
     // mut ui_query: Query<(&mut Text, &UIConsole)>,
 ) {
-    clock.frame_tick();
+    clock.tock();
 
     // if clock.current_frame % 100 == 0 {
     //     if let Ok((mut text, _console)) = ui_query.get_single_mut() {
@@ -169,10 +192,10 @@ pub fn clock_frame_tick(
 // timers
 // events
 
-#[allow(dead_code)]
-pub struct Duration {
-    days: u32,
-    hours: u32,
-    minutes: u32,
-    seconds: f64,
-}
+// pub struct DurationModulo {
+//     pub days: u32,
+//     pub hours: u32,
+//     pub minutes: u32,
+//     pub seconds: u32,
+//     pub milliseconds: u32,
+// }

@@ -1,5 +1,6 @@
-use crate::anatomy::humanoid::Location;
-use crate::anatomy::*;
+// use crate::anatomy::*;
+use crate::creature::anatomy::humanoid::Location;
+use crate::creature::anatomy::Side;
 use bevy::prelude::*;
 use std::{fmt::Debug, hash::Hash};
 

@@ -1,13 +1,5 @@
-use bevy::utils::HashMap;
-use std::{
-    fmt::Debug,
-    hash::Hash,
-    ops::{Index, IndexMut},
-};
-
-use crate::Cell;
-use bevy::prelude::{Component, Entity};
-// https://github.com/tomuxmon/bevy_roguelike/blob/main/bevy_inventory/src/lib.rs#L75
+use bevy::prelude::Component;
+use std::{fmt::Debug, hash::Hash};
 
 // use crate::typical::*;
 
@@ -122,7 +114,7 @@ pub enum System {
 */
 pub mod humanoid {
     use super::Side;
-    use bevy::prelude::{Component, Entity};
+    use bevy::prelude::Component;
 
     #[derive(Component, Eq, PartialEq, Copy, Clone, Debug, PartialOrd, Ord, Hash)]
     pub enum Area {
