@@ -1,201 +1,181 @@
-// use std::fmt::{format, Arguments};h
-use std::convert::From;
-
-// use crate::typical::*;
 use bevy::prelude::{App, Component, Plugin, ResMut, Resource};
+use std::convert::From;
 
 // at 10 ticks / second, a u32 is enough for 13 years worth of game time.
 // use u32 for everything to avoid casting.
-
-pub const TICKS_PER_SECOND: u32 = 10;
-pub const SECONDS_PER_MINUTE: u32 = 60;
-pub const SECONDS_PER_HOUR: u32 = 3600;
-pub const SECONDS_PER_DAY: u32 = 86_400;
-pub const SECONDS_PER_WEEK: u32 = 604_800;
-pub const SECONDS_PER_YEAR: u32 = 31_536_000;
 
 #[derive(Default)]
 pub struct TimePlugin;
 
 impl Plugin for TimePlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(Clock::default());
+        app.insert_resource(TurnTime(0));
     }
 }
 
-#[derive(Component, Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
-pub enum Duration {
-    Ticks(u32), // 100ms
-    Seconds(u32),
-    Minutes(u32),
-    Hours(u32),
-    Days(u32),
-    Weeks(u32),
-    Years(u32),
+pub fn advance_global_tick(mut time: ResMut<TurnTime>) {
+    time.tick();
 }
-impl Default for Duration {
-    fn default() -> Self {
-        Duration::Ticks(0)
-    }
+
+// util
+
+#[derive(Copy, Clone, Debug, Component, Eq, PartialEq, Ord, PartialOrd)]
+pub enum Unit {
+    Tick = 1,
+    Second = 10,
+    Minute = 600,
+    Hour = 3600,
+    Day = 864_000,
+    Week = 6_048_000,
+    Year = 315_360_000,
+}
+
+#[derive(Copy, Clone, Debug, Component, Eq)]
+pub struct Duration {
+    pub unit: Unit,
+    pub count: u32,
 }
 
 impl Duration {
-    pub fn as_ticks(&self) -> Duration {
-        Duration::Ticks(u32::from(*self))
-    }
-    pub fn as_seconds(&self) -> Duration {
-        Duration::Seconds(u32::from(*self) / TICKS_PER_SECOND)
-    }
-    pub fn as_minutes(&self) -> Duration {
-        Duration::Minutes(u32::from(*self) / TICKS_PER_SECOND / SECONDS_PER_MINUTE)
-    }
-    pub fn as_hours(&self) -> Duration {
-        Duration::Hours(u32::from(*self) / TICKS_PER_SECOND / SECONDS_PER_HOUR)
-    }
-    pub fn as_days(&self) -> Duration {
-        Duration::Days(u32::from(*self) / TICKS_PER_SECOND / SECONDS_PER_DAY)
-    }
-    pub fn as_weeks(&self) -> Duration {
-        Duration::Weeks(u32::from(*self) / TICKS_PER_SECOND / SECONDS_PER_WEEK)
-    }
-    pub fn as_years(&self) -> Duration {
-        Duration::Years(u32::from(*self) / TICKS_PER_SECOND / SECONDS_PER_YEAR)
+    pub fn as_u32(&self) -> u32 {
+        Into::<u32>::into(*self)
     }
 }
 
-impl From<Duration> for u32 {
-    fn from(duration: Duration) -> u32 {
-        match duration {
-            Duration::Ticks(ticks) => ticks,
-            Duration::Seconds(seconds) => seconds * TICKS_PER_SECOND,
-            Duration::Minutes(minutes) => minutes * SECONDS_PER_MINUTE * TICKS_PER_SECOND,
-            Duration::Hours(hours) => hours * SECONDS_PER_HOUR * TICKS_PER_SECOND,
-            Duration::Days(days) => days * SECONDS_PER_DAY * TICKS_PER_SECOND,
-            Duration::Weeks(weeks) => weeks * SECONDS_PER_WEEK * TICKS_PER_SECOND,
-            Duration::Years(years) => years * SECONDS_PER_YEAR * TICKS_PER_SECOND,
-        }
+impl PartialEq for Duration {
+    fn eq(&self, other: &Duration) -> bool {
+        // &(Into::<u32>::into(*self) as u32) == &(Into::<u32>::into(*other) as u32)
+        self.as_u32().eq(&other.as_u32())
+    }
+}
+impl PartialOrd for Duration {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.as_u32().partial_cmp(&other.as_u32())
     }
 }
 
-impl From<u32> for Duration {
-    fn from(tick: u32) -> Duration {
-        Duration::Ticks(tick)
+impl Ord for Duration {
+    fn cmp(&self, other: &Duration) -> std::cmp::Ordering {
+        self.as_u32().cmp(&other.as_u32())
     }
 }
 
-#[derive(Resource, Debug, Default)]
-pub struct Clock {
-    tick: u32,
-    second: u32,
-    minute: u32,
-    hour: u32,
-    weekday: u32,
-    week: u32,
-    day_of_year: u32,
-    year: u32,
+// units of time - conversions to u32 (tick)
+impl Unit {
+    pub fn seconds(seconds: u32) -> u32 {
+        Unit::Second as u32 * seconds
+    }
+
+    pub fn minutes(minutes: u32) -> u32 {
+        Unit::Minute as u32 * minutes
+    }
+
+    pub fn hours(hours: u32) -> u32 {
+        Unit::Hour as u32 * hours
+    }
+
+    pub fn days(days: u32) -> u32 {
+        Unit::Day as u32 * days
+    }
+
+    pub fn weeks(weeks: u32) -> u32 {
+        Unit::Week as u32 * weeks
+    }
+
+    pub fn years(years: u32) -> u32 {
+        Unit::Year as u32 * years
+    }
 }
 
-impl Clock {
-    pub fn tock(&mut self) {
-        self.tick = self.tick.checked_add(1).unwrap_or(0);
-        match self.tick {
-            _ if self.tick % (SECONDS_PER_YEAR * TICKS_PER_SECOND) == 0 => {
-                self.year += 1;
-                self.week = 0;
-                self.weekday = 0;
-                self.day_of_year = 0;
-                self.hour = 0;
-                self.minute = 0;
-                self.second = 0;
-                // event
-            }
-            _ if self.tick % (SECONDS_PER_WEEK * TICKS_PER_SECOND) == 0 => {
-                self.week += 1;
-                self.weekday = 0;
-                self.hour = 0;
-                self.minute = 0;
-                self.second = 0;
-                // event
-            }
-            _ if self.tick % (SECONDS_PER_DAY * TICKS_PER_SECOND) == 0 => {
-                self.weekday += 1;
-                self.day_of_year += 1;
-                self.hour = 0;
-                self.minute = 0;
-                self.second = 0;
-                // event
-            }
-            _ if self.tick % (SECONDS_PER_HOUR * TICKS_PER_SECOND) == 0 => {
-                self.hour += 1;
-                self.minute = 0;
-                self.second = 0;
-                // event
-            }
-            _ if self.tick % (SECONDS_PER_MINUTE * TICKS_PER_SECOND) == 0 => {
-                self.minute += 1;
-                self.second = 0;
-                // event
-            }
-            _ if self.tick % TICKS_PER_SECOND == 0 => {
-                self.second += 1;
-                dbg!("second", self);
-                // event
-            }
-            _ => (),
-        }
+#[derive(Resource, Component, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Clone, Copy)]
+pub struct TurnTime(u32);
+
+impl TurnTime {
+    pub fn as_clock(&self) -> Clock {
+        Clock::new(*self)
+    }
+
+    pub fn tick(&mut self) {
+        self.advance(1)
+    }
+
+    pub fn advance(&mut self, t: u32) {
+        self.0 = self.0.checked_add(t).unwrap_or(0);
     }
 
     pub fn advance_by(&mut self, duration: Duration) {
-        for _ in 0..u32::from(duration) {
-            self.tock();
+        self.advance(duration.into());
+    }
+
+    pub fn add(&self, other: u32) -> u32 {
+        self.0 + other
+    }
+}
+
+impl From<u32> for TurnTime {
+    fn from(tick: u32) -> TurnTime {
+        TurnTime(tick)
+    }
+}
+
+impl From<TurnTime> for u32 {
+    fn from(time: TurnTime) -> u32 {
+        time.0
+    }
+}
+impl From<Duration> for u32 {
+    fn from(duration: Duration) -> u32 {
+        duration.unit as u32 * duration.count
+    }
+}
+
+#[derive(Resource, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Clone, Copy)]
+pub struct Clock {
+    time: TurnTime,
+
+    year: u32,
+    day_of_year: u32,
+    week: u32,
+    weekday: u32,
+    hour: u32,
+    minute: u32,
+    second: u32,
+    tick: u32, // since last whole second
+}
+
+impl Clock {
+    pub fn new(time: TurnTime) -> Clock {
+        let mut tick = time.0;
+
+        let year = tick / Unit::Year as u32;
+        tick -= year * Unit::Year as u32;
+        let day_of_year = tick / Unit::Day as u32;
+
+        let week = tick / Unit::Week as u32;
+        tick -= week * Unit::Week as u32;
+
+        let weekday = tick / Unit::Day as u32;
+        tick -= weekday * Unit::Day as u32;
+
+        let hour = tick / Unit::Hour as u32;
+        tick -= hour * Unit::Hour as u32;
+
+        let minute = tick / Unit::Minute as u32;
+        tick -= minute * Unit::Minute as u32;
+
+        let second = tick / Unit::Second as u32;
+        tick -= second * Unit::Second as u32;
+
+        Clock {
+            time: TurnTime(tick),
+            year,
+            day_of_year,
+            week,
+            weekday,
+            hour,
+            minute,
+            second,
+            tick,
         }
     }
-
-    pub fn display(&self) -> String {
-        format!(
-            "Time: {:?}:{:?}:{:?} :: Turn :: [{:?}]\n",
-            self.hour, self.minute, self.second, self.tick,
-        )
-    }
 }
-
-pub fn clock_frame_tick(
-    mut clock: ResMut<Clock>,
-    // commands: Commands,
-    // asset_server: Res<AssetServer>,
-    // mut ui_query: Query<(&mut Text, &UIConsole)>,
-) {
-    clock.tock();
-
-    // if clock.current_frame % 100 == 0 {
-    //     if let Ok((mut text, _console)) = ui_query.get_single_mut() {
-    //         text.sections.push(mk_console_time_text_section(
-    //             clock.as_ref(),
-    //             asset_server.load("font/BigBlueTerminalPlus.ttf"),
-    //         ));
-    //     }
-    // }
-}
-
-// fn mk_console_time_text_section(clock: &Clock, font: Handle<Font>) -> TextSection {
-//     // update something
-//     let text_style = TextStyle {
-//         font,
-//         font_size: 11.0,
-//         color: Color::rgb(0.9, 0.9, 0.9),
-//     };
-//     let mut section = TextSection::from_style(text_style);
-//     section.value = clock.display();
-//     section
-// }
-
-// timers
-// events
-
-// pub struct DurationModulo {
-//     pub days: u32,
-//     pub hours: u32,
-//     pub minutes: u32,
-//     pub seconds: u32,
-//     pub milliseconds: u32,
-// }

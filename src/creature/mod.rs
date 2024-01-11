@@ -128,15 +128,6 @@ pub enum Size {
     Elephant,  //
     Leviathan, // expressed in map tiles
 }
-// Actions
-//
-#[derive(Component, Debug, Clone, Default)]
-#[allow(dead_code)]
-pub struct ActionList {
-    pub current: (),
-    pub queue: (),
-    // behaviour_tree: Option<()>,
-}
 #[derive(Component, Debug, Clone, Default)]
 pub struct NeedList {
     pub hunger: u8,

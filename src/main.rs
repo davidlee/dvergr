@@ -1,3 +1,4 @@
+pub mod action;
 pub mod board;
 pub mod combat;
 pub mod creature;
@@ -27,9 +28,10 @@ pub mod typical {
     pub use crate::creature::anatomy::{ Side, Gender};
     pub use crate::creature::anatomy::humanoid::Location;
     pub use crate::events::*;
+    pub use crate::action::*;
     pub use crate::player::{Player, PlayerRes};
     pub use crate::state::{AppInitEvent, AppState};
-    pub use crate::time::Clock;
+    pub use crate::time::{Clock, TurnTime, Duration};
     pub use bevy::math::{IVec2, IVec3, UVec2, UVec3};
     pub use bevy::prelude::{
         default, on_event, state_exists, state_exists_and_equals, App, BuildChildren, Bundle,
@@ -86,18 +88,22 @@ fn main() {
                     filter: "wgpu=warn,bevy_ecs=info".to_string(),
                 }),
         )
+        // PLUGINS
+        .add_plugins(FpsCounterPlugin)
+        .add_plugins(RngPlugin::default())
+        .add_plugins(time::TimePlugin)
+        // RESOURCES
         .insert_resource(ClearColor(Color::BLACK))
         .insert_resource(Msaa::default())
         .init_resource::<Board>()
+        // STATE
         .add_state::<AppState>()
+        // EVENTS
         .add_event::<player::movement::DirectionalInput>()
         .add_event::<state::AppInitEvent>()
         .add_event::<player::SpawnPlayerEvent>()
         .add_event::<events::begin_action::UpdateLocus>()
-        // plugins
-        .add_plugins(FpsCounterPlugin)
-        .add_plugins(RngPlugin::default())
-        .add_plugins(time::TimePlugin)
+        // SYSTEMS
         .add_systems(
             Startup,
             (
@@ -145,9 +151,6 @@ fn main() {
         .add_systems(Update, graphics::move_anim::move_head)
         .add_systems(Update, bevy::window::close_on_esc)
         .add_systems(PostUpdate, state::handle_app_init_event) // TODO REMOVE AFTER INIT COMPLETE
-        .add_systems(PostUpdate, time::clock_frame_tick)
-        // EVENTS
-        // ok, ready?
         .run();
 }
 
