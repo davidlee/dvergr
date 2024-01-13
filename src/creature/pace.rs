@@ -1,25 +1,11 @@
 use crate::typical::*;
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
-pub enum PaceId {
-    Immobile,
-    Interminable,
-    Slow,
-    Careful,
-    Deliberate,
-    #[default]
-    Relaxed,
-    Brisk,
-    Rapid,
-    Reckless,
-}
-
-#[derive(Component, Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
-pub enum Structure {
-    // structure, in fencing lingo : distance / range?
-    #[default]
-    Normal,
-}
+// #[derive(Component, Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
+// pub enum Structure {
+//     // structure, in fencing lingo : distance / range?
+//     #[default]
+//     Normal,
+// }
 
 #[derive(Component, Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Measure {
@@ -39,20 +25,36 @@ pub enum Approach {
     // the task equivalent
     Painstaking,
     Careful,
+    Focused,
     #[default]
     Casual,
     Hurried,
     Desperate,
 }
 
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
+pub enum PaceId {
+    Immobile,
+    Interminable, // crawl, listen / spot traps AND sneak
+    Slow,         // listen + spot traps
+    Cautious,     // sneak; move carefully over trecherous terrain
+    Deliberate,   //
+    #[default]
+    Relaxed, // friends walking and socialising
+    Brisk,        // very fast walk
+    Rapid,        // jogging
+    Running,      // running
+    Reckless,     // sprinting
+}
+
 pub use PaceId::*;
 
-#[derive(Component, Debug, Clone, Copy)]
+#[derive(Component, Debug, Clone, Copy, PartialEq, Eq, Ord, PartialOrd)]
 #[allow(dead_code)]
 pub struct Pace {
     id: PaceId,
     name: &'static str,
-    move_time_mult: f64,
+    ticks_per_cell: u32,
     sneak_modifier: i16,
 }
 
@@ -71,55 +73,55 @@ impl Pace {
 const PACE: [Pace; 9] = [
     Pace {
         id: Immobile,
-        move_time_mult: f64::NAN, // careful yo
-        sneak_modifier: 10,
+        ticks_per_cell: u32::MAX,
+        sneak_modifier: 12,
         name: "immobile",
     },
     Pace {
         id: Interminable,
-        move_time_mult: 8.0,
+        ticks_per_cell: 80,
         sneak_modifier: 6,
         name: "interminable",
     },
     Pace {
         id: Slow,
-        move_time_mult: 4.0,
+        ticks_per_cell: 40,
         sneak_modifier: 4,
         name: "slow",
     },
     Pace {
-        id: Careful,
-        move_time_mult: 2.0,
+        id: Cautious,
+        ticks_per_cell: 20,
         sneak_modifier: 2,
-        name: "careful",
+        name: "cautious",
     },
     Pace {
         id: Deliberate,
-        move_time_mult: 1.0,
+        ticks_per_cell: 10,
         sneak_modifier: 1,
         name: "deliberate",
     },
     Pace {
         id: Relaxed,
-        move_time_mult: 0.8,
+        ticks_per_cell: 8,
         sneak_modifier: 0,
         name: "relaxed",
     },
     Pace {
         id: Brisk,
-        move_time_mult: 0.6,
+        ticks_per_cell: 6,
         sneak_modifier: -2,
         name: "brisk",
     },
     Pace {
         id: Rapid,
-        move_time_mult: 8.0,
+        ticks_per_cell: 3,
         sneak_modifier: -4,
         name: "rapid",
     },
     Pace {
         id: Reckless,
-        move_time_mult: 8.0,
+        ticks_per_cell: 1, // no resolution to go faster without double-moves
         sneak_modifier: -8,
         name: "reckless",
     },
@@ -127,6 +129,6 @@ const PACE: [Pace; 9] = [
 
 #[test]
 fn pace_index() {
-    assert_eq!(Pace::get(PaceId::Careful).id, PaceId::Careful);
-    assert_eq!(PACE[PaceId::Careful as usize].id, PaceId::Careful);
+    assert_eq!(Pace::get(PaceId::Cautious).id, PaceId::Cautious);
+    assert_eq!(PACE[PaceId::Cautious as usize].id, PaceId::Cautious);
 }

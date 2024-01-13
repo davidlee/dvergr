@@ -164,13 +164,71 @@ pub enum Stance {
 pub struct Age(pub u16);
 
 #[derive(Component, Debug, Clone, Default)]
-pub struct SkillList {}
+pub struct SkillList {
+    survival: u8,
+    alcoholism: u8,
+    dagger: u8,
+    sword: u8,
+    listen: u8,
+    notice: u8,
+    sneak: u8,
+    ambush: u8,
+    climb: u8,
+    athletics: u8,
+    dueling: u8,
+    melee: u8,
+    daggers: u8,
+    axes: u8,
+    swords: u8,
+    staves: u8,
+    greatsword: u8,
+    boxing: u8,
+    kick: u8,
+    grappling: u8,
+    bow: u8,
+    sling: u8,
+    javelin: u8,
+    fencing: u8,
+    shield: u8,
+    twofisted: u8,
+    marksman: u8,
+    pistol: u8,
+    herbalism: u8,
+    mycology: u8,
+    zoology: u8,
+    cooking: u8,
+    husbandry: u8,
+    alchemy: u8,
+    poisons: u8,
+    apothecary: u8,
+    diagnosis: u8,
+    first_aid: u8,
+    surgery: u8,
+    mining: u8,
+    smithing: u8,
+    gemcutting: u8,
+    locks: u8,
+    mechanics: u8,
+    trapping: u8,
+    carpentry: u8,
+    leatherwork: u8,
+    masonry: u8,
+    attunement: u8,
+    ritual: u8,
+    divination: u8,
+    summoning: u8,
+    enchantment: u8,
+    bargain: u8,
+    law: u8,
+    runes: u8,
+    trance: u8,
+}
 
 #[derive(Component, Debug, Clone, Default)]
 pub struct AbilityList {}
 
-#[derive(Component, Debug, Clone, Default)]
-pub struct SpellList {}
+// #[derive(Component, Debug, Clone, Default)]
+// pub struct SpellList {}
 
 // grapple -> state machine?
 

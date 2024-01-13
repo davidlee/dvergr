@@ -31,6 +31,7 @@ pub fn validate_directional_input(
                                     velocity: locus.velocity,
                                     stance: locus.stance,
                                     weight: locus.weight,
+                                    pace: Pace::default(),
                                 },
                                 from: locus.position.clone(),
                             };

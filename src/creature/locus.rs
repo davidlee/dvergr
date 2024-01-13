@@ -11,6 +11,7 @@ pub struct Locus {
     pub direction: Direction,
     pub facing: Direction,
     pub stance: Stance,
+    pub pace: Pace,
     pub weight: f64,
 }
 
@@ -32,6 +33,7 @@ impl Default for Locus {
             direction: Direction::North,
             facing: Direction::North,
             stance: Stance::Standing,
+            pace: Pace::default(),
             weight: 80.0,
         }
     }

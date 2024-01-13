@@ -33,7 +33,7 @@ pub enum Unit {
 #[derive(Copy, Clone, Debug, Component, Eq)]
 pub struct Duration {
     pub unit: Unit,
-    pub count: u32,
+    pub value: u32,
 }
 
 impl Duration {
@@ -125,7 +125,7 @@ impl From<TurnTime> for u32 {
 }
 impl From<Duration> for u32 {
     fn from(duration: Duration) -> u32 {
-        duration.unit as u32 * duration.count
+        duration.unit as u32 * duration.value
     }
 }
 
