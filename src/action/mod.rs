@@ -8,6 +8,12 @@ pub use verb::Verb;
 // Actions
 //
 
+#[derive(Component, Debug, Clone, Default)]
+pub struct ActionList {
+    pub current_action: Option<Command>,
+    pub queued_commands: Vec<Command>,
+}
+
 #[derive(Event, Debug, Eq, PartialEq, Clone)]
 pub struct Meta {
     agent: Entity,

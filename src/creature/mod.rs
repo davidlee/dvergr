@@ -8,6 +8,7 @@ pub mod locus;
 pub mod movement;
 pub mod pace;
 pub mod phenotype;
+
 pub use character::*;
 pub use pace::*;
 
