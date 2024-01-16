@@ -63,6 +63,7 @@ use bevy::utils::tracing::Level;
 // use board::generator;
 use graphics::player_avatar::{PlayerAvatar, PlayerAvatarRes};
 use player::SpawnPlayerEvent;
+use state::GameState;
 use typical::*;
 
 fn main() {
@@ -98,6 +99,7 @@ fn main() {
         .init_resource::<Board>()
         // STATE
         .add_state::<AppState>()
+        .add_state::<GameState>()
         // EVENTS
         .add_event::<player::movement::DirectionalInput>()
         .add_event::<state::AppInitEvent>()
@@ -119,29 +121,19 @@ fn main() {
          // MOVEMENT
         .add_systems(
             PreUpdate,
-            input::keybindings.run_if(state_exists_and_equals(AppState::Ready)),
-        )
-        .add_systems(
-            PreUpdate,
-            (player::movement::validate_directional_input.after(input::keybindings))
-                .run_if(state_exists_and_equals(AppState::Ready)),
+            (input::keybindings, player::movement::validate_directional_input).chain()
+                .run_if(state_exists_and_equals(GameState::PlayerInput)),
         )
         .add_systems(
             PreUpdate,
             (creature::movement::process_movement
                 .after(player::movement::validate_directional_input))
-            .run_if(state_exists_and_equals(AppState::Ready)),
+            .run_if(state_exists_and_equals(GameState::Update)),
         )
         .add_systems(
             Update,
-            graphics::move_anim::add_changed_creature_mob_move_anim
-                .run_if(state_exists_and_equals(AppState::Ready)),
-        )
-        .add_systems(
-            Update,
-            (graphics::move_anim::player_movement
-                .after(graphics::move_anim::add_changed_creature_mob_move_anim))
-            .run_if(state_exists_and_equals(AppState::Ready)),
+            (graphics::move_anim::add_changed_creature_mob_move_anim, graphics::move_anim::player_movement).chain()
+                .run_if(state_exists_and_equals(GameState::Update)),
         )
         .add_systems(
             Update,
@@ -150,7 +142,7 @@ fn main() {
         )
         .add_systems(Update, graphics::move_anim::move_head)
         .add_systems(Update, bevy::window::close_on_esc)
-        .add_systems(PostUpdate, state::handle_app_init_event) // TODO REMOVE AFTER INIT COMPLETE
+        .add_systems(PostUpdate, state::handle_app_init_event.run_if(on_event::<AppInitEvent>())) 
         .run();
 }
 
@@ -162,14 +154,6 @@ pub struct TorchMarker;
 
 #[derive(Component, Debug)]
 pub struct TorchSecondaryLightMarker;
-
-// TODO organise map contents inside containers?
-
-// #[derive(Component, Debug)]
-// pub struct MapCubesMarker;
-
-// #[derive(Component, Debug)]
-// pub struct MapMobsMarker;
 
 #[derive(Component, Debug)]
 pub struct CameraMarker;
@@ -296,18 +280,6 @@ fn spawn_voxel_map(
                         },
                     ))
                     .with_children(|player| {
-                        // lights ...
-                        // player.spawn((PointLightBundle {
-                        //     point_light: PointLight {
-                        //         intensity: 950.,
-                        //         range: 120.,
-                        //         shadows_enabled: true,
-                        //         color: Color::rgba_linear(0.8, 0.3, 0.05, 1.0),
-                        //         ..default()
-                        //     },
-                        //     transform: Transform::from_xyz(0., 0., 0.25),
-                        //     ..default()
-                        
                         player.spawn((SpotLightBundle {
                             spot_light: SpotLight {
                                 intensity: 950.,
@@ -318,7 +290,6 @@ fn spawn_voxel_map(
                                 inner_angle: 0.2,
                                 ..default()
                             },
-                            // transform: Transform::from_xyz(0., 0., 0.25).looking_at(Vec3::new(0.0, 1.0, 0.), Vec3::splat(0.)),
                             transform: Transform::from_xyz(0., 0., 0.25).looking_at(Vec3::new(0., 0., 0.), Vec3::new(0., 0., 0.)),
                             ..default()
                         }, TorchMarker)).with_children( |torch| { 

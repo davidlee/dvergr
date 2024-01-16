@@ -39,7 +39,6 @@ impl Default for PlayerBundle {
                     ..default()
                 },
                 pace: Pace::default(),
-                age: Age(22),
                 species: Species::Dwarf,
                 ..default()
             },

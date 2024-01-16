@@ -20,7 +20,6 @@ pub enum AppState {
 #[derive(Debug, Event)]
 pub enum AppInitEvent {
     SetAppState(AppState),
-    SetAppStateDeferred(AppState, usize),
 }
 
 pub fn handle_app_init_event(
@@ -29,21 +28,18 @@ pub fn handle_app_init_event(
     mut next_state: ResMut<NextState<AppState>>,
 ) {
     for ev in reader.read() {
-        match ev {
-            AppInitEvent::SetAppState(ns) => {
-                let current_state = state.get();
-                warn!("State Transition: {:?} --> {:?}", current_state, ns);
-                next_state.set(*ns);
-            }
-            AppInitEvent::SetAppStateDeferred(_ns, _delay) => (),
-        }
+        let current_state = state.get();
+        let AppInitEvent::SetAppState(new_state) = ev;
+        warn!("State Transition: {:?} --> {:?}", current_state, new_state);
+        next_state.set(*new_state);
     }
 }
 
-// pub fn set_state_spawn_player_avatar(
-//     mut ev_writer: EventWriter<AppInitEvent>,
-//     avatar_ref: Res<PlayerAvatarRes>,
-// ) {
-//     // dbg(avatar_ref.entity);
-//     ev_writer.send(AppInitEvent::SetAppState(AppState::SpawnPlayerAvatar));
-// }
+#[derive(Clone, Debug, Default, Hash, Eq, States, PartialEq)]
+pub enum GameState {
+    #[default]
+    None,
+    PlayerInput,
+    Update,
+    // Animate,
+}

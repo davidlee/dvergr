@@ -7,7 +7,6 @@ pub mod condition;
 pub mod locus;
 pub mod movement;
 pub mod pace;
-pub mod phenotype;
 
 pub use character::*;
 pub use pace::*;
@@ -16,18 +15,15 @@ pub use attributes::*;
 pub use condition::*;
 pub use locus::*;
 pub use movement::*;
-pub use phenotype::*;
 
 #[allow(dead_code)]
 #[derive(Bundle, Debug, Clone)]
 pub struct CreatureBundle {
     pub creature: Creature,
     pub attributes: Attributes,
-    pub phenotype: Phenotype,
     pub species: Species,
     pub gender: Gender,
     pub needs: NeedList,
-    pub age: Age,
     pub size: CreatureSize,
     pub skills: SkillList,
     pub abilities: AbilityList,
@@ -37,13 +33,6 @@ pub struct CreatureBundle {
     pub approach: Approach,
     pub conditions: ConditionList,
     pub locus: Locus,
-    pub actions: ActionList,
-    // // age, disease, subspecies, careers, etc
-    // // a geriatric leprous veteran undead wood-elf pirate
-    // // a deranged adolescent amputee ex-slave wood sprite
-    // templates: (),
-    // gear: Equipment,
-    // traits: (),
 }
 
 impl Default for CreatureBundle {
@@ -51,11 +40,9 @@ impl Default for CreatureBundle {
         Self {
             creature: Creature::default(),
             attributes: Attributes::new(),
-            phenotype: Phenotype::default(),
             species: Species::Dwarf,
             gender: Gender::Male,
             needs: NeedList::default(),
-            age: Age(20),
             size: CreatureSize::default(),
             skills: SkillList::default(),
             abilities: AbilityList::default(),
@@ -65,7 +52,6 @@ impl Default for CreatureBundle {
             approach: Approach::default(),
             conditions: ConditionList::default(),
             locus: Locus::default(),
-            actions: ActionList::default(),
         }
     }
 }
@@ -84,7 +70,6 @@ impl CreatureBundle {
 pub struct Creature {
     dry_weight: f32, // kg
     height: i32,     // cm
-                     // age:
 }
 
 impl Default for Creature {
@@ -166,63 +151,62 @@ pub struct Age(pub u16);
 
 #[derive(Component, Debug, Clone, Default)]
 pub struct SkillList {
-    survival: u8,
-    alcoholism: u8,
-    dagger: u8,
-    sword: u8,
-    listen: u8,
-    notice: u8,
-    sneak: u8,
-    ambush: u8,
-    climb: u8,
-    athletics: u8,
-    dueling: u8,
-    melee: u8,
-    daggers: u8,
-    axes: u8,
-    swords: u8,
-    staves: u8,
-    greatsword: u8,
-    boxing: u8,
-    kick: u8,
-    grappling: u8,
-    bow: u8,
-    sling: u8,
-    javelin: u8,
-    fencing: u8,
-    shield: u8,
-    twofisted: u8,
-    marksman: u8,
-    pistol: u8,
-    herbalism: u8,
-    mycology: u8,
-    zoology: u8,
-    cooking: u8,
-    husbandry: u8,
-    alchemy: u8,
-    poisons: u8,
-    apothecary: u8,
-    diagnosis: u8,
-    first_aid: u8,
-    surgery: u8,
-    mining: u8,
-    smithing: u8,
-    gemcutting: u8,
-    locks: u8,
-    mechanics: u8,
-    trapping: u8,
-    carpentry: u8,
-    leatherwork: u8,
-    masonry: u8,
-    attunement: u8,
-    ritual: u8,
-    divination: u8,
-    summoning: u8,
-    enchantment: u8,
-    bargain: u8,
-    law: u8,
-    runes: u8,
-    trance: u8,
+    pub boxing: u8,
+    pub striking: u8,
+    pub grappling: u8,
+    pub dagger: u8,
+    pub sword: u8,
+    pub axe: u8,
+    pub staff: u8,
+    pub greatsword: u8,
+    pub bow: u8,
+    pub sling: u8,
+    pub javelin: u8,
+    pub marksman: u8,
+    pub pistol: u8,
+    pub dueling: u8,
+    pub melee: u8,
+    pub fencing: u8,
+    pub shield: u8,
+    pub two_weapon: u8,
+
+    pub listen: u8,
+    pub notice: u8,
+    pub sneak: u8,
+    pub ambush: u8,
+    pub climb: u8,
+    pub athletics: u8,
+    pub survival: u8,
+    pub alcoholism: u8,
+    pub herbalism: u8,
+    pub mycology: u8,
+    pub zoology: u8,
+    pub cooking: u8,
+    pub husbandry: u8,
+    pub alchemy: u8,
+    pub poisons: u8,
+    pub apothecary: u8,
+    pub diagnosis: u8,
+    pub first_aid: u8,
+    pub surgery: u8,
+    pub mining: u8,
+    pub smithing: u8,
+    pub carpentry: u8,
+    pub masonry: u8,
+    pub leatherwork: u8,
+    pub gemcutting: u8,
+    pub locks: u8,
+    pub mechanics: u8,
+    pub trapping: u8,
+    pub attunement: u8,
+    pub ritual: u8,
+    pub divination: u8,
+    pub summoning: u8,
+    pub enchantment: u8,
+    pub bargain: u8,
+    pub law: u8,
+    pub runes: u8,
+    pub trance: u8,
 }
 
 #[derive(Component, Debug, Clone, Default)]
