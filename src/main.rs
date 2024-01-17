@@ -15,24 +15,24 @@ pub mod inventory;
 // pub mod ui;
 
 pub mod typical {
-    pub use crate::material::*;
-    pub use crate::board::{
+    pub(crate) use crate::material::*;
+    pub(crate) use crate::board::{
         cell::{
-            Cell, CellFeature, CellFloorBundle, CellItems, CellWallBundle, Floor, Wall,
+            Cell, Floor, Wall,
         },
-        direction::{Direction, CARDINAL_DIRECTIONS, COMPASS_DEGREES, DIRECTION_OFFSETS},
+        direction::{Direction,  COMPASS_DEGREES},
         primitives::{Area3d, Size3d},
-        Board, PlayerCellVisibility, Position, BOARD_SIZE_X, BOARD_SIZE_Y, BOARD_SIZE_Z,
+        Board, PlayerCellVisibility, Position, BOARD_SIZE_X, BOARD_SIZE_Y,
     };
-    pub use crate::creature::{ Attributes, Creature, CreatureSize, Locus,Character, CharacterBundle, Pace };
-    pub use crate::creature::anatomy::{ Side, Gender};
-    pub use crate::creature::anatomy::humanoid::Location;
-    pub use crate::events::*;
-    pub use crate::action::*;
-    pub use crate::player::{Player, PlayerRes};
-    pub use crate::state::{AppInitEvent, AppState};
-    pub use crate::time::{Clock, TurnTime, Duration};
-    pub use bevy::math::{IVec2, IVec3, UVec2, UVec3};
+    pub(crate) use crate::creature::{  Creature, Locus, Pace };
+    pub(crate) use crate::creature::anatomy:: Gender;
+    // pub(crate) use crate::creature::anatomy::humanoid::Location;
+    pub(crate) use crate::events::*;
+    // pub(crate) use crate::action::*;
+    pub(crate) use crate::player::{Player, PlayerRes};
+    pub(crate) use crate::state::{AppInitEvent, AppState};
+    // pub(crate) use crate::time::{Clock, TickCount, Duration};
+    pub(crate) use bevy::math::{IVec2, IVec3, };
     pub use bevy::prelude::{
         default, on_event, state_exists, state_exists_and_equals, App, BuildChildren, Bundle,
         Changed, Commands, Component, Deref, DerefMut, Entity, Event, EventReader, EventWriter,
@@ -44,7 +44,7 @@ pub mod typical {
     };
     pub use bevy::utils::tracing::{debug, error, info, trace, warn, Level};
 
-    pub use crate::{CameraMarker, MapMarker};
+    // pub(crate) use crate::{CameraMarker, MapMarker};
     pub use bevy::utils::{HashMap, HashSet};
 }
 

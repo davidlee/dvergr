@@ -1,26 +1,27 @@
-use bevy::prelude::{App, Component, Plugin, ResMut, Resource};
+use bevy::prelude::{App, Component, Plugin, Resource};
 use std::convert::From;
 
 // at 10 ticks / second, a u32 is enough for 13 years worth of game time.
 // use u32 for everything to avoid casting.
 
 #[derive(Default)]
-pub struct TimePlugin;
+pub(crate) struct TimePlugin;
 
 impl Plugin for TimePlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(TurnTime(0));
+        app.insert_resource(TickCount(0));
     }
 }
 
-pub fn advance_global_tick(mut time: ResMut<TurnTime>) {
-    time.tick();
-}
+// pub(crate) fn advance_global_tick(mut time: ResMut<TickCount>) {
+//     time.tick();
+// }
 
 // util
 
 #[derive(Copy, Clone, Debug, Component, Eq, PartialEq, Ord, PartialOrd)]
-pub enum Unit {
+#[allow(dead_code)]
+pub(crate) enum Unit {
     Tick = 1,
     Second = 10,
     Minute = 600,
@@ -31,7 +32,7 @@ pub enum Unit {
 }
 
 #[derive(Copy, Clone, Debug, Component, Eq)]
-pub struct Duration {
+pub(crate) struct Duration {
     pub unit: Unit,
     pub value: u32,
 }
@@ -61,6 +62,7 @@ impl Ord for Duration {
 }
 
 // units of time - conversions to u32 (tick)
+#[allow(dead_code)]
 impl Unit {
     pub fn seconds(seconds: u32) -> u32 {
         Unit::Second as u32 * seconds
@@ -88,9 +90,10 @@ impl Unit {
 }
 
 #[derive(Resource, Component, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Clone, Copy)]
-pub struct TurnTime(u32);
+pub(crate) struct TickCount(pub(crate) u32);
 
-impl TurnTime {
+#[allow(dead_code)]
+impl TickCount {
     pub fn as_clock(&self) -> Clock {
         Clock::new(*self)
     }
@@ -110,16 +113,20 @@ impl TurnTime {
     pub fn add(&self, other: u32) -> u32 {
         self.0 + other
     }
-}
 
-impl From<u32> for TurnTime {
-    fn from(tick: u32) -> TurnTime {
-        TurnTime(tick)
+    pub fn as_u32(&self) -> u32 {
+        self.0
     }
 }
 
-impl From<TurnTime> for u32 {
-    fn from(time: TurnTime) -> u32 {
+impl From<u32> for TickCount {
+    fn from(tick: u32) -> TickCount {
+        TickCount(tick)
+    }
+}
+
+impl From<TickCount> for u32 {
+    fn from(time: TickCount) -> u32 {
         time.0
     }
 }
@@ -131,7 +138,7 @@ impl From<Duration> for u32 {
 
 #[derive(Resource, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Clone, Copy)]
 pub struct Clock {
-    time: TurnTime,
+    time: TickCount,
 
     year: u32,
     day_of_year: u32,
@@ -143,8 +150,9 @@ pub struct Clock {
     tick: u32, // since last whole second
 }
 
+#[allow(dead_code)]
 impl Clock {
-    pub fn new(time: TurnTime) -> Clock {
+    pub(crate) fn new(time: TickCount) -> Clock {
         let mut tick = time.0;
 
         let year = tick / Unit::Year as u32;
@@ -167,7 +175,7 @@ impl Clock {
         tick -= second * Unit::Second as u32;
 
         Clock {
-            time: TurnTime(tick),
+            time: TickCount(tick),
             year,
             day_of_year,
             week,

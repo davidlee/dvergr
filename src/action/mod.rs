@@ -2,15 +2,10 @@
 // use crate::creature::Locus;
 
 use bevy::prelude::*;
-use std::any::Any;
 use std::collections::VecDeque;
 use std::fmt::Debug;
 
 use crate::time::*;
-use crate::Locus;
-use crate::Player;
-
-pub use verb::Verb;
 
 pub mod verb;
 
@@ -19,159 +14,160 @@ pub struct ActionsPlugin;
 
 impl Plugin for ActionsPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<ActorQueue>()
-            .add_event::<TickEvent>()
-            .add_event::<NextActorEvent>()
-            // .add_event::<ActionCompleteEvent>()
-            // .add_event::<ActionAbortEvent>()
-            // .add_event::<ActionRequiredEvent>()
-            .add_event::<ActorQueueEmptyEvent>()
-            // .add_event::<InvalidPlayerActionEvent>()
-            .add_systems(Update, process_action_queue.run_if(on_event::<TickEvent>()));
+        app.add_event::<TickEvent>().add_systems(
+            Update,
+            process_current_actions.run_if(on_event::<TickEvent>()),
+        );
     }
 }
 
-pub fn process_action_queue(world: &mut World) {
-    let Some(mut queue) = world.get_resource_mut::<ActorQueue>() else {
-        return;
-    };
-    let Some(entity) = queue.0.pop_front() else {
-        world.send_event(ActorQueueEmptyEvent);
-        return;
-    };
-    let Some(mut actor) = world.get_mut::<Actor>(entity) else {
-        return;
-    };
-    let Some(action) = actor.current_action.take() else {
-        return;
-    };
-
-    let is_player = world.get::<Player>(entity).is_some();
-
-    // match action.execute(world) {
-    //     ActionState::Planned => panic!("Action should only be Planned until executed"),
-    //     ActionState::Started => (),
-    //     ActionState::Complete => {
-    //         actor.current_action.take();
-    //     } // send event
-    //     ActionState::Invalid => {
-    //         if world.get::<Player>(entity).is_some() {
-    //             world.send_event(InvalidPlayerActionEvent);
-    //             return;
-    //         }
-    //     } //
-    //     ActionState::Aborted => {
-    //         actor.current_action.take();
-    //     } // send event
-    // }
-
-    // actor.tick(world);
-
-    // if actor.current_action.is_some() {
-    //     let action = actor.current_action.unwrap();
-    //     let result_state = action.as_ref().execute(world);
-
-    //     match result_state {
-    //     }
-    //     world.send_event(NextActorEvent);
-    // };
-}
-
-// #[derive(Default, Debug)]
-// pub enum ActionState {
-//     None,
-//     #[default]
-//     Planned,
-//     Started,
-//     Complete,
-//     Invalid,
-//     Aborted,
-// }
-
-// Trait
-pub trait Action: Send + Sync + Debug {
-    fn execute(&self, world: &mut World) -> Result<Vec<Box<dyn Action>>, ()>;
-    fn as_any(&self) -> &dyn Any; // { self }
-}
-
-pub trait Strategy: Send + Sync + Debug {
-    fn scheme(&self, world: &mut World) -> dyn Action;
-}
-
 #[derive(Component, Default, Debug)]
-pub struct Actor {
-    pub current_action: Option<Box<dyn Action>>,
-    pub queue: VecDeque<Box<dyn Action>>,
-    pub strategy: Option<Box<dyn Strategy>>,
+pub(crate) struct Actor {
+    pub action: Option<Action>,
+    pub queue: VecDeque<Action>,
 }
 
-impl Actor {
-    // pub fn tick(&mut self, world: &mut World) {
-    //     if self.current_action.is_some() {
-    //         match self.current_action.as_mut().unwrap().execute(world) {
-    //             ActionState::Planned => panic!("Action should only be Planned until executed"),
-    //             ActionState::Started => (),
-    //             ActionState::Complete => {
-    //                 self.current_action = self.queue.pop_front();
-    //             }
-    //             ActionState::Invalid | ActionState::Aborted | ActionState::None => {
-    //                 self.current_action = None;
-    //             }
-    //         }
-    //     }
-    // }
+#[derive(Component, Debug)]
+pub(crate) struct ActorQueueEmptyMarker;
+
+fn process_current_actions(
+    mut commands: Commands,
+    mut actors_q: Query<&mut Actor>,
+    time: Res<TickCount>,
+) {
+    // TODO currently we're iterating over actors in unspecified order
+    // we may want to order by initiative, etc
+
+    for mut actor in actors_q.iter_mut() {
+        let mut entity: Option<Entity> = None;
+        if let Some(current_action) = &actor.action {
+            entity = Some(current_action.entity);
+            match current_action.status {
+                ActionStatus::Queued | ActionStatus::Complete => panic!("invalid state"),
+                ActionStatus::Active {
+                    start_tick: _,
+                    complete_tick,
+                } => {
+                    if time.as_u32() >= complete_tick {
+                        let mut action = actor.action.take().unwrap();
+                        action.status = ActionStatus::Complete;
+
+                        // TODO different envelope?
+                        commands.add(|world: &mut World| {
+                            world.send_event(action);
+                        });
+                    } else {
+                        // TODO validate it
+                    }
+                }
+                ActionStatus::Invalid | ActionStatus::Aborted => {
+                    actor.action.take();
+                    actor.queue = VecDeque::new();
+                    // TODO send event
+                }
+            }
+        }
+        let entity = entity;
+
+        if actor.action.is_none() {
+            if let Some(mut next_action) = actor.queue.pop_front() {
+                next_action.start(time.as_u32());
+                actor.action = Some(next_action);
+            } else if entity.is_some() {
+                let entity = entity.unwrap();
+                commands.entity(entity).insert(ActorQueueEmptyMarker);
+            } else {
+                // panic?
+            }
+        }
+    }
 }
 
-#[derive(Default, Resource, Debug)]
-pub struct ActorQueue(pub VecDeque<Entity>);
+// fn process_event(mut events: EventReader<Action>) {}
+
+#[derive(Default, Debug, Eq, PartialEq, Ord, PartialOrd, Clone, Copy, Hash)]
+#[allow(dead_code)]
+pub(crate) enum TickState {
+    #[default]
+    AwaitPlayerInput,
+    PlayerAction,
+    ActorActions,
+    AdvanceTime,
+    Animate,
+}
+
+#[derive(Default, Debug, Eq, PartialEq, Ord, PartialOrd, Clone, Copy, Hash)]
+#[allow(dead_code)]
+pub(crate) enum ActionStatus {
+    #[default]
+    Queued,
+    Active {
+        start_tick: u32,
+        complete_tick: u32,
+    },
+    Complete,
+    Invalid,
+    Aborted,
+}
 
 // Events
 #[derive(Event, Debug, Clone)]
-pub struct TickEvent;
+pub(crate) struct TickEvent;
 
-#[derive(Event, Debug, Clone)]
-pub struct NextActorEvent;
+#[derive(Event, Debug, PartialEq, Clone)]
+pub(crate) struct Action {
+    entity: Entity,
+    status: ActionStatus,
+    detail: ActionDetail,
+    duration: u32, // ticks
+}
 
-// #[derive(Event, Debug)]
-// pub struct ActionCompleteEvent;
-// #[derive(Event, Debug, Clone)]
-// pub struct ActionAbortEvent;
-// #[derive(Event, Debug, Clone)]
-// pub struct ActionRequiredEvent;
-
-#[derive(Event, Debug, Clone)]
-pub struct InvalidPlayerActionEvent;
-
-#[derive(Event, Debug, Clone)]
-pub struct ActorQueueEmptyEvent;
-
-#[derive(Event, Debug, Eq, PartialEq, Clone)]
-pub struct Meta {
-    agent: Entity,
-    duration: Duration,
-    started: Option<TurnTime>,
-    completes: Option<TurnTime>,
+impl Action {
+    fn start(&mut self, current_tick: u32) {
+        let start_tick = current_tick;
+        let complete_tick = start_tick + self.duration;
+        self.status = ActionStatus::Active {
+            start_tick,
+            complete_tick,
+        };
+    }
 }
 
 #[derive(Event, Debug, PartialEq, Clone)]
-pub enum Command {
-    Move(Meta, Verb, MovementCommand),
-    Inventory(Meta, Verb, InventoryCommand),
-    Attack(Meta, Verb, MeleeCombatCommand),
-    Shoot(Meta, Verb, MissileCombatCommand),
-    Wait(Meta, Verb, Duration),
-    General(Meta, Verb, GeneralCommand),
+#[allow(dead_code)]
+pub(crate) enum ActionDetail {
+    Move(MovementActionDetail),
+    Inventory(InventoryActionDetail),
+    Attack(MeleeCombatActionDetail),
+    Shoot(MissileCombatActionDetail),
+    Wait(Duration),
+    // General(Meta, Verb, GeneralAction),
 }
 
 #[derive(Event, Debug, PartialEq, Clone)]
-pub struct MovementCommand {
-    // verb: Verb,
-    origin: Locus, // pace etc ignored
-    destination: Locus,
+#[allow(dead_code)]
+pub(crate) enum MovementActionDetail {
+    // Crouch,
+    // Prone,
+    // Stand,
+    // Special(Direction, Vec<Flags>) - sneak, find traps, etc
+    Turn(Direction),
+    Walk(Direction),
+    Run(Direction),
+    // Sprint(Direction),
+    // Climb(Direction),
 }
 
+// #[derive(Event, Debug, Eq, PartialEq, Clone)]
+// pub struct GeneralAction {
+//     // verb: Verb,
+//     subject: Option<Entity>,
+//     object: Option<Entity>,
+//     indirect_object: Option<Entity>,
+// }
+
 #[derive(Event, Debug, Eq, PartialEq, Clone)]
-pub struct GeneralCommand {
+pub(crate) struct InventoryActionDetail {
     // verb: Verb,
     subject: Option<Entity>,
     object: Option<Entity>,
@@ -179,7 +175,7 @@ pub struct GeneralCommand {
 }
 
 #[derive(Event, Debug, Eq, PartialEq, Clone)]
-pub struct InventoryCommand {
+pub(crate) struct MeleeCombatActionDetail {
     // verb: Verb,
     subject: Option<Entity>,
     object: Option<Entity>,
@@ -187,15 +183,7 @@ pub struct InventoryCommand {
 }
 
 #[derive(Event, Debug, Eq, PartialEq, Clone)]
-pub struct MeleeCombatCommand {
-    // verb: Verb,
-    subject: Option<Entity>,
-    object: Option<Entity>,
-    indirect_object: Option<Entity>,
-}
-
-#[derive(Event, Debug, Eq, PartialEq, Clone)]
-pub struct MissileCombatCommand {
+pub(crate) struct MissileCombatActionDetail {
     // verb: Verb,
     subject: Option<Entity>,
     object: Option<Entity>,
