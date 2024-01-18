@@ -9,12 +9,6 @@ pub enum AppState {
     Init,
     SpawnPlayerAvatar,
     Ready,
-    // InitBoard,
-    // InitStage,
-    // LoadAssets,
-    // InitUI,
-    // InitTileMap,
-    // InitMobs,
 }
 
 #[derive(Debug, Event)]
@@ -35,11 +29,22 @@ pub fn handle_app_init_event(
     }
 }
 
-#[derive(Clone, Debug, Default, Hash, Eq, States, PartialEq)]
-pub enum GameState {
+#[derive(Default, Debug, Eq, PartialEq, Ord, PartialOrd, Clone, Copy, Hash, States)]
+#[allow(dead_code)]
+pub(crate) enum TickState {
     #[default]
-    None,
     PlayerInput,
-    Update,
-    // Animate,
+    ValidatePlayerAction,
+    //
+    PrepareAgentActions,
+    //
+    ClockTick, // advance clock
+    //
+    PlayerActionTick,
+    //
+    AgentActionsTick,
+    //
+    ApplyCompletedActions,
+    //
+    Animate,
 }

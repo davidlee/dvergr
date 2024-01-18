@@ -20,15 +20,15 @@ use crate::typical::*;
 //
 #[derive(Clone, Debug, Resource)]
 #[allow(dead_code)]
-pub struct Board {
-    pub size: Size3d,
-    pub cell_store: EntityPositionStore,
-    pub wall_store: EntityPositionStore,
-    pub floor_store: EntityPositionStore,
-    pub feature_store: EntityPositionStore,
-    pub visibility_store: EntityPositionStore,
-    pub items_store: EntityPositionStore,
-    pub creature_store: CreatureStore,
+pub(crate) struct Board {
+    pub(crate) size: Size3d,
+    pub(crate) cell_store: EntityPositionStore,
+    pub(crate) wall_store: EntityPositionStore,
+    pub(crate) floor_store: EntityPositionStore,
+    pub(crate) feature_store: EntityPositionStore,
+    pub(crate) visibility_store: EntityPositionStore,
+    pub(crate) items_store: EntityPositionStore,
+    pub(crate) creature_store: CreatureStore,
 }
 
 impl Default for Board {
@@ -51,7 +51,7 @@ impl Default for Board {
 }
 
 impl Board {
-    pub fn coords(&self) -> Vec<IVec3> {
+    pub(crate) fn coords(&self) -> Vec<IVec3> {
         let mut cv = vec![];
         for z in 0..BOARD_SIZE_Z {
             for y in 0..BOARD_SIZE_Y {
@@ -63,7 +63,11 @@ impl Board {
         cv
     }
 
-    pub fn apply_direction(&self, pos: &IVec3, direction: &Direction) -> Result<IVec3, &str> {
+    pub(crate) fn apply_direction(
+        &self,
+        pos: &IVec3,
+        direction: &Direction,
+    ) -> Result<IVec3, &str> {
         let [x, y, z] = pos.to_array();
         let [dx, dy, dz] = direction.offset().to_array();
         let [x, y, z] = [x + dx, y + dy, z + dz];
@@ -78,32 +82,39 @@ impl Board {
             Ok(IVec3::new(x, y, z))
         }
     }
+
+    // FIXME check for things other than walls - statues, pillars, creatures, doors ...
+
+    pub(crate) fn is_unoccupied(&self, pos: &IVec3) -> bool {
+        self.wall_store.get(&pos).is_none()
+    }
 }
 
 // Position
 //
 #[derive(Component, Debug, Clone, Eq, PartialEq)]
-pub enum Position {
+pub(crate) enum Position {
+    #[allow(dead_code)]
     Area(Area3d),
     Point(IVec3),
 }
 
 // PlayerCellVisibility
 //
-#[derive(Component, PartialEq, Clone, Copy, Debug)]
-pub struct PlayerCellVisibility {
-    pub seen: bool,
-    pub visible: bool,
-    pub position: IVec3,
-}
+// #[derive(Component, PartialEq, Clone, Copy, Debug)]
+// pub(crate) struct PlayerCellVisibility {
+//     pub seen: bool,
+//     pub visible: bool,
+//     pub position: IVec3,
+// }
 
-impl PlayerCellVisibility {
-    pub fn new(x: i32, y: i32, z: i32) -> Self {
-        let position = IVec3::new(x, y, z);
-        Self {
-            visible: false,
-            seen: false,
-            position,
-        }
-    }
-}
+// impl PlayerCellVisibility {
+//     pub fn new(x: i32, y: i32, z: i32) -> Self {
+//         let position = IVec3::new(x, y, z);
+//         Self {
+//             visible: false,
+//             seen: false,
+//             position,
+//         }
+//     }
+// }

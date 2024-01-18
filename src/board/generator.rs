@@ -155,7 +155,7 @@ fn carve_corridors(blanks: &mut Vec<CoOrdinate>, room_a: &Room, room_b: &Room) {
     }
 }
 
-pub fn populate_board(
+pub(crate) fn populate_board(
     mut commands: Commands,
     mut board: ResMut<Board>,
     mut ev_writer: EventWriter<SpawnPlayerEvent>,
@@ -208,15 +208,14 @@ pub fn populate_board(
             let [x, y, z] = pos.to_array();
             let cell = Cell::new(x, y, z);
             let floor = Floor::new(x, y, z, Material::Dirt);
-            let vis = PlayerCellVisibility::new(x, y, z);
 
             let entity: Entity;
             if blanks.contains(&[x, y]) {
-                entity = parent.spawn((cell, vis, floor)).id();
+                entity = parent.spawn((cell, floor)).id();
                 false
             } else {
                 let wall = Wall::new(x, y, z, Material::Dirt);
-                entity = parent.spawn((cell, vis, floor, wall)).id();
+                entity = parent.spawn((cell, floor, wall)).id();
                 board.wall_store.set(*pos, entity);
                 true
             };

@@ -5,22 +5,22 @@ use crate::creature::Stance;
 //
 
 #[derive(Component, Debug, Clone, PartialEq)]
-pub struct Locus {
-    pub position: Position,
-    pub velocity: Vec3,
-    pub direction: Direction,
-    pub facing: Direction,
-    pub stance: Stance,
-    pub pace: Pace,
-    pub weight: f64,
+pub(crate) struct Locus {
+    pub(crate) position: Position,
+    pub(crate) velocity: Vec3,
+    pub(crate) direction: Direction,
+    pub(crate) facing: Direction,
+    pub(crate) stance: Stance,
+    pub(crate) pace: Pace,
+    pub(crate) weight: f64,
 }
 
 impl Locus {
-    pub fn set_pos(&mut self, pos: IVec3) {
+    pub(crate) fn set_pos(&mut self, pos: IVec3) {
         self.position = Position::Point(pos);
     }
 
-    pub fn set_area(&mut self, area: Area3d) {
+    pub(crate) fn set_area(&mut self, area: Area3d) {
         self.position = Position::Area(area);
     }
 }

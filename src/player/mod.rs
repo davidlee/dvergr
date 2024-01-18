@@ -1,29 +1,26 @@
 // use crate::character::*;
+use crate::action::Action;
 use crate::creature::*;
 use crate::typical::*;
 use bevy::prelude::*;
+use std::collections::VecDeque;
 
-pub mod movement;
-
-#[derive(Component, Debug, Clone)]
-pub struct Player {}
+#[derive(Component, Debug, Clone, Default)]
+pub(crate) struct Player {
+    pub(crate) action: Option<Action>,
+    pub(crate) queue: VecDeque<Action>,
+}
 
 #[derive(Resource, Debug, Clone)]
-pub struct PlayerRes {
+pub(crate) struct PlayerRes {
     pub entity: Entity,
 }
 
 #[derive(Event, Debug)]
-pub struct SpawnPlayerEvent(pub IVec3);
-
-impl Default for Player {
-    fn default() -> Self {
-        Player {}
-    }
-}
+pub(crate) struct SpawnPlayerEvent(pub IVec3);
 
 #[derive(Bundle, Debug, Clone)]
-pub struct PlayerBundle {
+pub(crate) struct PlayerBundle {
     player: Player,
     creature: CreatureBundle,
     character: CharacterBundle,
@@ -54,7 +51,7 @@ impl Default for PlayerBundle {
     }
 }
 
-pub fn spawn(
+pub(crate) fn spawn(
     mut commands: Commands,
     mut board: ResMut<Board>,
     // mut ev_writer: EventWriter<AppInitEvent>,

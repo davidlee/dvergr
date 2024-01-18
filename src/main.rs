@@ -1,9 +1,9 @@
+#![allow(dead_code)]
 pub mod action;
 pub mod board;
 pub mod combat;
 pub mod creature;
 pub mod dice;
-pub mod events;
 pub mod graphics;
 pub mod input;
 pub mod player;
@@ -22,16 +22,12 @@ pub mod typical {
         },
         direction::{Direction,  COMPASS_DEGREES},
         primitives::{Area3d, Size3d},
-        Board, PlayerCellVisibility, Position, BOARD_SIZE_X, BOARD_SIZE_Y,
+        Board,  Position, BOARD_SIZE_X, BOARD_SIZE_Y,
     };
     pub(crate) use crate::creature::{  Creature, Locus, Pace };
     pub(crate) use crate::creature::anatomy:: Gender;
-    // pub(crate) use crate::creature::anatomy::humanoid::Location;
-    pub(crate) use crate::events::*;
-    // pub(crate) use crate::action::*;
     pub(crate) use crate::player::{Player, PlayerRes};
     pub(crate) use crate::state::{AppInitEvent, AppState};
-    // pub(crate) use crate::time::{Clock, TickCount, Duration};
     pub(crate) use bevy::math::{IVec2, IVec3, };
     pub use bevy::prelude::{
         default, on_event, state_exists, state_exists_and_equals, App, BuildChildren, Bundle,
@@ -44,8 +40,8 @@ pub mod typical {
     };
     pub use bevy::utils::tracing::{debug, error, info, trace, warn, Level};
 
-    // pub(crate) use crate::{CameraMarker, MapMarker};
     pub use bevy::utils::{HashMap, HashSet};
+    pub use bevy::utils::tracing::*;
 }
 
 use bevy::core_pipeline::clear_color::ClearColorConfig;
@@ -60,10 +56,11 @@ use bevy_turborand::prelude::RngPlugin;
 use bevy::log::LogPlugin;
 use bevy::prelude::*;
 use bevy::utils::tracing::Level;
+use graphics::LogicalGraphicalEntityMapper;
 // use board::generator;
 use graphics::player_avatar::{PlayerAvatar, PlayerAvatarRes};
 use player::SpawnPlayerEvent;
-use state::GameState;
+use state::TickState;
 use typical::*;
 
 fn main() {
@@ -95,52 +92,94 @@ fn main() {
         .add_plugins(time::TimePlugin)
         // RESOURCES
         .insert_resource(ClearColor(Color::BLACK))
+        .insert_resource(LogicalGraphicalEntityMapper::new())
         .insert_resource(Msaa::default())
         .init_resource::<Board>()
         // STATE
         .add_state::<AppState>()
-        .add_state::<GameState>()
+            .add_state::<TickState>()
         // EVENTS
-        .add_event::<player::movement::DirectionalInput>()
+        // .add_event::<input::UpdateLocus>()
         .add_event::<state::AppInitEvent>()
         .add_event::<player::SpawnPlayerEvent>()
-        .add_event::<events::begin_action::UpdateLocus>()
+        .add_event::<action::PlayerActionInvalidEvent>()
+        .add_event::<action::StillWaitForAnimEvent>()
+        //
         // SYSTEMS
+        //
+
+        // Startup
         .add_systems(
             Startup,
             (
                 board::generator::populate_board,
                 player::spawn,
-                apply_deferred,
+                apply_deferred, // ensure player exists
                 spawn_voxel_map,
                 apply_deferred,
                 graphics::player_avatar::spawn,
             )
                 .chain(),
         )
-         // MOVEMENT
+
+        // Actions
+        
+        .add_systems(OnEnter(TickState::ValidatePlayerAction), input::validate_player_move)
+        .add_systems(OnEnter(TickState::PrepareAgentActions), action::prepare_agent_actions)
+        .add_systems(OnEnter(TickState::ClockTick), action::clock_tick)
+        .add_systems(OnEnter(TickState::ApplyCompletedActions), action::apply_completed_action_markers)
+            
+         // Movement
         .add_systems(
             PreUpdate,
-            (input::keybindings, player::movement::validate_directional_input).chain()
-                .run_if(state_exists_and_equals(GameState::PlayerInput)),
+            input::keybindings
+                .run_if(state_exists_and_equals(TickState::PlayerInput)),
         )
+
         .add_systems(
             PreUpdate,
-            (creature::movement::process_movement
-                .after(player::movement::validate_directional_input))
-            .run_if(state_exists_and_equals(GameState::Update)),
+            action::tick_player_action
+            .run_if(state_exists_and_equals(TickState::PlayerActionTick)),
         )
+
+        .add_systems(
+            PreUpdate,
+            action::tick_agent_actions
+            .run_if(state_exists_and_equals(TickState::AgentActionsTick)),
+        )
+
         .add_systems(
             Update,
-            (graphics::move_anim::add_changed_creature_mob_move_anim, graphics::move_anim::player_movement).chain()
-                .run_if(state_exists_and_equals(GameState::Update)),
+            (action::on_success::apply_move,
+            action::on_success::attack).chain()
+            .run_if(state_exists_and_equals(TickState::ApplyCompletedActions)),
         )
+
+        .add_systems(PostUpdate, action::dead_letters.run_if(state_exists_and_equals(TickState::Animate)))
+
+        // .add_systems(
+        //     PreUpdate,
+        //     creature::movement::process_movement
+        //     .run_if(state_exists_and_equals(TickState::Tick)),
+        // )
+        
+        // .add_systems(
+        //     PreUpdate,
+        //     creature::movement::process_movement
+        //     .run_if(state_exists_and_equals(TickState::PlayerActs)),
+        // )
+
         .add_systems(
             Update,
-                graphics::player_avatar::flicker_torches
+            (graphics::move_anim::player_movement).chain()
+                .run_if(state_exists_and_equals(TickState::Animate)),
+        )
+
+        .add_systems(
+            Update,
+                (graphics::player_avatar::flicker_torches, graphics::move_anim::move_head)
             .run_if(state_exists_and_equals(AppState::Ready)),
         )
-        .add_systems(Update, graphics::move_anim::move_head)
         .add_systems(Update, bevy::window::close_on_esc)
         .add_systems(PostUpdate, state::handle_app_init_event.run_if(on_event::<AppInitEvent>())) 
         .run();

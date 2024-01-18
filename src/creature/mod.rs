@@ -1,24 +1,22 @@
 use crate::typical::*;
 
-pub mod anatomy;
-pub mod attributes;
-pub mod character;
-pub mod condition;
-pub mod locus;
-pub mod movement;
-pub mod pace;
+pub(crate) mod anatomy;
+pub(crate) mod attributes;
+pub(crate) mod character;
+pub(crate) mod condition;
+pub(crate) mod locus;
+pub(crate) mod movement;
+pub(crate) mod pace;
 
-pub use character::*;
-pub use pace::*;
+pub(crate) use character::*;
+pub(crate) use pace::*;
 
-pub use attributes::*;
-pub use condition::*;
-pub use locus::*;
-pub use movement::*;
+pub(crate) use attributes::*;
+pub(crate) use condition::*;
+pub(crate) use locus::*;
 
-#[allow(dead_code)]
 #[derive(Bundle, Debug, Clone)]
-pub struct CreatureBundle {
+pub(crate) struct CreatureBundle {
     pub creature: Creature,
     pub attributes: Attributes,
     pub species: Species,
@@ -53,12 +51,6 @@ impl Default for CreatureBundle {
             conditions: ConditionList::default(),
             locus: Locus::default(),
         }
-    }
-}
-
-impl CreatureBundle {
-    pub fn human() -> Self {
-        Self::default()
     }
 }
 
@@ -150,7 +142,8 @@ pub enum Stance {
 pub struct Age(pub u16);
 
 #[derive(Component, Debug, Clone, Default)]
-pub struct SkillList {
+#[allow(dead_code)]
+pub(crate) struct SkillList {
     pub boxing: u8,
     pub striking: u8,
     pub grappling: u8,
@@ -210,7 +203,7 @@ pub struct SkillList {
 }
 
 #[derive(Component, Debug, Clone, Default)]
-pub struct AbilityList {}
+pub(crate) struct AbilityList {}
 
 // #[derive(Component, Debug, Clone, Default)]
 // pub struct SpellList {}

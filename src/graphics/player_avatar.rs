@@ -1,3 +1,4 @@
+use super::LogicalGraphicalEntityMapper;
 use crate::typical::*;
 use bevy::core_pipeline::clear_color::ClearColorConfig;
 use bevy::prelude::*;
@@ -28,6 +29,8 @@ pub fn spawn(
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     mut ev_writer: EventWriter<AppInitEvent>,
     avatar_ref: Res<PlayerAvatarRes>,
+    mut mapper: ResMut<LogicalGraphicalEntityMapper>,
+    player_query: Query<(Entity, &Player)>,
 ) {
     let texture_handle: Handle<Image> = asset_server.load(SPRITESHEET_ASSET_PATH);
     let vec2 = Vec2::new(TILE_SIZE_W, TILE_SIZE_H);
@@ -38,7 +41,11 @@ pub fn spawn(
         atlas_handle: texture_atlas_handle.clone(),
     });
 
+    let player_entity = player_query.get_single().unwrap().0;
     let avatar_entity = avatar_ref.entity;
+
+    mapper.insert(&player_entity, &avatar_entity);
+
     commands
         .get_entity(avatar_entity)
         .expect("no avatar, nowhere for sprite")

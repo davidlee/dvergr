@@ -3,45 +3,26 @@ use std::ops::Add;
 use bevy::prelude::SpotLight;
 
 use super::{player_avatar::PlayerAvatar, typical::*};
-use crate::{typical::*, TorchMarker};
+use crate::{action::StillWaitForAnimEvent, typical::*, TorchMarker};
 
-pub fn add_changed_creature_mob_move_anim(
+pub(crate) fn player_movement(
     mut commands: Commands,
-    mut mob_query: Query<(Entity, &CreatureEntityRef, &mut Transform)>,
-    changed_query: Query<(Entity, &Creature, &Locus), Changed<Locus>>,
-) {
-    for (_mob_entity, CreatureEntityRef(entity), transform) in mob_query.iter_mut() {
-        if changed_query.contains(*entity) {
-            let (_, _creature, locus) = changed_query.get(*entity).unwrap();
-            match locus.position {
-                Position::Point(pos) => {
-                    let [x, y, _] = pos.as_vec3().to_array();
-                    let [facing_x, facing_y] = locus.facing.offset2df().to_array();
-                    let target = Transform::from_xyz(x, y, 0.)
-                        .looking_at(Vec3::new(facing_x, facing_y, 0.), Vec3::splat(0.));
-
-                    let anim =
-                        LerpVec3::from_translation(transform.translation, target.translation, 6); // 6 frames
-                    commands.entity(_mob_entity).insert(anim);
-                }
-                _ => panic!("doesn't support area yet"),
-            }
-        }
-    }
-}
-
-pub fn player_movement(
-    mut commands: Commands,
-    mut avatar_query: Query<(Entity, &PlayerAvatar, &mut LerpVec3, &mut Transform)>,
+    mut ev_wr: EventWriter<StillWaitForAnimEvent>,
     mut sprite_query: Query<(
         Entity,
         &TextureAtlasSprite,
         &mut Transform,
         Without<PlayerAvatar>,
     )>,
+    mut avatar_query: Query<(Entity, &PlayerAvatar, &mut LerpVec3, &mut Transform)>,
 ) {
+    warn!("player mov");
+    let mut still_animating = false;
+
     if let Ok((_sprite_entity, _sprite, mut sprite_transform, _)) = sprite_query.get_single_mut() {
+        warn!("found ..");
         for (avatar_entity, _avatar, mut anim, mut player_transform) in avatar_query.iter_mut() {
+            warn!("yeah gotem");
             if anim.current_frame == 1 {
                 player_transform.translation = anim.target;
                 sprite_transform.scale = Vec3::new(1.0, 1.0, 1.0);
@@ -53,12 +34,18 @@ pub fn player_movement(
                 let scale_factor = (k - (anim.current_frame as f32 - k).abs()).abs() / 35.0 + 1.0; // FIXME WTF is 35.0 here??
                 sprite_transform.scale = Vec3::new(scale_factor, scale_factor, scale_factor);
                 anim.current_frame -= 1;
+                still_animating = true;
             }
         }
     }
+
+    if still_animating {
+        warn!("still animating");
+        ev_wr.send(StillWaitForAnimEvent);
+    }
 }
 
-pub fn move_head(
+pub(crate) fn move_head(
     player_query: Query<(Entity, &Player, &Locus)>,
     // mut avatar_query: Query<(Entity, &PlayerAvatar, &mut LerpVec3, &mut Transform)>,
     mut query: Query<(Entity, &TorchMarker, &SpotLight, &mut Transform)>,

@@ -1,7 +1,8 @@
+use crate::input::UpdateLocus;
 use crate::typical::*;
 
 pub fn process_movement(
-    mut ev_move: EventReader<begin_action::UpdateLocus>,
+    mut ev_move: EventReader<UpdateLocus>,
     mut board: ResMut<Board>,
     mut query: Query<(Entity, &Creature, &mut Locus)>,
 ) {
