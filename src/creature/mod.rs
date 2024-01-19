@@ -5,7 +5,6 @@ pub(crate) mod attributes;
 pub(crate) mod character;
 pub(crate) mod condition;
 pub(crate) mod locus;
-pub(crate) mod movement;
 pub(crate) mod pace;
 
 pub(crate) use character::*;

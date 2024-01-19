@@ -1,17 +1,6 @@
+#![allow(dead_code)]
+
 use crate::typical::*;
-
-// #[derive(Component, Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
-// pub enum Structure {
-//     // structure, in fencing lingo : distance / range?
-//     #[default]
-//     Normal,
-// }
-
-#[derive(Component, Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
-pub enum Measure {
-    #[default]
-    Normal, //
-}
 
 #[derive(Component, Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Tempo {

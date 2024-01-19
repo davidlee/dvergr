@@ -16,6 +16,8 @@ pub const BOARD_SIZE_Z: i32 = 1;
 
 use crate::typical::*;
 
+type Size3d = IVec3;
+
 // Board
 //
 #[derive(Clone, Debug, Resource)]
@@ -35,9 +37,9 @@ impl Default for Board {
     fn default() -> Self {
         Board {
             size: Size3d {
-                width: BOARD_SIZE_X,
-                height: BOARD_SIZE_Y,
-                depth: 1,
+                x: BOARD_SIZE_X,
+                y: BOARD_SIZE_Y,
+                z: 1,
             },
             cell_store: EntityPositionStore::default(),
             wall_store: EntityPositionStore::default(),
@@ -53,9 +55,9 @@ impl Default for Board {
 impl Board {
     pub(crate) fn coords(&self) -> Vec<IVec3> {
         let mut cv = vec![];
-        for z in 0..BOARD_SIZE_Z {
-            for y in 0..BOARD_SIZE_Y {
-                for x in 0..BOARD_SIZE_X {
+        for z in 0..self.size.z {
+            for y in 0..self.size.y {
+                for x in 0..self.size.x {
                     cv.push(IVec3::new(x, y, z));
                 }
             }
@@ -72,10 +74,7 @@ impl Board {
         let [dx, dy, dz] = direction.offset().to_array();
         let [x, y, z] = [x + dx, y + dy, z + dz];
 
-        if [x, y, z].iter().any(|n| *n < 0)
-            || x > self.size.width
-            || y > self.size.height
-            || z > self.size.depth
+        if [x, y, z].iter().any(|n| *n < 0) || x > self.size.x || y > self.size.y || z > self.size.z
         {
             Err("out of bounds")
         } else {
@@ -89,32 +88,3 @@ impl Board {
         self.wall_store.get(&pos).is_none()
     }
 }
-
-// Position
-//
-#[derive(Component, Debug, Clone, Eq, PartialEq)]
-pub(crate) enum Position {
-    #[allow(dead_code)]
-    Area(Area3d),
-    Point(IVec3),
-}
-
-// PlayerCellVisibility
-//
-// #[derive(Component, PartialEq, Clone, Copy, Debug)]
-// pub(crate) struct PlayerCellVisibility {
-//     pub seen: bool,
-//     pub visible: bool,
-//     pub position: IVec3,
-// }
-
-// impl PlayerCellVisibility {
-//     pub fn new(x: i32, y: i32, z: i32) -> Self {
-//         let position = IVec3::new(x, y, z);
-//         Self {
-//             visible: false,
-//             seen: false,
-//             position,
-//         }
-//     }
-// }

@@ -1,8 +1,9 @@
+#![allow(dead_code)]
+
 use crate::typical::*;
 // Condition
 //
 #[derive(Component, Debug, Clone, Default, Eq, PartialEq)]
-#[allow(dead_code)]
 pub struct ConditionList {
     needs: (),
     conditions: (),

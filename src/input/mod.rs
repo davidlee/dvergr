@@ -7,12 +7,12 @@ use crate::typical::*;
 use bevy::prelude::{Entity, EventWriter, Input, KeyCode, Query, Res};
 use bevy::utils::tracing::*;
 
-#[derive(Event, Debug)]
-pub(crate) struct UpdateLocus {
-    pub entity: Entity,
-    pub locus: Locus,
-    pub from: Position,
-}
+// #[derive(Event, Debug)]
+// pub(crate) struct UpdateLocus {
+//     pub entity: Entity,
+//     pub locus: Locus,
+//     pub from: Position,
+// }
 
 pub(crate) fn keybindings(
     mut get_player: Query<(Entity, &mut Player)>,
@@ -104,14 +104,13 @@ pub(crate) fn validate_player_move(
         }
 
         if direction.is_some() {
-            if let Position::Point(origin) = locus.position {
-                if let Ok(destination) = board.apply_direction(&origin, &direction.unwrap()) {
-                    // TODO check for things other than walls - statues, pillars, creatures, doors ...
-                    valid = board.is_unoccupied(&destination);
-                } else {
-                    warn!("out of bounds");
-                    valid = false;
-                }
+            let origin = locus.position;
+            if let Ok(destination) = board.apply_direction(&origin, &direction.unwrap()) {
+                // TODO check for things other than walls - statues, pillars, creatures, doors ...
+                valid = board.is_unoccupied(&destination);
+            } else {
+                warn!("out of bounds");
+                valid = false;
             }
         } else {
             return;

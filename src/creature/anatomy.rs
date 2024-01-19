@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use bevy::prelude::Component;
 use std::{fmt::Debug, hash::Hash};
 

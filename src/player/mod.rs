@@ -3,12 +3,12 @@ use crate::action::Action;
 use crate::creature::*;
 use crate::typical::*;
 use bevy::prelude::*;
-use std::collections::VecDeque;
+// use std::collections::VecDeque;
 
 #[derive(Component, Debug, Clone, Default)]
 pub(crate) struct Player {
     pub(crate) action: Option<Action>,
-    pub(crate) queue: VecDeque<Action>,
+    // pub(crate) queue: VecDeque<Action>,
 }
 
 #[derive(Resource, Debug, Clone)]
@@ -32,7 +32,7 @@ impl Default for PlayerBundle {
             player: Player::default(),
             creature: CreatureBundle {
                 locus: Locus {
-                    position: Position::Point(IVec3::new(3, 3, 0)),
+                    position: IVec3::new(3, 3, 0),
                     ..default()
                 },
                 pace: Pace::default(),
@@ -59,12 +59,12 @@ pub(crate) fn spawn(
 ) {
     warn!("Spawn Player");
     for SpawnPlayerEvent(pos) in ev_reader.read() {
-        let position = Position::Point(*pos);
-        warn!("Spawn Player {:?}", position);
+        warn!("Spawn Player {:?}", pos);
+
         let player_bundle = PlayerBundle {
             creature: CreatureBundle {
                 locus: Locus {
-                    position,
+                    position: *pos,
                     ..default()
                 },
                 ..default()
@@ -74,10 +74,7 @@ pub(crate) fn spawn(
         warn!("humm");
         let player_entity = commands.spawn(player_bundle).id();
 
-        board
-            .creature_store
-            .add_single(player_entity, *pos)
-            .unwrap();
+        board.creature_store.insert(player_entity, *pos);
 
         dbg!("inserting PlayerRes");
         commands.insert_resource(PlayerRes {

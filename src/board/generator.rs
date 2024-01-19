@@ -1,3 +1,4 @@
+use crate::material::*;
 use crate::player::SpawnPlayerEvent;
 use crate::typical::*;
 use bevy_turborand::prelude::*;

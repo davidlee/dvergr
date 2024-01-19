@@ -88,6 +88,7 @@ impl Action {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Default, Debug, Eq, PartialEq, Ord, PartialOrd, Clone, Copy, Hash)]
 pub(crate) enum ActionStatus {
     #[default]
@@ -110,6 +111,7 @@ pub(crate) struct ActorQueueEmptyMarker;
 
 // details
 
+#[allow(dead_code)]
 #[derive(Event, Debug, PartialEq, Clone, Copy, Component)]
 pub(crate) enum ActionDetail {
     Move(MovementActionDetail),

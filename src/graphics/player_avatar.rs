@@ -1,4 +1,5 @@
 use super::LogicalGraphicalEntityMapper;
+use crate::graphics::TorchSecondaryLightMarker;
 use crate::typical::*;
 use bevy::core_pipeline::clear_color::ClearColorConfig;
 use bevy::prelude::*;
@@ -7,16 +8,6 @@ use bevy_turborand::GlobalChaChaRng;
 use bevy_turborand::RngComponent;
 
 use crate::graphics::typical::*;
-// use crate::TorchMarker;
-use crate::TorchSecondaryLightMarker;
-
-#[derive(Component, Debug, Default)]
-pub struct PlayerAvatar;
-
-#[derive(Resource, Debug, Clone)]
-pub struct PlayerAvatarRes {
-    pub entity: Entity,
-}
 
 use super::SPRITESHEET_ASSET_PATH;
 const TILE_SIZE_W: f32 = 32.0;

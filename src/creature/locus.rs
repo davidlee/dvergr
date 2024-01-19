@@ -6,7 +6,7 @@ use crate::creature::Stance;
 
 #[derive(Component, Debug, Clone, PartialEq)]
 pub(crate) struct Locus {
-    pub(crate) position: Position,
+    pub(crate) position: IVec3,
     pub(crate) velocity: Vec3,
     pub(crate) direction: Direction,
     pub(crate) facing: Direction,
@@ -15,21 +15,11 @@ pub(crate) struct Locus {
     pub(crate) weight: f64,
 }
 
-impl Locus {
-    pub(crate) fn set_pos(&mut self, pos: IVec3) {
-        self.position = Position::Point(pos);
-    }
-
-    pub(crate) fn set_area(&mut self, area: Area3d) {
-        self.position = Position::Area(area);
-    }
-}
-
 impl Default for Locus {
     fn default() -> Self {
         Locus {
-            position: Position::Point(IVec3::new(0, 0, 0)),
-            velocity: Vec3::new(0., 0., 0.),
+            position: IVec3::ZERO,
+            velocity: Vec3::ZERO,
             direction: Direction::North,
             facing: Direction::North,
             stance: Stance::Standing,

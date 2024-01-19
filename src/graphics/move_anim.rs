@@ -1,22 +1,16 @@
-use std::ops::Add; // for transform.rotation.add
-
-use bevy::prelude::Quat;
-
-use crate::graphics::anim::{LerpVec3, SimpleFrameTimer};
+use crate::action::StillWaitForAnimEvent;
+use crate::graphics::anim::LerpVec3;
+use crate::graphics::TorchMarker;
 use crate::typical::*;
-use crate::{action::StillWaitForAnimEvent, TorchMarker};
 
 pub(crate) fn lerp_vec3_translation(
     mut commands: Commands,
     mut ev_wr: EventWriter<StillWaitForAnimEvent>,
     mut query: Query<(Entity, &mut Transform, &mut LerpVec3)>,
 ) {
-    // warn!("lerpvec3");
     let mut still_animating = false;
 
     for (entity, mut transform, mut anim) in query.iter_mut() {
-        // dbg!(entity, &transform, &anim);
-
         if anim.is_done() {
             transform.translation = anim.target;
             commands.entity(entity).remove::<LerpVec3>();
@@ -31,7 +25,6 @@ pub(crate) fn lerp_vec3_translation(
     }
 
     if still_animating {
-        // warn!("still animating ..");
         ev_wr.send(StillWaitForAnimEvent);
     }
 }
@@ -41,7 +34,6 @@ pub(crate) fn animate_player_fov(
     mut query: Query<&mut Transform, With<TorchMarker>>,
 ) {
     let locus = get_locus.single();
-
     let mut tr = query.single_mut();
     let t = Transform::from_xyz(0., 0., 0.).looking_at(locus.facing.offset().as_vec3(), Vec3::Z);
     tr.rotation = tr.rotation.lerp(t.rotation, 0.2);
