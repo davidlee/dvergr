@@ -2,18 +2,20 @@ use super::*;
 use crate::graphics::typical::LerpVec3;
 use crate::{graphics::LogicalGraphicalEntityMapper, typical::*};
 
-// TODO stuff from move_anim.rs ..
-
-// TODO ensure move is still valid
 pub(crate) fn apply_move(
-    mut query: Query<(Entity, &mut Locus, &mut MovementActionDetail)>,
-    mut query_tr: Query<(Entity, &mut Transform)>,
+    mut query_logic: Query<(Entity, &mut Locus, &mut MovementActionDetail)>,
+    mut query_gfx: Query<(Entity, &mut Transform)>,
     mut commands: Commands,
     board: ResMut<Board>,
     mapper: Res<LogicalGraphicalEntityMapper>,
 ) {
-    for (logical_entity, mut locus, mov) in query.iter_mut() {
+    warn!("APPLY MOVE");
+    for (logical_entity, mut locus, mov) in query_logic.iter_mut() {
+        warn!("FOUND THIS {:?}", &locus);
+        dbg!(&locus, &mov);
+
         if let Position::Point(pos) = locus.position {
+            dbg!("thundertits!!");
             // update the logical model
             let dest: IVec3 = board.apply_direction(&pos, mov.direction()).unwrap();
 
@@ -33,9 +35,9 @@ pub(crate) fn apply_move(
             let target = Transform::from_xyz(x, y, 0.)
                 .looking_at(Vec3::new(facing_x, facing_y, 0.), Vec3::splat(0.));
 
-            let current = query_tr.component_mut::<Transform>(*graphical_entity);
+            let current = query_gfx.component_mut::<Transform>(*graphical_entity);
             let anim = LerpVec3::from_translation(current.translation, target.translation, 6);
-
+            dbg!("ANIMATION::::", &anim);
             commands.entity(*graphical_entity).insert(anim);
         }
     }

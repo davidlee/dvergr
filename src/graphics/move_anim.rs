@@ -1,46 +1,36 @@
-use std::ops::Add;
-
 use bevy::prelude::SpotLight;
+use std::ops::Add; // for transform.rotation.add
 
-use super::{player_avatar::PlayerAvatar, typical::*};
-use crate::{action::StillWaitForAnimEvent, typical::*, TorchMarker};
+use crate::graphics::anim::{LerpVec3, SimpleFrameTimer};
+use crate::typical::*;
+use crate::{action::StillWaitForAnimEvent, TorchMarker};
 
-pub(crate) fn player_movement(
+pub(crate) fn lerp_vec3_translation(
     mut commands: Commands,
     mut ev_wr: EventWriter<StillWaitForAnimEvent>,
-    mut sprite_query: Query<(
-        Entity,
-        &TextureAtlasSprite,
-        &mut Transform,
-        Without<PlayerAvatar>,
-    )>,
-    mut avatar_query: Query<(Entity, &PlayerAvatar, &mut LerpVec3, &mut Transform)>,
+    mut query: Query<(Entity, &mut Transform, &mut LerpVec3)>,
 ) {
-    warn!("player mov");
+    warn!("lerpvec3");
     let mut still_animating = false;
 
-    if let Ok((_sprite_entity, _sprite, mut sprite_transform, _)) = sprite_query.get_single_mut() {
-        warn!("found ..");
-        for (avatar_entity, _avatar, mut anim, mut player_transform) in avatar_query.iter_mut() {
-            warn!("yeah gotem");
-            if anim.current_frame == 1 {
-                player_transform.translation = anim.target;
-                sprite_transform.scale = Vec3::new(1.0, 1.0, 1.0);
-                commands.entity(avatar_entity).remove::<LerpVec3>();
-            } else {
-                player_transform.translation.x += anim.delta.x;
-                player_transform.translation.y += anim.delta.y;
-                let k = anim.total_frames as f32 / 2.0;
-                let scale_factor = (k - (anim.current_frame as f32 - k).abs()).abs() / 35.0 + 1.0; // FIXME WTF is 35.0 here??
-                sprite_transform.scale = Vec3::new(scale_factor, scale_factor, scale_factor);
-                anim.current_frame -= 1;
-                still_animating = true;
-            }
+    for (entity, mut transform, mut anim) in query.iter_mut() {
+        dbg!(entity, &transform, &anim);
+
+        if anim.is_done() {
+            transform.translation = anim.target;
+            commands.entity(entity).remove::<LerpVec3>();
+            //
+            commands.entity(entity).log_components();
+        } else {
+            transform.translation += anim.delta;
+            anim.next();
+
+            still_animating = true;
         }
     }
 
     if still_animating {
-        warn!("still animating");
+        warn!("still animating ..");
         ev_wr.send(StillWaitForAnimEvent);
     }
 }

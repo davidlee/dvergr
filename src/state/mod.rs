@@ -35,15 +35,12 @@ pub(crate) enum TickState {
     #[default]
     PlayerInput,
     ValidatePlayerAction,
-    //
     PrepareAgentActions,
     //
-    ClockTick, // advance clock
+    ClockTick, // advance clock until the next tick something happens
     //
     PlayerActionTick,
-    //
     AgentActionsTick,
-    //
     ApplyCompletedActions,
     //
     Animate,

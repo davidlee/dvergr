@@ -37,6 +37,7 @@ pub mod typical {
     };
     pub use bevy::prelude::{
         First, Last, OnEnter, OnExit, OnTransition, PostUpdate, PreUpdate, Startup, Update,
+        Transform,
     };
     pub use bevy::utils::tracing::{debug, error, info, trace, warn, Level};
 
@@ -123,7 +124,7 @@ fn main() {
         )
 
         // Actions
-        
+        .add_systems(OnEnter(TickState::PlayerInput), action::skip_player_input_if_action_exists)
         .add_systems(OnEnter(TickState::ValidatePlayerAction), input::validate_player_move)
         .add_systems(OnEnter(TickState::PrepareAgentActions), action::prepare_agent_actions)
         .add_systems(OnEnter(TickState::ClockTick), action::clock_tick)
@@ -171,7 +172,7 @@ fn main() {
 
         .add_systems(
             Update,
-            (graphics::move_anim::player_movement).chain()
+            (graphics::move_anim::lerp_vec3_translation).chain()
                 .run_if(state_exists_and_equals(TickState::Animate)),
         )
 

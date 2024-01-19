@@ -9,7 +9,7 @@ pub(crate) mod player_avatar;
 use bevy::{prelude::*, utils::HashMap};
 
 pub(crate) mod typical {
-    pub use super::anim::{LerpVec3, Lerpf32, SimpleTimer};
+    pub use super::anim::{LerpVec3, Lerpf32, SimpleFrameTimer};
     pub use super::components::{GridSize, PixelSize, TileSize};
     pub use super::{CreatureEntityRef, DwarfSpritesheet};
     pub use bevy::prelude::{

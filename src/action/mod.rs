@@ -26,6 +26,18 @@ pub(crate) struct Action {
 }
 
 impl Action {
+    fn ticks_left(&self) -> Option<u32> {
+        if let ActionStatus::Active {
+            start_tick: _,
+            complete_tick,
+        } = self.status
+        {
+            Some(complete_tick)
+        } else {
+            None
+        }
+    }
+
     fn start(&mut self, current_tick: u32) {
         let start_tick = current_tick;
         let complete_tick = start_tick + self.duration;

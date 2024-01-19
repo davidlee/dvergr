@@ -3,6 +3,18 @@ use super::*;
 #[derive(Event, Debug)]
 pub(crate) struct StillWaitForAnimEvent;
 
+pub(crate) fn skip_player_input_if_action_exists(
+    query: Query<&Player>,
+    mut next_state: ResMut<NextState<TickState>>,
+) {
+    let player = query.get_single().unwrap();
+    if player.action.is_some() {
+        info!("no need for player input, have action. go to ClockTick");
+        dbg!(player);
+        next_state.set(TickState::ClockTick);
+    }
+}
+
 pub(crate) fn dead_letters(
     mut letters: EventReader<StillWaitForAnimEvent>,
     mut next_state: ResMut<NextState<TickState>>,
@@ -13,48 +25,98 @@ pub(crate) fn dead_letters(
         finished = false;
     }
     if finished {
-        warn!(">> ValidatePlayerAction");
-        next_state.set(TickState::ValidatePlayerAction);
+        warn!(">> Loop Over ...");
+        next_state.set(TickState::PlayerInput);
     }
 }
 
 pub(crate) fn apply_completed_action_markers(
     mut commands: Commands,
-    mut actors: Query<(Entity, &mut Actor)>,
+    // mut actors: Query<(Entity, &mut Actor)>,
     mut get_player: Query<(Entity, &mut Player)>,
     mut next_state: ResMut<NextState<TickState>>,
     // time: Res<TickCount>,
 ) {
-    warn!("apply completed, any?");
+    warn!("apply completed action markers:");
     // Player action complete?
     let (entity, mut player) = get_player.single_mut();
     warn!("player :: {:?}", player);
+
     if player.action.is_some_and(|x| x.is_success()) {
         warn!("completed ###");
-        // remove the action
+
+        // remove it
         let action = player.action.take().unwrap();
+
         // insert the detail as a marker component
-        // which will trigger the effects
-        commands.entity(entity).insert(action.detail);
+        // we'll look for these in the on_success systems
+
+        let mut cmds = commands.entity(entity);
+        match action.detail {
+            ActionDetail::Move(x) => {
+                cmds.insert(x);
+            }
+            ActionDetail::Inventory(x) => {
+                cmds.insert(x);
+            }
+            ActionDetail::Attack(x) => {
+                cmds.insert(x);
+            }
+            ActionDetail::Shoot(x) => {
+                cmds.insert(x);
+            }
+            ActionDetail::Wait => {} // noop
+        }
+
+        cmds.log_components();
     }
 
-    for (e, mut actor) in actors.iter_mut() {
-        if actor.action.is_some_and(|x| x.is_success()) {
-            let action = actor.action.take().unwrap();
-            commands.entity(e).insert(action.detail);
-        }
-    }
+    // for (e, mut actor) in actors.iter_mut() {
+    //     if actor.action.is_some_and(|x| x.is_success()) {
+    //         let action = actor.action.take().unwrap();
+    //         // TODO / fixme
+    //         // commands.entity(e).insert(action.detail).log_components();
+    //     }
+    // }
 
     warn!(">> animate");
     next_state.set(TickState::Animate)
 }
 
+// find the next "interesting" clock tick
+// for now, that is the next tick in which an action completes -
+// then advance to it
+
 pub(crate) fn clock_tick(
     mut clock: ResMut<TickCount>,
+    qp: Query<&Player>,
+    qa: Query<&Actor>,
     mut next_state: ResMut<NextState<TickState>>,
 ) {
-    clock.tick();
-    warn!("time is now {:?}", clock);
+    let mut ts: Vec<u32> = vec![];
+
+    let player = qp.get_single().unwrap();
+    if player.action.is_some() {
+        if let Some(t) = player.action.unwrap().ticks_left() {
+            ts.push(t);
+        }
+    }
+
+    for actor in qa.iter() {
+        if actor.action.is_some() {
+            if let Some(t) = actor.action.unwrap().ticks_left() {
+                ts.push(t);
+            }
+        }
+    }
+
+    if ts.is_empty() {
+        clock.tick();
+    } else {
+        ts.sort();
+        clock.advance(ts[0]);
+    }
+
     next_state.set(TickState::PlayerActionTick);
 }
 
@@ -78,12 +140,14 @@ pub(crate) fn tick_player_action(
         }
 
         if action.should_complete(time.as_u32()) {
+            warn!("SHOULD COMPLETE");
             action.status = ActionStatus::Complete;
         } else {
             // TODO validate / handle interrupts / etc
         };
 
         player.action = Some(action);
+        dbg!("tick_player_action:", &player.action);
         next_state.set(TickState::AgentActionsTick);
     } else {
         panic!("missing action");
