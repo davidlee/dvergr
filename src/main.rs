@@ -178,7 +178,7 @@ fn main() {
 
         .add_systems(
             Update,
-                (graphics::player_avatar::flicker_torches, graphics::move_anim::move_head)
+                (graphics::player_avatar::flicker_torches, graphics::move_anim::animate_player_fov)
             .run_if(state_exists_and_equals(AppState::Ready)),
         )
         .add_systems(Update, bevy::window::close_on_esc)

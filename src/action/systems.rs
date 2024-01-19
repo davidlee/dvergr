@@ -10,7 +10,7 @@ pub(crate) fn skip_player_input_if_action_exists(
     let player = query.get_single().unwrap();
     if player.action.is_some() {
         info!("no need for player input, have action. go to ClockTick");
-        dbg!(player);
+        // dbg!(player);
         next_state.set(TickState::ClockTick);
     }
 }
@@ -19,7 +19,7 @@ pub(crate) fn dead_letters(
     mut letters: EventReader<StillWaitForAnimEvent>,
     mut next_state: ResMut<NextState<TickState>>,
 ) {
-    warn!("dead letters");
+    // warn!("dead letters");
     let mut finished = true;
     for _ in letters.read() {
         finished = false;
@@ -37,13 +37,13 @@ pub(crate) fn apply_completed_action_markers(
     mut next_state: ResMut<NextState<TickState>>,
     // time: Res<TickCount>,
 ) {
-    warn!("apply completed action markers:");
+    // warn!("apply completed action markers:");
     // Player action complete?
     let (entity, mut player) = get_player.single_mut();
-    warn!("player :: {:?}", player);
+    // warn!("player :: {:?}", player);
 
     if player.action.is_some_and(|x| x.is_success()) {
-        warn!("completed ###");
+        // warn!("completed ###");
 
         // remove it
         let action = player.action.take().unwrap();
@@ -116,6 +116,7 @@ pub(crate) fn clock_tick(
         ts.sort();
         clock.advance(ts[0]);
     }
+    dbg!("Time is: {:?}", clock);
 
     next_state.set(TickState::PlayerActionTick);
 }

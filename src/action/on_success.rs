@@ -11,11 +11,11 @@ pub(crate) fn apply_move(
 ) {
     warn!("APPLY MOVE");
     for (logical_entity, mut locus, mov) in query_logic.iter_mut() {
-        warn!("FOUND THIS {:?}", &locus);
         dbg!(&locus, &mov);
 
         if let Position::Point(pos) = locus.position {
             dbg!("thundertits!!");
+
             // update the logical model
             let dest: IVec3 = board.apply_direction(&pos, mov.direction()).unwrap();
 
@@ -28,17 +28,18 @@ pub(crate) fn apply_move(
                 .remove::<MovementActionDetail>();
 
             // then add an animation marker to the graphics
-            let graphical_entity = mapper.graphical_entity(&logical_entity).unwrap();
 
-            let [x, y, _] = pos.as_vec3().to_array();
-            let [facing_x, facing_y] = locus.facing.offset2df().to_array();
-            let target = Transform::from_xyz(x, y, 0.)
-                .looking_at(Vec3::new(facing_x, facing_y, 0.), Vec3::splat(0.));
+            // let [facing_x, facing_y] = locus.facing.offset2df().to_array();
+            //     .looking_at(Vec3::new(facing_x, facing_y, 0.), Vec3::splat(0.));
 
-            let current = query_gfx.component_mut::<Transform>(*graphical_entity);
-            let anim = LerpVec3::from_translation(current.translation, target.translation, 6);
-            dbg!("ANIMATION::::", &anim);
-            commands.entity(*graphical_entity).insert(anim);
+            // let current = query_gfx.component_mut::<Transform>(*gfx_entity);
+            // let anim = LerpVec3::from_translation(current.translation, target.translation, 6);
+            // dbg!("ANIMATION::::", &anim);
+
+            let anim = LerpVec3::from_translation(pos.as_vec3(), dest.as_vec3(), 6);
+            let gfx_entity = mapper.graphical_entity(&logical_entity).unwrap();
+
+            commands.entity(*gfx_entity).insert(anim);
         }
     }
 }
