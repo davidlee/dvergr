@@ -7,27 +7,27 @@ use bevy::prelude::*;
 pub enum AppState {
     #[default]
     Init,
-    SpawnPlayerAvatar,
+    // SpawnPlayerAvatar,
     Ready,
 }
 
-#[derive(Debug, Event)]
-pub enum AppInitEvent {
-    SetAppState(AppState),
-}
+// #[derive(Debug, Event)]
+// pub enum AppInitEvent {
+//     SetAppState(AppState),
+// }
 
-pub fn handle_app_init_event(
-    mut reader: EventReader<AppInitEvent>,
-    state: Res<State<AppState>>,
-    mut next_state: ResMut<NextState<AppState>>,
-) {
-    for ev in reader.read() {
-        let current_state = state.get();
-        let AppInitEvent::SetAppState(new_state) = ev;
-        warn!("State Transition: {:?} --> {:?}", current_state, new_state);
-        next_state.set(*new_state);
-    }
-}
+// pub fn handle_app_init_event(
+//     mut reader: EventReader<AppInitEvent>,
+//     state: Res<State<AppState>>,
+//     mut next_state: ResMut<NextState<AppState>>,
+// ) {
+//     for ev in reader.read() {
+//         let current_state = state.get();
+//         let AppInitEvent::SetAppState(new_state) = ev;
+//         warn!("State Transition: {:?} --> {:?}", current_state, new_state);
+//         next_state.set(*new_state);
+//     }
+// }
 
 #[derive(Default, Debug, Eq, PartialEq, Ord, PartialOrd, Clone, Copy, Hash, States)]
 #[allow(dead_code)]

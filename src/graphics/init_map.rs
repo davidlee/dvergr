@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy::pbr::OpaqueRendererMethod;
 use bevy::core_pipeline::clear_color::ClearColorConfig;
 use bevy::render::view::ColorGrading;
-use crate::{Board, SpawnPlayerEvent, PlayerRes};
+use crate::{Board, SpawnPlayerEvent, Player};
 use super::*;
 
 
@@ -15,14 +15,11 @@ const CAMERA3D_Z_POS:f32 = 20.;
 pub(crate) fn spawn_voxel_map(
     board: Res<Board>,
     mut commands: Commands,
-    mut cmd: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     asset_server: ResMut<AssetServer>,
     mut ev: EventReader<SpawnPlayerEvent>,
-    // mut ambient_light: Res<AmbientLight>,
-    // player_query: Query<(Entity, &Player)>,
-    player_ref: Res<PlayerRes>,
+    player_query: Query<(Entity, &Player)>,
 ) {
     // ..
     let texture_handle: Handle<Image> = asset_server.load("dirt.png");
@@ -64,7 +61,7 @@ pub(crate) fn spawn_voxel_map(
     let bx = 0.0 - board.size.x as f32;
     let by = 0.0 - board.size.y as f32;
 
-    let player_entity = player_ref.entity;
+    let player_entity = player_query.single().0;
 
     commands.insert_resource(AmbientLight {
         color: Color::BLACK,
@@ -113,7 +110,7 @@ pub(crate) fn spawn_voxel_map(
             }
 
             for SpawnPlayerEvent(position) in ev.read() {
-                let player_avatar_entity = ch
+                    ch
                     .spawn((
                         PlayerAvatar,
                         CreatureEntityRef(player_entity),
@@ -170,11 +167,7 @@ pub(crate) fn spawn_voxel_map(
                             },
                         ));
                     })
-                    .id();
-                // create resource so we can access the entitity elsewhere
-                cmd.insert_resource(PlayerAvatarRes {
-                    entity: player_avatar_entity,
-                });
+                    ;
             }
         });
 }

@@ -1,4 +1,7 @@
+#![allow(dead_code)]
 use crate::typical::*;
+
+pub(crate) use anatomy::{APSymmetry, Gender, Side};
 
 pub(crate) mod anatomy;
 pub(crate) mod attributes;
@@ -58,7 +61,7 @@ impl Default for CreatureBundle {
 
 #[allow(dead_code)]
 #[derive(Component, Debug, Clone)]
-pub struct Creature {
+pub(crate) struct Creature {
     dry_weight: f32, // kg
     height: i32,     // cm
 }
@@ -72,15 +75,14 @@ impl Default for Creature {
     }
 }
 
-impl Creature {
-    pub fn human() -> Self {
-        Self::default()
-    }
-}
-// Size
-//
+// impl Creature {
+//     pub fn human() -> Self {
+//         Self::default()
+//     }
+// }
+
 #[derive(Component, Debug, Clone, Default, Eq, PartialEq, Ord, PartialOrd)]
-pub enum CreatureSize {
+pub(crate) enum CreatureSize {
     Insect,
     Tiny,  // kitten
     Small, // Human child; fox
@@ -91,35 +93,36 @@ pub enum CreatureSize {
     Leviathan(), // show me map tiles
 }
 
-pub enum Size {
-    Bug,    // diminutive
-    Cat,    // tiny
-    Monkey, // small
-    Wolf,   //
-    Man,    // Medium
-    Tiger,  //
-    Bear,   // Large
-    Horse,  //
-    Bison,  // Larger
-    Hippopotamus,
-    Elephant,  //
-    Leviathan, // expressed in map tiles
-}
+// pub(crate) enum Size {
+//     Bug,    // diminutive
+//     Cat,    // tiny
+//     Monkey, // small
+//     Wolf,   //
+//     Man,    // Medium
+//     Tiger,  //
+//     Bear,   // Large
+//     Horse,  //
+//     Bison,  // Larger
+//     Hippopotamus,
+//     Elephant,  //
+//     Leviathan, // expressed in map tiles
+// }
+
 #[derive(Component, Debug, Clone, Default)]
-pub struct NeedList {
+pub(crate) struct NeedList {
     pub hunger: u8,
     pub thirst: u8,
     pub sleep: u8,
     pub morale: u8,
     pub breath: u8,
-    pub blood: f32, // liters
+    pub blood: f32, // litres
     pub hope: u8,
     pub safety: u8,
 }
 
-// should be a state machine??
+// should be a state machine perhaps?
 #[derive(Component, Debug, Clone, Copy, Default, Eq, PartialEq)]
-pub enum Stance {
+pub(crate) enum Stance {
     Dynamic,
     #[default]
     Standing,
@@ -137,8 +140,8 @@ pub enum Stance {
     // Jumping,
 }
 
-#[derive(Component, Debug, Clone, Default)]
-pub struct Age(pub u16);
+// #[derive(Component, Debug, Clone, Default)]
+// pub struct Age(pub u16);
 
 #[derive(Component, Debug, Clone, Default)]
 #[allow(dead_code)]

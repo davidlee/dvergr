@@ -16,11 +16,12 @@ const SPRITE_SCALE: f32 = 0.6;
 
 pub fn spawn(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
-    mut ev_writer: EventWriter<AppInitEvent>,
-    avatar_ref: Res<PlayerAvatarRes>,
     mut mapper: ResMut<LogicalGraphicalEntityMapper>,
+    mut next_state: ResMut<NextState<AppState>>,
+    asset_server: Res<AssetServer>,
+    // avatar_ref: Res<PlayerAvatarRes>,
+    avatar_query: Query<(Entity, &PlayerAvatar)>,
     player_query: Query<(Entity, &Player)>,
 ) {
     let texture_handle: Handle<Image> = asset_server.load(SPRITESHEET_ASSET_PATH);
@@ -32,8 +33,8 @@ pub fn spawn(
         atlas_handle: texture_atlas_handle.clone(),
     });
 
-    let player_entity = player_query.get_single().unwrap().0;
-    let avatar_entity = avatar_ref.entity;
+    let player_entity = player_query.single().0;
+    let avatar_entity = avatar_query.single().0;
 
     mapper.insert(&player_entity, &avatar_entity);
 
@@ -62,7 +63,8 @@ pub fn spawn(
                 ..default()
             });
         });
-    ev_writer.send(AppInitEvent::SetAppState(AppState::Ready));
+
+    next_state.set(AppState::Ready);
 }
 
 // TODO get parent, use attributes for intensity range

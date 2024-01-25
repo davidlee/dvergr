@@ -7,13 +7,6 @@ use crate::typical::*;
 use bevy::prelude::{Entity, EventWriter, Input, KeyCode, Query, Res};
 use bevy::utils::tracing::*;
 
-// #[derive(Event, Debug)]
-// pub(crate) struct UpdateLocus {
-//     pub entity: Entity,
-//     pub locus: Locus,
-//     pub from: Position,
-// }
-
 pub(crate) fn keybindings(
     mut get_player: Query<(Entity, &mut Player)>,
     mut next_state: ResMut<NextState<TickState>>,
@@ -64,6 +57,7 @@ pub(crate) fn keybindings(
             duration: 10,
         };
         player.action = Some(action);
+        // FIXME this feels like it should be an event ...
         next_state.set(TickState::ValidatePlayerAction);
     }
 }
@@ -78,6 +72,7 @@ pub(crate) fn handle_ev_player_action_invalid(
 
     let mut player = player_query.get_single_mut().unwrap();
     for _ in ev_invalid.read() {
+        warn!("PLAYER ACTION INVALID -- removing");
         player.action = None;
     }
 
@@ -92,8 +87,8 @@ pub(crate) fn validate_player_move(
     board: Res<Board>,
 ) {
     if let Ok((player, locus)) = player_query.get_single_mut() {
+        let mut _valid = false;
         let mut direction: Option<Direction> = None;
-        let mut valid = false;
 
         if let Some(action) = &player.action {
             direction = match action.detail {
@@ -107,22 +102,19 @@ pub(crate) fn validate_player_move(
             let origin = locus.position;
             if let Ok(destination) = board.apply_direction(&origin, &direction.unwrap()) {
                 // TODO check for things other than walls - statues, pillars, creatures, doors ...
-                valid = board.is_unoccupied(&destination);
+                _valid = board.is_unoccupied(&destination);
             } else {
                 warn!("out of bounds");
-                valid = false;
+                _valid = false;
             }
         } else {
             return;
         }
 
-        if valid {
+        if _valid {
             next_state.set(TickState::PrepareAgentActions);
         } else {
             ev_invalid.send(PlayerActionInvalidEvent);
-            // player.action = None;
-            // warn!("Invalid player input");
-            // next_state.set(TickState::PlayerInput);
         }
     }
 }

@@ -64,8 +64,6 @@ fn main() {
         .add_state::<AppState>()
         .add_state::<TickState>()
         // EVENTS
-        // .add_event::<input::UpdateLocus>()
-        .add_event::<state::AppInitEvent>()
         .add_event::<player::SpawnPlayerEvent>()
         .add_event::<action::PlayerActionInvalidEvent>()
         .add_event::<action::StillWaitForAnimEvent>()
@@ -92,7 +90,13 @@ fn main() {
         )
         .add_systems(
             OnEnter(TickState::ValidatePlayerAction),
-            input::validate_player_move,
+            (
+                input::validate_player_move,
+                // other validations go here
+                input::handle_ev_player_action_invalid
+                    .run_if(on_event::<action::PlayerActionInvalidEvent>()),
+            )
+                .chain(),
         )
         .add_systems(
             OnEnter(TickState::PrepareAgentActions),
@@ -144,9 +148,5 @@ fn main() {
                 .run_if(state_exists_and_equals(AppState::Ready)),
         )
         .add_systems(Update, bevy::window::close_on_esc)
-        .add_systems(
-            PostUpdate,
-            state::handle_app_init_event.run_if(on_event::<AppInitEvent>()),
-        )
         .run();
 }

@@ -1,3 +1,5 @@
+// #![allow(unused_imports)]
+
 pub(crate) use crate::board::{
     cell::{Cell, Floor, Wall},
     direction::{Direction, COMPASS_DEGREES},
@@ -7,11 +9,15 @@ pub(crate) use crate::board::{
     BOARD_SIZE_Y,
 };
 
-pub(crate) use crate::creature::anatomy::Gender;
-pub(crate) use crate::creature::{Creature, Locus, Pace};
+#[allow(unused_imports)]
+pub(crate) use crate::creature::{
+    APSymmetry, AbilityList, Creature, CreatureBundle, CreatureSize, Gender, Locus, NeedList, Pace,
+    Side, SkillList, Stance,
+};
+
 pub(crate) use crate::material::Species;
-pub(crate) use crate::player::{Player, PlayerRes};
-pub(crate) use crate::state::{AppInitEvent, AppState};
+pub(crate) use crate::player::Player;
+pub(crate) use crate::state::AppState;
 
 pub use bevy::math::{IVec2, IVec3};
 pub use bevy::prelude::{

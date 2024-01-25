@@ -11,10 +11,10 @@ pub(crate) struct Player {
     // pub(crate) queue: VecDeque<Action>,
 }
 
-#[derive(Resource, Debug, Clone)]
-pub(crate) struct PlayerRes {
-    pub entity: Entity,
-}
+// #[derive(Resource, Debug, Clone)]
+// pub(crate) struct PlayerRes {
+//     pub entity: Entity,
+// }
 
 #[derive(Event, Debug)]
 pub(crate) struct SpawnPlayerEvent(pub IVec3);
@@ -76,11 +76,9 @@ pub(crate) fn spawn(
 
         board.creature_store.insert(player_entity, *pos);
 
-        dbg!("inserting PlayerRes");
-        commands.insert_resource(PlayerRes {
-            entity: player_entity,
-        });
-
-        // ev_writer.send(AppInitEvent::SetAppState(AppState::BuildMap));
+        // dbg!("inserting PlayerRes");
+        // commands.insert_resource(PlayerRes {
+        //     entity: player_entity,
+        // });
     }
 }
