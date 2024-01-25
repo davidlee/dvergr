@@ -14,9 +14,18 @@ pub mod state;
 pub mod time;
 pub mod typical;
 
+use action::{PlayerActionInvalidEvent, StillWaitForAnimEvent};
 use graphics::LogicalGraphicalEntityMapper;
 use player::SpawnPlayerEvent;
 use typical::graphics::*;
+
+use bevy::ecs::schedule::common_conditions::*;
+pub use bevy::prelude::{
+    apply_deferred, default, on_event, state_exists, state_exists_and_equals, First, Has,
+    IntoSystemConfigs, Last, OnEnter, OnExit, OnTransition, PostUpdate, PreUpdate, Startup, Update,
+};
+
+// use bevy::ecs::schedule::*;
 
 use bevy::prelude::{DefaultPlugins, PluginGroup};
 use bevy::window::{PresentMode, Window, WindowPlugin, WindowResolution, WindowTheme};
@@ -59,9 +68,9 @@ fn main() {
         .add_state::<AppState>()
         .add_state::<TickState>()
         // EVENTS
-        .add_event::<player::SpawnPlayerEvent>()
-        .add_event::<action::PlayerActionInvalidEvent>()
-        .add_event::<action::StillWaitForAnimEvent>()
+        .add_event::<SpawnPlayerEvent>()
+        .add_event::<PlayerActionInvalidEvent>()
+        .add_event::<StillWaitForAnimEvent>()
         //
         // SYSTEMS
         //
@@ -79,9 +88,10 @@ fn main() {
                 .chain(),
         )
         // Actions
+        // OnEnter(TickState) systems
         .add_systems(
             OnEnter(TickState::PlayerInput),
-            action::skip_player_input_if_action_exists,
+            (action::skip_player_input_if_action_exists, apply_deferred).chain(),
         )
         .add_systems(
             OnEnter(TickState::ValidatePlayerAction),
@@ -90,43 +100,58 @@ fn main() {
                 // other validations go here
                 input::handle_ev_player_action_invalid
                     .run_if(on_event::<action::PlayerActionInvalidEvent>()),
+                apply_deferred,
             )
                 .chain(),
         )
         .add_systems(
             OnEnter(TickState::PrepareAgentActions),
-            action::prepare_agent_actions,
+            (action::prepare_agent_actions, apply_deferred).chain(),
         )
         .add_systems(OnEnter(TickState::ClockTick), action::clock_tick)
         .add_systems(
             OnEnter(TickState::ApplyCompletedActions),
-            action::apply_completed_action_markers,
+            (action::apply_completed_action_markers, apply_deferred).chain(),
+        )
+        // PreUpdate
+        // validate, apply actions, etc
+        .add_systems(
+            PreUpdate,
+            (
+                input::keybindings.run_if(state_exists_and_equals(TickState::PlayerInput)),
+                apply_deferred,
+            )
+                .chain(),
         )
         .add_systems(
             PreUpdate,
-            input::keybindings.run_if(state_exists_and_equals(TickState::PlayerInput)),
+            (
+                action::tick_player_action
+                    .run_if(state_exists_and_equals(TickState::PlayerActionTick)),
+                apply_deferred,
+            )
+                .chain(),
         )
         .add_systems(
             PreUpdate,
-            action::tick_player_action.run_if(state_exists_and_equals(TickState::PlayerActionTick)),
+            (
+                action::tick_agent_actions
+                    .run_if(state_exists_and_equals(TickState::AgentActionsTick)),
+                apply_deferred,
+            )
+                .chain(),
         )
-        .add_systems(
-            PreUpdate,
-            action::tick_agent_actions.run_if(state_exists_and_equals(TickState::AgentActionsTick)),
-        )
-        // actually apply effects
+        // Update
+        // actually apply effects of actions
         .add_systems(
             Update,
             (
                 action::on_success::apply_move,
                 action::on_success::apply_attack,
+                apply_deferred,
             )
                 .chain()
                 .run_if(state_exists_and_equals(TickState::ApplyCompletedActions)),
-        )
-        .add_systems(
-            PostUpdate,
-            action::dead_letters.run_if(state_exists_and_equals(TickState::Animate)),
         )
         .add_systems(
             Update,
@@ -134,6 +159,13 @@ fn main() {
                 .chain()
                 .run_if(state_exists_and_equals(TickState::Animate)),
         )
+        // Check if animations are complete, if so GOTO 10
+        .add_systems(
+            PostUpdate,
+            action::dead_letters.run_if(state_exists_and_equals(TickState::Animate)),
+        )
+        //
+        // these alway run, in the background:
         .add_systems(
             Update,
             (
@@ -143,5 +175,13 @@ fn main() {
                 .run_if(state_exists_and_equals(AppState::Ready)),
         )
         .add_systems(Update, bevy::window::close_on_esc)
+        .add_systems(
+            Update,
+            show_instrumentation.run_if(not(state_exists_and_equals(TickState::PlayerInput))),
+        )
         .run();
+}
+
+fn show_instrumentation(t: Res<bevy::core::FrameCount>, res: Res<State<TickState>>) {
+    warn!("😈 frame incremented: {:?} => {:?}", t.0, res.get());
 }

@@ -19,13 +19,12 @@ pub(crate) fn dead_letters(
     mut letters: EventReader<StillWaitForAnimEvent>,
     mut next_state: ResMut<NextState<TickState>>,
 ) {
-    // warn!("dead letters");
     let mut finished = true;
     for _ in letters.read() {
         finished = false;
     }
     if finished {
-        warn!(">> Loop Over ...");
+        info!("Anim Complete >> PlayerInput");
         next_state.set(TickState::PlayerInput);
     }
 }
@@ -68,7 +67,7 @@ pub(crate) fn apply_completed_action_markers(
             ActionDetail::Wait => {} // noop
         }
 
-        cmds.log_components();
+        // cmds.log_components();
     }
 
     // for (e, mut actor) in actors.iter_mut() {
@@ -116,7 +115,7 @@ pub(crate) fn clock_tick(
         ts.sort();
         clock.advance(ts[0]);
     }
-    dbg!("Time is: {:?}", clock);
+    dbg!("Clock Tick! time is: {:?}", clock);
 
     next_state.set(TickState::PlayerActionTick);
 }
@@ -148,7 +147,7 @@ pub(crate) fn tick_player_action(
         };
 
         player.action = Some(action);
-        dbg!("tick_player_action:", &player.action);
+        // dbg!("tick_player_action:", &player.action);
         next_state.set(TickState::AgentActionsTick);
     } else {
         panic!("missing action");

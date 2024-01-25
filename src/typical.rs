@@ -26,13 +26,10 @@ pub(crate) use crate::player::Player;
 pub(crate) use crate::state::{AppState, TickState};
 pub(crate) use crate::time::{Clock, Duration, TickCount, Unit};
 
-//
 pub use bevy::prelude::{
-    apply_deferred, default, on_event, state_exists, state_exists_and_equals, App, BuildChildren,
-    Bundle, Changed, Commands, Component, Deref, DerefMut, Entity, Event, EventReader, EventWriter,
-    First, Has, IntoSystemConfigs, Last, NextState, OnEnter, OnExit, OnTransition, Plugin,
-    PostUpdate, PreUpdate, Query, Res, ResMut, Resource, Startup, State, Transform, Update, Vec2,
-    Vec3, With, Without,
+    App, BuildChildren, Bundle, Changed, Commands, Component, Deref, DerefMut, Entity, Event,
+    EventReader, EventWriter, NextState, Plugin, Query, Res, ResMut, Resource, State, Transform,
+    Vec2, Vec3, With, Without,
 };
 
 pub use bevy::core_pipeline::clear_color::ClearColorConfig;
@@ -53,17 +50,15 @@ pub use std::convert::From;
 pub use std::fmt::Debug;
 pub use std::hash::Hash;
 
-// pub use std::dbg;
-// pub use std::format;
-
 pub(crate) mod graphics {
     pub(crate) use super::*;
     pub(crate) use crate::graphics::anim::LerpVec3;
     pub(crate) use crate::graphics::{
         CameraMarker, CreatureEntityRef, DwarfSpritesheet, TorchMarker, TorchSecondaryLightMarker,
     };
-    // these are perhaps more public than the above ..
+    // these are slightly more public than the above ..
     pub(crate) use crate::graphics::{LogicalGraphicalEntityMapper, MapMarker, PlayerAvatar};
+
     pub use bevy::prelude::{
         AssetServer, Assets, ClearColor, Color, Handle, Image, Msaa, SpatialBundle, Sprite,
         SpriteBundle, SpriteSheetBundle, TextureAtlas, TextureAtlasBuilder, TextureAtlasSprite,
