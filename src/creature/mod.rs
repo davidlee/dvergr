@@ -17,8 +17,9 @@ pub(crate) use attributes::*;
 pub(crate) use condition::*;
 pub(crate) use locus::*;
 
-#[derive(Bundle, Debug, Clone)]
+#[derive(Bundle, Debug)]
 pub(crate) struct CreatureBundle {
+    pub actor: Actor,
     pub creature: Creature,
     pub attributes: Attributes,
     pub species: Species,
@@ -38,6 +39,7 @@ pub(crate) struct CreatureBundle {
 impl Default for CreatureBundle {
     fn default() -> Self {
         Self {
+            actor: Actor::default(),
             creature: Creature::default(),
             attributes: Attributes::new(),
             species: Species::Dwarf,

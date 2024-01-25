@@ -3,12 +3,76 @@ use crate::typical::*;
 pub(crate) mod on_success;
 pub(crate) mod systems;
 
+#[derive(Default, Debug, Eq, PartialEq, Ord, PartialOrd, Clone, Copy, Hash, States)]
+pub(crate) enum ActionSystemState {
+    #[default]
+    Plan,
+    Run,
+    AwaitAnim,
+}
+
+#[derive(Component, Debug)]
+pub(crate) struct ActionPlanRequestMarker;
+
+#[allow(dead_code)]
+pub(crate) mod events {
+    use super::*;
+
+    #[derive(Event, Debug)]
+    pub(crate) struct TickEvent;
+
+    #[derive(Event, Debug)]
+    pub(crate) struct ActionPlanRequestEvent;
+
+    // #[derive(Event, Debug, Clone)]
+    // pub(crate) struct PlayerActionInvalidEvent; // deprecate
+
+    #[derive(Event, Debug, Clone)]
+    pub(crate) struct ActionInvalidEvent {
+        pub(crate) entity: Entity,
+        pub(crate) at: u32,
+    }
+
+    #[derive(Event, Debug, Clone)]
+    pub(crate) struct ActionCompleteEvent {
+        pub(crate) entity: Entity,
+        pub(crate) at: u32,
+    }
+
+    #[derive(Event, Debug, Clone)]
+    pub(crate) struct ActionVerifyAssignsEvent {
+        pub(crate) at: u32,
+    }
+
+    #[derive(Event, Debug, Clone)]
+    pub(crate) struct ActionStartEvent {
+        pub(crate) entity: Entity,
+        pub(crate) at: u32,
+    }
+
+    #[derive(Event, Debug, Clone)]
+    pub(crate) struct ActionAbortEvent {
+        pub(crate) entity: Entity,
+        pub(crate) at: u32,
+    }
+
+    #[derive(Event, Debug)]
+    pub(crate) struct StillWaitForAnimEvent;
+}
+
 pub(crate) use systems::*;
 
 #[derive(Component, Default, Debug)]
 pub(crate) struct Actor {
     pub action: Option<Action>,
     pub queue: VecDeque<Action>,
+}
+
+impl Actor {
+    pub(crate) fn reset(&mut self) {
+        self.action = None;
+        self.queue = VecDeque::new();
+    }
 }
 
 #[derive(Event, Debug, PartialEq, Clone, Copy)]
@@ -18,6 +82,7 @@ pub(crate) struct Action {
     pub(crate) status: ActionStatus,
     pub(crate) detail: ActionDetail,
     pub(crate) duration: u32, // ticks
+    pub(crate) validated: bool,
 }
 
 impl Action {
@@ -98,12 +163,6 @@ pub(crate) enum ActionStatus {
     Aborted,
 }
 
-#[derive(Event, Debug, Clone)]
-pub(crate) struct PlayerActionInvalidEvent;
-
-#[derive(Component, Debug)]
-pub(crate) struct ActorQueueEmptyMarker;
-
 // details
 
 #[allow(dead_code)]
@@ -120,13 +179,13 @@ pub(crate) enum ActionDetail {
 #[derive(Event, Debug, PartialEq, Clone, Copy, Component)]
 #[allow(dead_code)]
 pub(crate) enum MovementActionDetail {
-    Turn(Direction),
-    Walk(Direction),
-    Run(Direction),
+    Turn(Dir),
+    Walk(Dir),
+    Run(Dir),
 }
 
 impl MovementActionDetail {
-    pub(crate) fn direction(&self) -> &Direction {
+    pub(crate) fn direction(&self) -> &Dir {
         match self {
             MovementActionDetail::Turn(dir)
             | MovementActionDetail::Walk(dir)

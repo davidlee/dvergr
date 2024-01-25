@@ -1,118 +1,105 @@
 use crate::action::{
-    Action, ActionDetail, ActionStatus, MovementActionDetail, PlayerActionInvalidEvent,
+    events::*, Action, ActionDetail, ActionPlanRequestMarker, ActionStatus, Actor,
+    MovementActionDetail,
 };
 
 use crate::typical::*;
-use bevy::prelude::{Input, KeyCode};
+
+#[derive(Default, Debug, Eq, PartialEq, Ord, PartialOrd, Clone, Copy, Hash, States)]
+pub(crate) enum PlayerInputState {
+    #[default]
+    Listen = 1,
+    Inactive = 0,
+}
 
 pub(crate) fn keybindings(
-    mut get_player: Query<(Entity, &mut Player)>,
-    mut next_state: ResMut<NextState<TickState>>,
-    // mut commands: Commands,
+    mut get_player: Query<(Entity, &Player, &mut Actor)>,
+    // mut next_state: ResMut<NextState<TickState>>,
     keys: Res<Input<KeyCode>>,
 ) {
     let shifted: bool = keys.any_pressed([KeyCode::ShiftLeft, KeyCode::ShiftRight]);
 
     let direction = if keys.just_pressed(KeyCode::Up) {
-        Some(if shifted {
-            Direction::NorthWest
-        } else {
-            Direction::North
-        })
+        Some(if shifted { Dir::NorthWest } else { Dir::North })
     } else if keys.just_pressed(KeyCode::Down) {
-        Some(if shifted {
-            Direction::SouthEast
-        } else {
-            Direction::South
-        })
+        Some(if shifted { Dir::SouthEast } else { Dir::South })
     } else if keys.just_pressed(KeyCode::Left) {
-        Some(if shifted {
-            Direction::SouthWest
-        } else {
-            Direction::West
-        })
+        Some(if shifted { Dir::SouthWest } else { Dir::West })
     } else if keys.just_pressed(KeyCode::Right) {
-        Some(if shifted {
-            Direction::NorthEast
-        } else {
-            Direction::East
-        })
+        Some(if shifted { Dir::NorthEast } else { Dir::East })
     } else {
         None
     };
 
     if let Some(direction) = direction {
-        let (entity, mut player) = get_player.single_mut();
-        if player.action.is_some() {
+        let (entity, _player, mut actor) = get_player.single_mut();
+        if actor.action.is_some() {
             panic!("Player unexpectedly already has an action");
         }
-        // let entity = player_ref.entity;
         let movement = MovementActionDetail::Walk(direction);
         let action = Action {
             entity,
             status: ActionStatus::Queued,
             detail: ActionDetail::Move(movement),
             duration: 10,
+            validated: false,
         };
-        player.action = Some(action);
-        // FIXME this feels like it should be an event ...
-        next_state.set(TickState::ValidatePlayerAction);
+        actor.action = Some(action);
     }
 }
 
-//
-pub(crate) fn handle_ev_player_action_invalid(
-    mut ev_invalid: EventReader<PlayerActionInvalidEvent>,
-    mut player_query: Query<&mut Player>,
-    mut next_state: ResMut<NextState<TickState>>,
+// should we immediately call Actor#reset, or use this action to reset?
+// atmo we're doing the latter
+pub(crate) fn handle_action_invalid(
+    mut ev_invalid: EventReader<ActionInvalidEvent>,
+    mut commands: Commands,
+    mut query: Query<(Entity, &mut Actor)>,
 ) {
-    warn!("HANDLER: handle_ev_player_action_invalid");
+    warn!("HANDLER: handle_action_invalid");
 
-    let mut player = player_query.get_single_mut().unwrap();
+    let (entity, mut actor) = query.single_mut();
     for _ in ev_invalid.read() {
-        warn!("PLAYER ACTION INVALID -- removing");
-        player.action = None;
+        actor.reset();
+        commands.entity(entity).insert(ActionPlanRequestMarker);
     }
 
-    next_state.set(TickState::PlayerInput);
+    // TODO something
 }
 
 //
-pub(crate) fn validate_player_move(
-    mut next_state: ResMut<NextState<TickState>>,
-    mut ev_invalid: EventWriter<PlayerActionInvalidEvent>,
-    mut player_query: Query<(&mut Player, &Locus)>,
+pub(crate) fn validate_move(
+    mut ev_invalid: EventWriter<ActionInvalidEvent>,
+    mut query: Query<(Entity, &mut Actor, &Locus)>,
+    time: Res<TickCount>,
     board: Res<Board>,
 ) {
-    if let Ok((player, locus)) = player_query.get_single_mut() {
-        let mut _valid = false;
-        let mut direction: Option<Direction> = None;
-
-        if let Some(action) = &player.action {
-            direction = match action.detail {
-                // hrurr
-                ActionDetail::Move(MovementActionDetail::Walk(dir)) => Some(dir),
-                _ => None,
-            };
-        }
-
-        if direction.is_some() {
-            let origin = locus.position;
-            if let Ok(destination) = board.apply_direction(&origin, &direction.unwrap()) {
-                // TODO check for things other than walls - statues, pillars, creatures, doors ...
-                _valid = board.is_unoccupied(&destination);
-            } else {
-                warn!("out of bounds");
-                _valid = false;
+    for (entity, mut actor, locus) in query.iter_mut() {
+        if let Some(action) = &mut actor.action {
+            if action.validated {
+                continue;
             }
-        } else {
-            return;
-        }
 
-        if _valid {
-            next_state.set(TickState::PrepareAgentActions);
+            match action.detail {
+                // TODO
+                ActionDetail::Move(MovementActionDetail::Walk(dir)) => {
+                    if board
+                        .apply_direction(&locus.position, &dir)
+                        .is_ok_and(|dir| board.is_unoccupied(&dir))
+                    {
+                        action.validated = true;
+                    } else {
+                        ev_invalid.send(ActionInvalidEvent {
+                            entity,
+                            at: time.as_u32(),
+                        });
+                    };
+                }
+                ActionDetail::Move(_) => panic!("not implemented"),
+                _ => (), // it's not a movement action, ignore
+            }
+            // TODO check for issues other than collisions with walls
         } else {
-            ev_invalid.send(PlayerActionInvalidEvent);
+            // no action, should we care?
         }
     }
 }

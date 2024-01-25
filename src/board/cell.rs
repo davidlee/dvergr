@@ -47,7 +47,7 @@ impl Cell {
 
 #[derive(Component, Eq, PartialEq, Debug, Clone)]
 pub(crate) struct Wall {
-    pub(crate) material: Material,
+    pub(crate) substance: Substance,
     pub(crate) position: IVec3,
 }
 
@@ -60,9 +60,12 @@ impl Wall {
     //     true
     // }
 
-    pub(crate) fn new(x: i32, y: i32, z: i32, material: Material) -> Self {
+    pub(crate) fn new(x: i32, y: i32, z: i32, material: Substance) -> Self {
         let position = IVec3::new(x, y, z);
-        Self { position, material }
+        Self {
+            position,
+            substance: material,
+        }
     }
 }
 
@@ -102,12 +105,12 @@ pub(crate) struct CellItems {
 
 #[derive(Component, Eq, PartialEq, Debug, Clone)]
 pub(crate) struct Floor {
-    material: Material,
+    material: Substance,
     position: IVec3,
 }
 
 impl Floor {
-    pub(crate) fn new(x: i32, y: i32, z: i32, material: Material) -> Self {
+    pub(crate) fn new(x: i32, y: i32, z: i32, material: Substance) -> Self {
         let position = IVec3::new(x, y, z);
         Self { position, material }
     }

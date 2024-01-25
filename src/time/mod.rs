@@ -1,6 +1,16 @@
 use bevy::prelude::{App, Component, Plugin, Resource};
+#[allow(unused_imports)]
+use bevy::utils::Duration; // TODO
 use std::convert::From;
-// use crate::typical::*;
+
+/* WARN / TODO should probably use this since it exists:
+
+https://docs.rs/bevy/latest/bevy/utils/struct.Dur.html
+
+painful to refactor, but .. less so now than later ..
+also collisions with Dur and Direction suck, I should just rename them
+
+*/
 
 // at 10 ticks / second, a u32 is enough for 13 years worth of game time.
 // use u32 for everything to avoid casting.
@@ -33,31 +43,31 @@ pub(crate) enum Unit {
 }
 
 #[derive(Copy, Clone, Debug, Component, Eq)]
-pub(crate) struct Duration {
-    pub unit: Unit,
-    pub value: u32,
+struct Dur {
+    unit: Unit,
+    value: u32,
 }
 
-impl Duration {
+impl Dur {
     pub fn as_u32(&self) -> u32 {
         Into::<u32>::into(*self)
     }
 }
 
-impl PartialEq for Duration {
-    fn eq(&self, other: &Duration) -> bool {
+impl PartialEq for Dur {
+    fn eq(&self, other: &Dur) -> bool {
         // &(Into::<u32>::into(*self) as u32) == &(Into::<u32>::into(*other) as u32)
         self.as_u32().eq(&other.as_u32())
     }
 }
-impl PartialOrd for Duration {
+impl PartialOrd for Dur {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         self.as_u32().partial_cmp(&other.as_u32())
     }
 }
 
-impl Ord for Duration {
-    fn cmp(&self, other: &Duration) -> std::cmp::Ordering {
+impl Ord for Dur {
+    fn cmp(&self, other: &Dur) -> std::cmp::Ordering {
         self.as_u32().cmp(&other.as_u32())
     }
 }
@@ -107,9 +117,9 @@ impl TickCount {
         self.0 = self.0.checked_add(t).unwrap_or(0);
     }
 
-    pub fn advance_by(&mut self, duration: Duration) {
-        self.advance(duration.into());
-    }
+    // pub fn advance_by(&mut self, duration: Dur) {
+    //     self.advance(duration.into());
+    // }
 
     pub fn add(&self, other: u32) -> u32 {
         self.0 + other
@@ -131,8 +141,8 @@ impl From<TickCount> for u32 {
         time.0
     }
 }
-impl From<Duration> for u32 {
-    fn from(duration: Duration) -> u32 {
+impl From<Dur> for u32 {
+    fn from(duration: Dur) -> u32 {
         duration.unit as u32 * duration.value
     }
 }

@@ -10,29 +10,43 @@ pub mod input;
 pub mod inventory;
 pub mod material;
 pub mod player;
-pub mod state;
 pub mod time;
 pub mod typical;
 
-use action::{PlayerActionInvalidEvent, StillWaitForAnimEvent};
+use bevy::ecs::schedule::ScheduleLabel;
+use bevy::window::{PresentMode, WindowResolution, WindowTheme};
+use bevy_fps_counter::FpsCounterPlugin;
+use bevy_turborand::prelude::RngPlugin;
 use graphics::LogicalGraphicalEntityMapper;
+use input::PlayerInputState;
 use player::SpawnPlayerEvent;
 use typical::graphics::*;
 
-use bevy::ecs::schedule::common_conditions::*;
-pub use bevy::prelude::{
-    apply_deferred, default, on_event, state_exists, state_exists_and_equals, First, Has,
-    IntoSystemConfigs, Last, OnEnter, OnExit, OnTransition, PostUpdate, PreUpdate, Startup, Update,
-};
+// System sets and such
+#[derive(Ord, ScheduleLabel, Debug, Hash, PartialEq, Eq, Clone, PartialOrd)]
+enum ActionSchedule {
+    // Plan:
+    Assign,
+    Validate,
+    // Run:
+    Tick,
+    Apply,
+    // AwaitAnim:
+    Animate,
+}
 
-// use bevy::ecs::schedule::*;
+#[derive(Debug, Hash, PartialEq, Eq, Clone, SystemSet)]
+struct CustomFlush;
 
-use bevy::prelude::{DefaultPlugins, PluginGroup};
-use bevy::window::{PresentMode, Window, WindowPlugin, WindowResolution, WindowTheme};
-use bevy_fps_counter::FpsCounterPlugin;
-use bevy_turborand::prelude::RngPlugin;
+#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
+enum ActionSet {
+    PreUpdate,
+    Update,
+    PostUpdate,
+}
 
 fn main() {
+    // let schedule = Schedule::new(ActionSchedule::Assign);
     App::new()
         .add_plugins(
             DefaultPlugins
@@ -65,16 +79,26 @@ fn main() {
         .insert_resource(Msaa::default())
         .init_resource::<Board>()
         // STATE
-        .add_state::<AppState>()
-        .add_state::<TickState>()
+        .add_state::<ActionSystemState>()
+        .add_state::<PlayerInputState>()
         // EVENTS
         .add_event::<SpawnPlayerEvent>()
-        .add_event::<PlayerActionInvalidEvent>()
+        .add_event::<TickEvent>()
+        .add_event::<ActionInvalidEvent>()
+        .add_event::<ActionPlanRequestEvent>()
+        .add_event::<ActionCompleteEvent>()
+        .add_event::<ActionVerifyAssignsEvent>()
+        .add_event::<ActionStartEvent>()
+        .add_event::<ActionAbortEvent>()
         .add_event::<StillWaitForAnimEvent>()
         //
         // SYSTEMS
         //
         // Startup
+        .configure_sets(PreUpdate, ActionSet::PreUpdate)
+        .configure_sets(Update, ActionSet::Update)
+        .configure_sets(PostUpdate, ActionSet::PostUpdate)
+        //
         .add_systems(
             Startup,
             (
@@ -84,104 +108,81 @@ fn main() {
                 graphics::init_map::spawn_voxel_map,
                 apply_deferred,
                 graphics::player_avatar::spawn,
-            )
-                .chain(),
-        )
-        // Actions
-        // OnEnter(TickState) systems
-        .add_systems(
-            OnEnter(TickState::PlayerInput),
-            (action::skip_player_input_if_action_exists, apply_deferred).chain(),
-        )
-        .add_systems(
-            OnEnter(TickState::ValidatePlayerAction),
-            (
-                input::validate_player_move,
-                // other validations go here
-                input::handle_ev_player_action_invalid
-                    .run_if(on_event::<action::PlayerActionInvalidEvent>()),
-                apply_deferred,
+                action::bootstrap,
             )
                 .chain(),
         )
         .add_systems(
-            OnEnter(TickState::PrepareAgentActions),
-            (action::prepare_agent_actions, apply_deferred).chain(),
-        )
-        .add_systems(OnEnter(TickState::ClockTick), action::clock_tick)
-        .add_systems(
-            OnEnter(TickState::ApplyCompletedActions),
-            (action::apply_completed_action_markers, apply_deferred).chain(),
-        )
-        // PreUpdate
-        // validate, apply actions, etc
-        .add_systems(
-            PreUpdate,
+            ActionSchedule::Assign,
             (
-                input::keybindings.run_if(state_exists_and_equals(TickState::PlayerInput)),
-                apply_deferred,
+                action::check_player_plan,
+                apply_deferred.in_set(CustomFlush),
+                input::keybindings.run_if(in_state(PlayerInputState::Listen)),
+                action::plan_agent_actions.run_if(on_event::<ActionPlanRequestEvent>()),
+                action::check_all_plans.run_if(on_event::<ActionVerifyAssignsEvent>()),
             )
-                .chain(),
+                .chain()
+                .in_set(ActionSet::PreUpdate)
+                .run_if(in_state(ActionSystemState::Plan)),
         )
+        // hmmm there's devil in the detail of how we ensure we validate
+        // optimistically, as little as possible
         .add_systems(
-            PreUpdate,
+            ActionSchedule::Validate,
             (
-                action::tick_player_action
-                    .run_if(state_exists_and_equals(TickState::PlayerActionTick)),
-                apply_deferred,
+                input::validate_move,
+                // TODO other validations
+                // ...
+                input::handle_action_invalid.run_if(on_event::<ActionInvalidEvent>()),
+                apply_deferred.in_set(CustomFlush),
+                action::set_state_run, // conditions
+                apply_deferred.in_set(CustomFlush),
             )
-                .chain(),
+                .chain()
+                .in_set(ActionSet::PreUpdate)
+                .run_if(in_state(ActionSystemState::Plan)),
         )
         .add_systems(
-            PreUpdate,
+            ActionSchedule::Tick,
             (
-                action::tick_agent_actions
-                    .run_if(state_exists_and_equals(TickState::AgentActionsTick)),
-                apply_deferred,
+                action::clock_tick,
+                action::tick_actions,
+                apply_deferred.in_set(CustomFlush),
             )
-                .chain(),
+                .chain()
+                .in_set(ActionSet::PreUpdate)
+                .run_if(on_event::<TickEvent>()),
         )
-        // Update
-        // actually apply effects of actions
         .add_systems(
-            Update,
+            ActionSchedule::Apply,
             (
+                action::apply_completed_action_markers,
+                apply_deferred.in_set(CustomFlush),
                 action::on_success::apply_move,
                 action::on_success::apply_attack,
-                apply_deferred,
+                // ...
+                action::set_state_await_anim,
+                apply_deferred.in_set(CustomFlush),
             )
                 .chain()
-                .run_if(state_exists_and_equals(TickState::ApplyCompletedActions)),
+                .in_set(ActionSet::PreUpdate)
+                .run_if(on_event::<ActionCompleteEvent>()),
         )
         .add_systems(
-            Update,
-            (graphics::move_anim::lerp_vec3_translation)
-                .chain()
-                .run_if(state_exists_and_equals(TickState::Animate)),
-        )
-        // Check if animations are complete, if so GOTO 10
-        .add_systems(
-            PostUpdate,
-            action::dead_letters.run_if(state_exists_and_equals(TickState::Animate)),
-        )
-        //
-        // these alway run, in the background:
-        .add_systems(
-            Update,
+            ActionSchedule::Animate,
             (
                 graphics::player_avatar::flicker_torches,
                 graphics::move_anim::animate_player_fov,
+                graphics::move_anim::lerp_vec3_translation,
+                // keep-alive or return to set player input
+                (action::set_state_plan, apply_deferred.in_set(CustomFlush))
+                    .chain()
+                    .run_if(not(on_event::<StillWaitForAnimEvent>())),
             )
-                .run_if(state_exists_and_equals(AppState::Ready)),
+                .chain()
+                .in_set(ActionSet::Update)
+                .run_if(in_state(ActionSystemState::AwaitAnim)),
         )
         .add_systems(Update, bevy::window::close_on_esc)
-        .add_systems(
-            Update,
-            show_instrumentation.run_if(not(state_exists_and_equals(TickState::PlayerInput))),
-        )
         .run();
-}
-
-fn show_instrumentation(t: Res<bevy::core::FrameCount>, res: Res<State<TickState>>) {
-    warn!("😈 frame incremented: {:?} => {:?}", t.0, res.get());
 }

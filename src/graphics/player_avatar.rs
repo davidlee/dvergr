@@ -15,7 +15,7 @@ pub fn spawn(
     mut commands: Commands,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     mut mapper: ResMut<LogicalGraphicalEntityMapper>,
-    mut next_state: ResMut<NextState<AppState>>,
+    // mut next_state: ResMut<NextState<AppState>>,
     asset_server: Res<AssetServer>,
     avatar_query: Query<(Entity, &PlayerAvatar)>,
     player_query: Query<(Entity, &Player)>,
@@ -60,7 +60,7 @@ pub fn spawn(
             });
         });
 
-    next_state.set(AppState::Ready);
+    // next_state.set(AppState::Ready);
 }
 
 // TODO get parent, use its attributes for intensity range

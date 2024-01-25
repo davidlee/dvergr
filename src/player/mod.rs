@@ -1,25 +1,14 @@
-// use crate::character::*;
-use crate::action::Action;
-use crate::creature::*;
+use crate::creature::{Character, CharacterBundle, CharacterLevel, CreatureBundle};
 use crate::typical::*;
 use bevy::prelude::*;
-// use std::collections::VecDeque;
 
 #[derive(Component, Debug, Clone, Default)]
-pub(crate) struct Player {
-    pub(crate) action: Option<Action>,
-    // pub(crate) queue: VecDeque<Action>,
-}
-
-// #[derive(Resource, Debug, Clone)]
-// pub(crate) struct PlayerRes {
-//     pub entity: Entity,
-// }
+pub(crate) struct Player;
 
 #[derive(Event, Debug)]
 pub(crate) struct SpawnPlayerEvent(pub IVec3);
 
-#[derive(Bundle, Debug, Clone)]
+#[derive(Bundle, Debug)]
 pub(crate) struct PlayerBundle {
     player: Player,
     creature: CreatureBundle,

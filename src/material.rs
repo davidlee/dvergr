@@ -15,8 +15,11 @@ use bevy::prelude::Component;
 // a Ruby Cell != a single ruby
 // is there a Seam or other intermediary?
 //
+
+// don't call it Material to avoid collisions with Bevy
+
 #[derive(Component, Eq, PartialEq, Clone, Debug, PartialOrd, Ord, Hash)]
-pub enum Material {
+pub enum Substance {
     Wood(Wood),
     Metal(Metal),
     Mineral(Mineral),

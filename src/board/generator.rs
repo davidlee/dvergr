@@ -1,4 +1,4 @@
-use crate::material::Material;
+use crate::material::Substance;
 use crate::player::SpawnPlayerEvent;
 use crate::typical::*;
 
@@ -205,14 +205,14 @@ pub(crate) fn populate_board(
         for pos in board.coords().iter() {
             let [x, y, z] = pos.to_array();
             let cell = Cell::new(x, y, z);
-            let floor = Floor::new(x, y, z, Material::Dirt);
+            let floor = Floor::new(x, y, z, Substance::Dirt);
 
             let entity: Entity;
             if blanks.contains(&[x, y]) {
                 entity = parent.spawn((cell, floor)).id();
                 false
             } else {
-                let wall = Wall::new(x, y, z, Material::Dirt);
+                let wall = Wall::new(x, y, z, Substance::Dirt);
                 entity = parent.spawn((cell, floor, wall)).id();
                 board.wall_store.set(*pos, entity);
                 true

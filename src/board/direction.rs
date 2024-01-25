@@ -3,10 +3,10 @@ use crate::typical::*;
 
 use std::f32::consts::TAU;
 
-// Direction
+// Dir
 //
 #[derive(Eq, PartialEq, Copy, Clone, Debug, Ord, PartialOrd)]
-pub enum Direction {
+pub enum Dir {
     North,
     NorthEast,
     East,
@@ -16,11 +16,11 @@ pub enum Direction {
     West,
     NorthWest,
 }
-use Direction::*;
+use Dir::*;
 
 use super::geometry::abs_degrees;
 
-impl Direction {
+impl Dir {
     const DIRECTION_NUM: usize = 8;
 
     pub fn offset(self) -> IVec3 {
@@ -65,7 +65,7 @@ impl Direction {
         DIRECTION_RADIANS[self as usize]
     }
 
-    pub fn closest_cardinal(degrees: f32) -> Direction {
+    pub fn closest_cardinal(degrees: f32) -> Dir {
         println!("{:?}^{:?}", degrees, abs_degrees(degrees));
         match abs_degrees(degrees) {
             // _ if (degrees > abs_degrees(-45.0) && degrees < 360.0) || degrees <= 45.0 => North,
@@ -79,36 +79,31 @@ impl Direction {
 
 #[test]
 fn test_closest_cardinal() {
-    assert_eq!(Direction::closest_cardinal(1.0), North);
-    assert_eq!(Direction::closest_cardinal(87.0), East);
-    assert_eq!(Direction::closest_cardinal(93.0), East);
-    assert_eq!(Direction::closest_cardinal(179.0), South);
-    assert_eq!(Direction::closest_cardinal(183.0), South);
-    assert_eq!(Direction::closest_cardinal(270.0), West);
-    assert_eq!(Direction::closest_cardinal(286.0), West);
-    assert_eq!(Direction::closest_cardinal(320.0), North);
-    assert_eq!(Direction::closest_cardinal(-15.0), North);
-    assert_eq!(Direction::closest_cardinal(-94.3), West);
-    assert_eq!(Direction::closest_cardinal(-186.3), South);
+    assert_eq!(Dir::closest_cardinal(1.0), North);
+    assert_eq!(Dir::closest_cardinal(87.0), East);
+    assert_eq!(Dir::closest_cardinal(93.0), East);
+    assert_eq!(Dir::closest_cardinal(179.0), South);
+    assert_eq!(Dir::closest_cardinal(183.0), South);
+    assert_eq!(Dir::closest_cardinal(270.0), West);
+    assert_eq!(Dir::closest_cardinal(286.0), West);
+    assert_eq!(Dir::closest_cardinal(320.0), North);
+    assert_eq!(Dir::closest_cardinal(-15.0), North);
+    assert_eq!(Dir::closest_cardinal(-94.3), West);
+    assert_eq!(Dir::closest_cardinal(-186.3), South);
 }
 
-pub const DIRECTIONS: [Direction; 8] = [
-    Direction::North,
-    Direction::NorthEast,
-    Direction::East,
-    Direction::SouthEast,
-    Direction::South,
-    Direction::SouthWest,
-    Direction::West,
-    Direction::NorthWest,
+pub const DIRECTIONS: [Dir; 8] = [
+    Dir::North,
+    Dir::NorthEast,
+    Dir::East,
+    Dir::SouthEast,
+    Dir::South,
+    Dir::SouthWest,
+    Dir::West,
+    Dir::NorthWest,
 ];
 
-pub const CARDINAL_DIRECTIONS: [Direction; 4] = [
-    Direction::North,
-    Direction::East,
-    Direction::South,
-    Direction::West,
-];
+pub const CARDINAL_DIRECTIONS: [Dir; 4] = [Dir::North, Dir::East, Dir::South, Dir::West];
 
 pub const DIRECTION_OFFSETS: [IVec3; 8] = [
     IVec3 { x: 0, y: 1, z: 0 },

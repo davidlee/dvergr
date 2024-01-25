@@ -64,16 +64,12 @@ pub fn take_sector(
         .collect()
 }
 
-pub fn sector_facing(
-    facing: Direction,
-    centre: &IVec3,
-    circle: HashSet<[i32; 2]>,
-) -> HashSet<[i32; 2]> {
+pub fn sector_facing(facing: Dir, centre: &IVec3, circle: HashSet<[i32; 2]>) -> HashSet<[i32; 2]> {
     let angle = f32::to_radians(COMPASS_DEGREES[facing as usize]);
     take_sector(angle, f32::to_radians(90.), centre, circle)
 }
 
-pub fn fov_facing(centre: &IVec3, facing: Direction, radius: f32) -> HashSet<[i32; 2]> {
+pub fn fov_facing(centre: &IVec3, facing: Dir, radius: f32) -> HashSet<[i32; 2]> {
     take_sector(
         facing.to_degrees(),
         f32::to_radians(120.),

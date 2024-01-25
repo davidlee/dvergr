@@ -65,11 +65,7 @@ impl Board {
         cv
     }
 
-    pub(crate) fn apply_direction(
-        &self,
-        pos: &IVec3,
-        direction: &Direction,
-    ) -> Result<IVec3, &str> {
+    pub(crate) fn apply_direction(&self, pos: &IVec3, direction: &Dir) -> Result<IVec3, &str> {
         let [x, y, z] = pos.to_array();
         let [dx, dy, dz] = direction.offset().to_array();
         let [x, y, z] = [x + dx, y + dy, z + dz];
