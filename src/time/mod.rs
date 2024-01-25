@@ -1,5 +1,6 @@
 use bevy::prelude::{App, Component, Plugin, Resource};
 use std::convert::From;
+// use crate::typical::*;
 
 // at 10 ticks / second, a u32 is enough for 13 years worth of game time.
 // use u32 for everything to avoid casting.

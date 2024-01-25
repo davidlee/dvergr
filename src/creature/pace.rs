@@ -3,14 +3,14 @@
 use crate::typical::*;
 
 #[derive(Component, Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
-pub enum Tempo {
+pub(crate) enum Tempo {
     // the combat equivalent
     #[default]
     Normal,
 }
 
 #[derive(Component, Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
-pub enum Approach {
+pub(crate) enum Approach {
     // the task equivalent
     Painstaking,
     Careful,
@@ -22,7 +22,7 @@ pub enum Approach {
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
-pub enum PaceId {
+pub(crate) enum PaceId {
     Immobile,
     Interminable, // crawl, listen / spot traps AND sneak
     Slow,         // listen + spot traps
@@ -36,11 +36,11 @@ pub enum PaceId {
     Reckless,     // sprinting
 }
 
-pub use PaceId::*;
+pub(crate) use PaceId::*;
 
 #[derive(Component, Debug, Clone, Copy, PartialEq, Eq, Ord, PartialOrd)]
 #[allow(dead_code)]
-pub struct Pace {
+pub(crate) struct Pace {
     id: PaceId,
     name: &'static str,
     ticks_per_cell: u32,

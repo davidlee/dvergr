@@ -1,10 +1,7 @@
-// use crate::anatomy::*;
-use crate::creature::anatomy::humanoid::Location;
-use crate::creature::anatomy::Side;
-use bevy::prelude::*;
-use std::{fmt::Debug, hash::Hash};
+#![allow(dead_code)]
+use crate::typical::*;
 
-pub mod weapons {}
+pub(crate) mod weapons {}
 
 /*
 //
@@ -42,62 +39,62 @@ Entity (Player, Anatomy, ..)
 // EVENTS
 
 #[derive(Event, Debug, Copy, Clone)]
-pub struct ItemPickUpEvent {
-    pub owner: Entity,
+pub(crate) struct ItemPickUpEvent {
+    pub(crate) owner: Entity,
 }
 
 #[derive(Event, Debug, Copy, Clone)]
-pub struct ItemDropEvent {
-    pub owner: Entity,
-    pub item: Entity,
+pub(crate) struct ItemDropEvent {
+    pub(crate) owner: Entity,
+    pub(crate) item: Entity,
 }
 
 #[derive(Event, Debug, Copy, Clone)]
-pub struct ItemStowEvent {
-    pub owner: Entity,
-    pub item: Entity,
-    pub container: Entity,
+pub(crate) struct ItemStowEvent {
+    pub(crate) owner: Entity,
+    pub(crate) item: Entity,
+    pub(crate) container: Entity,
 }
 
 #[derive(Event, Debug, Copy, Clone)]
-pub struct ItemRetrieveEvent {
-    pub owner: Entity,
-    pub item: Entity,
-    pub container: Entity,
+pub(crate) struct ItemRetrieveEvent {
+    pub(crate) owner: Entity,
+    pub(crate) item: Entity,
+    pub(crate) container: Entity,
 }
 
 #[derive(Event, Debug, Clone)]
-pub struct ItemDonEvent {
-    pub owner: Entity,
-    pub item: Entity,
-    pub container: Entity,
-    pub locations: Vec<Location>, //Location,
+pub(crate) struct ItemDonEvent {
+    pub(crate) owner: Entity,
+    pub(crate) item: Entity,
+    pub(crate) container: Entity,
+    pub(crate) locations: Vec<Location>, //Location,
 }
 
 #[derive(Event, Debug, Clone)]
-pub struct ItemDoffEvent {
-    pub owner: Entity,
-    pub item: Entity,
-    pub container: Entity,
-    pub locations: Vec<Location>, //Location,
+pub(crate) struct ItemDoffEvent {
+    pub(crate) owner: Entity,
+    pub(crate) item: Entity,
+    pub(crate) container: Entity,
+    pub(crate) locations: Vec<Location>, //Location,
 }
 
 #[derive(Event, Debug, Clone)]
-pub struct ItemEquipEvent {
-    pub owner: Entity,
-    pub item: Entity,
-    pub hands: Side,
+pub(crate) struct ItemEquipEvent {
+    pub(crate) owner: Entity,
+    pub(crate) item: Entity,
+    pub(crate) hands: Side,
 }
 
 #[derive(Event, Debug, Clone)]
-pub struct ItemUnequipEvent {
-    pub owner: Entity,
-    pub item: Entity,
-    pub hands: Side,
+pub(crate) struct ItemUnequipEvent {
+    pub(crate) owner: Entity,
+    pub(crate) item: Entity,
+    pub(crate) hands: Side,
 }
 
 #[derive(Component, Debug, Clone, Eq, PartialEq)]
-pub enum ItemLocation {
+pub(crate) enum ItemLocation {
     Cell(Entity, IVec3),
     Container(Entity),
     Worn(Entity, Vec<Location>),
@@ -105,7 +102,7 @@ pub enum ItemLocation {
 }
 
 #[derive(Component, Debug, Clone, Copy, Eq, PartialEq, Hash, Ord, PartialOrd)]
-pub enum ItemCategory {
+pub(crate) enum ItemCategory {
     Ammunition(AmmunitionType),
     Furniture,
     Container,
@@ -134,7 +131,7 @@ pub enum ItemCategory {
 }
 
 #[derive(Component, Debug, Clone, Copy, Eq, PartialEq, Hash, Ord, PartialOrd)]
-pub enum AmmunitionType {
+pub(crate) enum AmmunitionType {
     Arrow,
     Bolt,
     Dart,
@@ -145,7 +142,7 @@ pub enum AmmunitionType {
 }
 
 #[derive(Component, Debug, Clone, Copy, Eq, PartialEq, Hash, Ord, PartialOrd)]
-pub enum Quality {
+pub(crate) enum Quality {
     Terrible,
     Poor,
     Average,
@@ -157,41 +154,41 @@ pub enum Quality {
 }
 
 #[derive(Component, Debug, Clone, Eq, PartialEq, Hash)]
-pub struct ItemDetail<ItemCategory> {
-    pub category: ItemCategory,
-    pub display_name: String,
-    pub description: String,
+pub(crate) struct ItemDetail<ItemCategory> {
+    pub(crate) category: ItemCategory,
+    pub(crate) display_name: String,
+    pub(crate) description: String,
 }
 
 #[derive(Component, Debug, Clone, Eq, PartialEq, Hash, Ord, PartialOrd)]
-pub struct Stowable {
-    pub weight: u16, // grams
-    pub volume: u16, // mL
-    pub length: u16, // cm
+pub(crate) struct Stowable {
+    pub(crate) weight: u16, // grams
+    pub(crate) volume: u16, // mL
+    pub(crate) length: u16, // cm
 }
 
 #[derive(Component, Debug, Clone, Copy, Eq, PartialEq, Hash, Ord, PartialOrd)]
-pub struct Carryable {
-    pub hands: Side,
+pub(crate) struct Carryable {
+    pub(crate) hands: Side,
 }
 
 #[derive(Component, Debug, Clone, Copy, Eq, PartialEq, Hash, Ord, PartialOrd)]
-pub struct Wieldable {
-    pub hands: Side,
+pub(crate) struct Wieldable {
+    pub(crate) hands: Side,
 }
 
 #[derive(Component, Debug, Clone, Copy, Eq, PartialEq, Hash, Ord, PartialOrd)]
-pub struct Usable {
-    pub hands: Side,
+pub(crate) struct Usable {
+    pub(crate) hands: Side,
 }
 
 #[derive(Component, Debug, Clone, Copy, Eq, PartialEq, Hash, Ord, PartialOrd)]
-pub struct TakesAmmo {
-    pub ammo_type: (),
+pub(crate) struct TakesAmmo {
+    pub(crate) ammo_type: (),
 }
 
 #[derive(Component, Debug, Clone, Eq, PartialEq, Hash, Ord, PartialOrd)]
-pub struct Durability {
+pub(crate) struct Durability {
     condition: u8,
 }
 
@@ -202,9 +199,9 @@ impl Default for Durability {
 }
 
 #[derive(Component, Debug, Clone, Eq, PartialEq, Hash)]
-pub struct Stackable {
-    pub count: u8,
-    pub max: u8,
+pub(crate) struct Stackable {
+    pub(crate) count: u8,
+    pub(crate) max: u8,
 }
 impl Default for Stackable {
     fn default() -> Stackable {
@@ -213,9 +210,9 @@ impl Default for Stackable {
 }
 
 #[derive(Component, Debug, Clone, Eq, PartialEq, Hash)]
-pub struct Valuable {
-    pub base_value: u16,
-    pub computed_value: u16,
+pub(crate) struct Valuable {
+    pub(crate) base_value: u16,
+    pub(crate) computed_value: u16,
 }
 
 // some containers can only contain certain items
@@ -226,10 +223,10 @@ pub struct Valuable {
 
 #[derive(Debug, Default, Clone, Component)]
 
-pub struct Container {
-    pub contents: Vec<Entity>,
-    pub volume: u16,
-    pub max_length: u16,
+pub(crate) struct Container {
+    pub(crate) contents: Vec<Entity>,
+    pub(crate) volume: u16,
+    pub(crate) max_length: u16,
 }
 
 // retrieving an item takes time
@@ -241,16 +238,16 @@ impl Container {
 }
 
 #[derive(Debug, Default, Clone, Component)]
-pub struct LiquidContainer {
-    pub contents: Option<Liquid>,
-    pub volume: u16,
+pub(crate) struct LiquidContainer {
+    pub(crate) contents: Option<Liquid>,
+    pub(crate) volume: u16,
 }
 
 impl LiquidContainer {}
 // impl Carryable for LiquidContainer {}
 
 #[derive(Debug, Default, Clone, Hash, Eq, Ord, PartialEq, PartialOrd)]
-pub enum LiquidType {
+pub(crate) enum LiquidType {
     #[default]
     Water,
     Brine,
@@ -261,13 +258,13 @@ pub enum LiquidType {
 }
 
 #[derive(Debug, Default, Clone, Component)]
-pub struct Liquid {
-    pub kind: LiquidType,
-    pub volume: u16,
+pub(crate) struct Liquid {
+    pub(crate) kind: LiquidType,
+    pub(crate) volume: u16,
 }
 
 #[derive(Debug, Default, Clone, Component, Eq, PartialEq, Hash)]
-pub enum ConsumableUse {
+pub(crate) enum ConsumableUse {
     #[default]
     SingleUse,
     LimitedUse(u8),
@@ -275,7 +272,7 @@ pub enum ConsumableUse {
 }
 
 #[derive(Debug, Default, Clone, Component, Eq, PartialEq, Hash)]
-pub enum ConsumableMethod {
+pub(crate) enum ConsumableMethod {
     #[default]
     Drinkable,
     Edible,
@@ -298,7 +295,7 @@ struct Consumable {
 }
 
 // #[derive(Component, Debug, Clone)]
-// pub enum WearableSlotStatus {
+// pub(crate) enum WearableSlotStatus {
 //     Free,
 //     Occupied, // you may be wearing a shirt, but can still layer a gambeson
 //     // while full plate might allow a tabard over it, but not a ball gown
@@ -306,7 +303,7 @@ struct Consumable {
 //              // but nor does it prevent you wearing them underneath
 // }
 
-// pub enum CarryableSlotStatus {
+// pub(crate) enum CarryableSlotStatus {
 //     Free,
 //     Occupied,
 // }

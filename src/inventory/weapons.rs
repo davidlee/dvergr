@@ -1,12 +1,12 @@
-pub enum WeaponType {
+pub(crate) enum WeaponType {
     CloseQuarters(CloseQuartersWeaponType),
     Personal(PersonalWeaponType),
     Missile(MissileWeaponType),
 }
 
-pub enum WeaponRange {}
+pub(crate) enum WeaponRange {}
 
-pub enum CloseQuartersWeaponType {
+pub(crate) enum CloseQuartersWeaponType {
     Dagger,
     PushKnife,
     KnuckleKnife,
@@ -17,7 +17,7 @@ pub enum CloseQuartersWeaponType {
     Buckler,
 }
 
-pub enum PersonalWeaponType {
+pub(crate) enum PersonalWeaponType {
     Polearm,
     MassWeapon,
     Dagger,
@@ -28,7 +28,7 @@ pub enum PersonalWeaponType {
     Pike,
 }
 
-pub enum SwordType {
+pub(crate) enum SwordType {
     Dagger,
     Dirk,
     HouseKnife,
@@ -49,19 +49,19 @@ pub enum SwordType {
     Kriegsmesser,
 }
 
-pub enum LineWeaponType {
+pub(crate) enum LineWeaponType {
     Pike,
     Lance,
 }
 
-pub enum HaftLength {
+pub(crate) enum HaftLength {
     Short,
     Bastard,
     Double,
     Long(usize), // feet
 }
 
-pub enum MissileWeaponType {
+pub(crate) enum MissileWeaponType {
     Bow,
     Crossbow,
     // Sling,
@@ -69,7 +69,7 @@ pub enum MissileWeaponType {
     Thrower,
 }
 
-pub enum Bow {
+pub(crate) enum Bow {
     Shortbow,
     Longbow,
     Flatbow,
@@ -77,14 +77,14 @@ pub enum Bow {
     CompositeRecurveBow,
 }
 
-pub enum Crossbow {
+pub(crate) enum Crossbow {
     Hand,
     Light,
     Heavy,
     Arbalest,
 }
 
-pub enum Thrown {
+pub(crate) enum Thrown {
     Knife,
     Axe,
     Javelin,
@@ -95,7 +95,7 @@ pub enum Thrown {
     Grenade,
 }
 
-pub enum Thrower {
+pub(crate) enum Thrower {
     Sling,
     DartThrower,
     Atlatl,
@@ -104,7 +104,7 @@ pub enum Thrower {
 
 // combine for fun
 
-pub enum Head {
+pub(crate) enum Head {
     Axe,   // can also hook
     Blade, // sword on a pole
     Mace,
@@ -120,9 +120,9 @@ pub enum Head {
     Mancatcher,
 }
 
-// pub enum WeaponHaft {} wood vs metal
+// pub(crate) enum WeaponHaft {} wood vs metal
 
-pub enum Guard {
+pub(crate) enum Guard {
     None,
     Tsuba,
     Cross,
@@ -134,13 +134,13 @@ pub enum Guard {
     Sai,
 }
 
-pub enum Pommel {
+pub(crate) enum Pommel {
     None,
     Blunt,
     Spiked,
 }
 
-pub enum Balance {
+pub(crate) enum Balance {
     Parrying,
     Thrusting,
     Cutting,
@@ -148,7 +148,7 @@ pub enum Balance {
     Bashing,
 }
 
-pub enum BladeType {
+pub(crate) enum BladeType {
     BackSword,
     DoubleEdged,
 
@@ -166,7 +166,7 @@ pub enum BladeType {
 
 // thrusts & reach = better for open duels
 // slashing = better for battlefield melee; less getting stuck, defensive arcs
-pub enum BladeCurvature {
+pub(crate) enum BladeCurvature {
     Straight, // rapier
     Gentle,   // katana
     Balanced, // saber
@@ -175,7 +175,7 @@ pub enum BladeCurvature {
     Flambard,
 }
 
-// pub enum Polearm {
+// pub(crate) enum Polearm {
 //     Staff,
 //     Spear,
 //     Halberd,

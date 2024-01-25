@@ -1,11 +1,9 @@
 use crate::action::{
     Action, ActionDetail, ActionStatus, MovementActionDetail, PlayerActionInvalidEvent,
 };
-use crate::board::direction::Direction;
-use crate::state::TickState;
+
 use crate::typical::*;
-use bevy::prelude::{Entity, EventWriter, Input, KeyCode, Query, Res};
-use bevy::utils::tracing::*;
+use bevy::prelude::{Input, KeyCode};
 
 pub(crate) fn keybindings(
     mut get_player: Query<(Entity, &mut Player)>,

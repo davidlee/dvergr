@@ -14,16 +14,14 @@ pub mod state;
 pub mod time;
 pub mod typical;
 
+use graphics::LogicalGraphicalEntityMapper;
+use player::SpawnPlayerEvent;
 use typical::graphics::*;
 
 use bevy::prelude::{DefaultPlugins, PluginGroup};
 use bevy::window::{PresentMode, Window, WindowPlugin, WindowResolution, WindowTheme};
-
 use bevy_fps_counter::FpsCounterPlugin;
 use bevy_turborand::prelude::RngPlugin;
-
-use graphics::LogicalGraphicalEntityMapper;
-use player::SpawnPlayerEvent;
 
 fn main() {
     App::new()
