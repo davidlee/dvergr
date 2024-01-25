@@ -60,6 +60,22 @@ pub(crate) fn check_all_plans(
     }
 }
 
+pub(crate) fn handle_action_invalid(
+    mut ev_invalid: EventReader<ActionInvalidEvent>,
+    mut commands: Commands,
+    mut query: Query<(Entity, &mut Actor)>,
+) {
+    warn!("HANDLER: handle_action_invalid");
+
+    let (entity, mut actor) = query.single_mut();
+    for _ in ev_invalid.read() {
+        actor.reset();
+        commands.entity(entity).insert(ActionPlanRequestMarker);
+    }
+
+    // TODO something
+}
+
 pub(crate) fn apply_completed_action_markers(
     mut commands: Commands,
     // mut actors: Query<(Entity, &mut Actor)>,

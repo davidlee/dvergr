@@ -1,7 +1,4 @@
-use crate::action::{
-    events::*, Action, ActionDetail, ActionPlanRequestMarker, ActionStatus, Actor,
-    MovementActionDetail,
-};
+use crate::action::{Action, ActionDetail, ActionStatus, Actor, MovementActionDetail};
 
 use crate::typical::*;
 
@@ -14,7 +11,6 @@ pub(crate) enum PlayerInputState {
 
 pub(crate) fn keybindings(
     mut get_player: Query<(Entity, &Player, &mut Actor)>,
-    // mut next_state: ResMut<NextState<TickState>>,
     keys: Res<Input<KeyCode>>,
 ) {
     let shifted: bool = keys.any_pressed([KeyCode::ShiftLeft, KeyCode::ShiftRight]);
@@ -45,61 +41,5 @@ pub(crate) fn keybindings(
             validated: false,
         };
         actor.action = Some(action);
-    }
-}
-
-// should we immediately call Actor#reset, or use this action to reset?
-// atmo we're doing the latter
-pub(crate) fn handle_action_invalid(
-    mut ev_invalid: EventReader<ActionInvalidEvent>,
-    mut commands: Commands,
-    mut query: Query<(Entity, &mut Actor)>,
-) {
-    warn!("HANDLER: handle_action_invalid");
-
-    let (entity, mut actor) = query.single_mut();
-    for _ in ev_invalid.read() {
-        actor.reset();
-        commands.entity(entity).insert(ActionPlanRequestMarker);
-    }
-
-    // TODO something
-}
-
-//
-pub(crate) fn validate_move(
-    mut ev_invalid: EventWriter<ActionInvalidEvent>,
-    mut query: Query<(Entity, &mut Actor, &Locus)>,
-    time: Res<TickCount>,
-    board: Res<Board>,
-) {
-    for (entity, mut actor, locus) in query.iter_mut() {
-        if let Some(action) = &mut actor.action {
-            if action.validated {
-                continue;
-            }
-
-            match action.detail {
-                // TODO
-                ActionDetail::Move(MovementActionDetail::Walk(dir)) => {
-                    if board
-                        .apply_direction(&locus.position, &dir)
-                        .is_ok_and(|dir| board.is_unoccupied(&dir))
-                    {
-                        action.validated = true;
-                    } else {
-                        ev_invalid.send(ActionInvalidEvent {
-                            entity,
-                            at: time.as_u32(),
-                        });
-                    };
-                }
-                ActionDetail::Move(_) => panic!("not implemented"),
-                _ => (), // it's not a movement action, ignore
-            }
-            // TODO check for issues other than collisions with walls
-        } else {
-            // no action, should we care?
-        }
     }
 }

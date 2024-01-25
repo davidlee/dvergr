@@ -2,6 +2,10 @@ use crate::typical::*;
 
 pub(crate) mod on_success;
 pub(crate) mod systems;
+pub(crate) mod validation;
+
+pub(crate) use systems::*;
+// pub(crate) use validation::*;
 
 #[derive(Default, Debug, Eq, PartialEq, Ord, PartialOrd, Clone, Copy, Hash, States)]
 pub(crate) enum ActionSystemState {
@@ -59,8 +63,6 @@ pub(crate) mod events {
     #[derive(Event, Debug)]
     pub(crate) struct StillWaitForAnimEvent;
 }
-
-pub(crate) use systems::*;
 
 #[derive(Component, Default, Debug)]
 pub(crate) struct Actor {

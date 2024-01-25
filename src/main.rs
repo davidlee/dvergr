@@ -130,10 +130,10 @@ fn main() {
         .add_systems(
             ActionSchedule::Validate,
             (
-                input::validate_move,
+                action::validation::validate_move,
                 // TODO other validations
                 // ...
-                input::handle_action_invalid.run_if(on_event::<ActionInvalidEvent>()),
+                action::handle_action_invalid.run_if(on_event::<ActionInvalidEvent>()),
                 apply_deferred.in_set(CustomFlush),
                 action::set_state_run, // conditions
                 apply_deferred.in_set(CustomFlush),
