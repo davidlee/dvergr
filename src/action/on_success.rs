@@ -1,6 +1,7 @@
 use super::*;
-use crate::graphics::typical::LerpVec3;
-use crate::{graphics::LogicalGraphicalEntityMapper, typical::*};
+
+use crate::graphics::anim::LerpVec3;
+use crate::graphics::LogicalGraphicalEntityMapper;
 
 pub(crate) fn apply_move(
     mut query_logic: Query<(Entity, &mut Locus, &mut MovementActionDetail)>,
@@ -8,13 +9,9 @@ pub(crate) fn apply_move(
     mut board: ResMut<Board>,
     mapper: Res<LogicalGraphicalEntityMapper>,
 ) {
-    warn!("APPLY MOVE");
     for (logical_entity, mut locus, mov) in query_logic.iter_mut() {
         dbg!(&locus, &mov);
         let pos = locus.position;
-
-        // if let Position::Point(pos) = locus.position {
-        dbg!("thundertits!!");
 
         // update the logical model
         let dest: IVec3 = board.apply_direction(&pos, mov.direction()).unwrap();
@@ -36,7 +33,6 @@ pub(crate) fn apply_move(
 
         commands.entity(*gfx_entity).insert(anim);
     }
-    // }
 }
 
 pub(crate) fn apply_attack() {}

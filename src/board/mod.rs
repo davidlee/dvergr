@@ -4,15 +4,15 @@ pub mod creature_store;
 pub mod direction;
 pub mod generator;
 pub mod geometry;
-pub mod lighting;
 pub mod primitives;
 
 pub use cell_store::*;
 pub use creature_store::*;
 
-pub const BOARD_SIZE_X: i32 = 48;
-pub const BOARD_SIZE_Y: i32 = 24;
-pub const BOARD_SIZE_Z: i32 = 1;
+pub(crate) const BOARD_SIZE_X: i32 = 48;
+pub(crate) const BOARD_SIZE_Y: i32 = 24;
+
+// pub(crate) const BOARD_SIZE_Z: i32 = 1;
 
 use crate::typical::*;
 

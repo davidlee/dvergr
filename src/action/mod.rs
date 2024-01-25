@@ -1,13 +1,8 @@
-use crate::board::direction::Direction;
-use crate::state::TickState;
-use crate::time::*;
-use crate::Player;
-use bevy::prelude::*;
-use std::collections::VecDeque;
-use std::fmt::Debug;
+use crate::typical::*;
 
 pub(crate) mod on_success;
 pub(crate) mod systems;
+
 pub(crate) use systems::*;
 
 #[derive(Component, Default, Debug)]

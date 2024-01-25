@@ -1,18 +1,15 @@
-use super::LogicalGraphicalEntityMapper;
-use crate::graphics::TorchSecondaryLightMarker;
+use super::*;
 use crate::typical::*;
-use bevy::core_pipeline::clear_color::ClearColorConfig;
-use bevy::prelude::*;
+
 use bevy_turborand::prelude::*;
 use bevy_turborand::GlobalChaChaRng;
 use bevy_turborand::RngComponent;
 
-use crate::graphics::typical::*;
-
 use super::SPRITESHEET_ASSET_PATH;
-const TILE_SIZE_W: f32 = 32.0;
-const TILE_SIZE_H: f32 = 32.0;
-const SPRITE_SCALE: f32 = 0.6;
+
+pub(crate) const TILE_SIZE_W: f32 = 32.0;
+pub(crate) const TILE_SIZE_H: f32 = 32.0;
+pub(crate) const SPRITE_SCALE: f32 = 0.6;
 
 pub fn spawn(
     mut commands: Commands,
@@ -20,7 +17,6 @@ pub fn spawn(
     mut mapper: ResMut<LogicalGraphicalEntityMapper>,
     mut next_state: ResMut<NextState<AppState>>,
     asset_server: Res<AssetServer>,
-    // avatar_ref: Res<PlayerAvatarRes>,
     avatar_query: Query<(Entity, &PlayerAvatar)>,
     player_query: Query<(Entity, &Player)>,
 ) {
@@ -67,7 +63,8 @@ pub fn spawn(
     next_state.set(AppState::Ready);
 }
 
-// TODO get parent, use attributes for intensity range
+// TODO get parent, use its attributes for intensity range
+//
 #[allow(unused, unreachable_code)]
 pub fn flicker_torches(
     mut commands: Commands,
@@ -80,7 +77,6 @@ pub fn flicker_torches(
     )>,
     mut global_rng: ResMut<GlobalChaChaRng>,
 ) {
-    // return;
     let mut rng = RngComponent::from(&mut global_rng);
 
     for x in secondary_query.iter_mut() {

@@ -1,4 +1,4 @@
-// #![allow(unused_imports)]
+#![allow(unused_imports)]
 
 pub(crate) use crate::board::{
     cell::{Cell, Floor, Wall},
@@ -9,7 +9,8 @@ pub(crate) use crate::board::{
     BOARD_SIZE_Y,
 };
 
-#[allow(unused_imports)]
+pub(crate) use crate::time::*;
+
 pub(crate) use crate::creature::{
     APSymmetry, AbilityList, Creature, CreatureBundle, CreatureSize, Gender, Locus, NeedList, Pace,
     Side, SkillList, Stance,
@@ -17,15 +18,44 @@ pub(crate) use crate::creature::{
 
 pub(crate) use crate::material::Species;
 pub(crate) use crate::player::Player;
-pub(crate) use crate::state::AppState;
+pub(crate) use crate::state::{AppState, TickState};
 
-pub use bevy::math::{IVec2, IVec3};
+//
 pub use bevy::prelude::{
-    default, on_event, state_exists, state_exists_and_equals, App, BuildChildren, Bundle, Changed,
-    Commands, Component, Deref, DerefMut, Entity, Event, EventReader, EventWriter, First, Has,
-    IntoSystemConfigs, Last, NextState, OnEnter, OnExit, OnTransition, Plugin, PostUpdate,
-    PreUpdate, Query, Res, ResMut, Resource, Startup, State, Transform, Update, Vec2, Vec3, With,
-    Without,
+    apply_deferred, default, on_event, state_exists, state_exists_and_equals, App, BuildChildren,
+    Bundle, Changed, Commands, Component, Deref, DerefMut, Entity, Event, EventReader, EventWriter,
+    First, Has, IntoSystemConfigs, Last, NextState, OnEnter, OnExit, OnTransition, Plugin,
+    PostUpdate, PreUpdate, Query, Res, ResMut, Resource, Startup, State, Transform, Update, Vec2,
+    Vec3, With, Without,
 };
+
+pub use bevy::core_pipeline::clear_color::ClearColorConfig;
+pub use bevy::math::{IVec2, IVec3};
 pub use bevy::utils::tracing::*;
 pub use bevy::utils::{HashMap, HashSet};
+
+pub use bevy::log::LogPlugin;
+pub use bevy::utils::tracing::Level;
+
+pub use bevy_turborand::prelude::*;
+pub use bevy_turborand::GlobalChaChaRng;
+pub use bevy_turborand::RngComponent;
+
+pub use std::collections::VecDeque;
+pub use std::fmt::Debug;
+
+pub(crate) mod graphics {
+    pub(crate) use super::*;
+    pub(crate) use crate::graphics::anim::LerpVec3;
+    pub(crate) use crate::graphics::{
+        CameraMarker, CreatureEntityRef, DwarfSpritesheet, TorchMarker, TorchSecondaryLightMarker,
+    };
+    // these are perhaps more public than the above ..
+    pub(crate) use crate::graphics::{LogicalGraphicalEntityMapper, MapMarker, PlayerAvatar};
+    pub use bevy::prelude::{
+        AssetServer, Assets, ClearColor, Color, Handle, Image, Msaa, SpatialBundle, Sprite,
+        SpriteBundle, SpriteSheetBundle, TextureAtlas, TextureAtlasBuilder, TextureAtlasSprite,
+        Transform,
+    };
+    pub use bevy::window::{PresentMode, Window, WindowPlugin, WindowResolution, WindowTheme};
+}

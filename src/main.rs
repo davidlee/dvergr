@@ -12,21 +12,18 @@ pub mod material;
 pub mod player;
 pub mod state;
 pub mod time;
-
 pub mod typical;
 
-use bevy::prelude::{ClearColor, Color, DefaultPlugins, PluginGroup};
+use typical::graphics::*;
+
+use bevy::prelude::{DefaultPlugins, PluginGroup};
 use bevy::window::{PresentMode, Window, WindowPlugin, WindowResolution, WindowTheme};
+
 use bevy_fps_counter::FpsCounterPlugin;
 use bevy_turborand::prelude::RngPlugin;
 
-use bevy::log::LogPlugin;
-use bevy::prelude::*;
-use bevy::utils::tracing::Level;
 use graphics::LogicalGraphicalEntityMapper;
 use player::SpawnPlayerEvent;
-use state::TickState;
-use typical::*;
 
 fn main() {
     App::new()

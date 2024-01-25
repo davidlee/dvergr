@@ -8,42 +8,7 @@ pub(crate) mod player_avatar;
 
 use bevy::{prelude::*, utils::HashMap};
 
-pub(crate) mod typical {
-    pub use super::anim::LerpVec3;
-    pub use super::{CreatureEntityRef, DwarfSpritesheet, PlayerAvatar, PlayerAvatarRes};
-    pub use bevy::prelude::{
-        AssetServer, Assets, Color, Handle, Image, SpatialBundle, Sprite, SpriteBundle,
-        SpriteSheetBundle, TextureAtlas, TextureAtlasBuilder, TextureAtlasSprite, Transform,
-    };
-}
-
-#[derive(Component, Debug, Default)]
-pub struct PlayerAvatar;
-
-#[derive(Resource, Debug, Clone)]
-pub struct PlayerAvatarRes {
-    pub entity: Entity,
-}
-
-#[derive(Component, Debug)]
-pub struct MapMarker;
-
-#[derive(Component, Debug)]
-pub struct TorchMarker;
-
-#[derive(Component, Debug)]
-pub struct TorchSecondaryLightMarker;
-
-#[derive(Component, Debug)]
-pub struct CameraMarker;
-
-#[derive(Resource, Debug)]
-pub struct DwarfSpritesheet {
-    pub atlas_handle: Handle<TextureAtlas>,
-}
-
-#[derive(Component, Debug)]
-pub struct CreatureEntityRef(pub Entity);
+// mapper resource
 
 #[derive(Resource, Debug, Default)]
 pub struct LogicalGraphicalEntityMapper {
@@ -75,3 +40,29 @@ impl LogicalGraphicalEntityMapper {
             .insert(*sprite_entity, *logical_entity);
     }
 }
+
+#[derive(Component, Debug, Default)]
+pub struct PlayerAvatar;
+
+#[derive(Resource, Debug)]
+pub struct DwarfSpritesheet {
+    pub atlas_handle: Handle<TextureAtlas>,
+}
+
+#[derive(Component, Debug)]
+pub struct CreatureEntityRef(pub Entity);
+//
+// marker components
+//
+
+#[derive(Component, Debug)]
+pub struct MapMarker;
+
+#[derive(Component, Debug)]
+pub struct TorchMarker;
+
+#[derive(Component, Debug)]
+pub struct TorchSecondaryLightMarker;
+
+#[derive(Component, Debug)]
+pub struct CameraMarker;

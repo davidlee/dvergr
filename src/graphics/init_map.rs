@@ -13,31 +13,24 @@ const VOXEL_CUBE_SIZE: f32 = 1.0;
 const CAMERA3D_Z_POS:f32 = 20.;
 
 pub(crate) fn spawn_voxel_map(
-    board: Res<Board>,
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    asset_server: ResMut<AssetServer>,
     mut ev: EventReader<SpawnPlayerEvent>,
+
+    board: Res<Board>,
+    asset_server: ResMut<AssetServer>,
     player_query: Query<(Entity, &Player)>,
 ) {
     // ..
     let texture_handle: Handle<Image> = asset_server.load("dirt.png");
-    // ambient_light.color = Color::BLACK;
-
 
     let floor_material = materials.add(StandardMaterial {
         reflectance: 0.01,
         perceptual_roughness: 1.0,
         diffuse_transmission: 0.0,
         base_color_texture: Some(texture_handle.clone()),
-
-        // normal_map_texture: None,
-        metallic: 0.0,
-        // parallax_mapping_method: ParallaxMappingMethod::Relief { max_steps: 3 },
         ior: 1.0,
-
-        thickness: 1.0,
         specular_transmission: 0.2,
         attenuation_distance: 0.01,
         attenuation_color: Color::BLACK,
@@ -48,8 +41,6 @@ pub(crate) fn spawn_voxel_map(
         double_sided: true,
         ..default()
     });
-
-    // let margin = f32::EPSILON * 2.0;
 
     let shape = meshes.add(
         shape::Cube {
