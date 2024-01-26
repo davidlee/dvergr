@@ -95,9 +95,9 @@ fn main() {
         // SYSTEMS
         //
         // Startup
-        .configure_sets(PreUpdate, ActionSet::PreUpdate)
-        .configure_sets(Update, ActionSet::Update)
-        .configure_sets(PostUpdate, ActionSet::PostUpdate)
+        // .configure_sets(PreUpdate, ActionSet::PreUpdate)
+        // .configure_sets(Update, ActionSet::Update)
+        // .configure_sets(PostUpdate, ActionSet::PostUpdate)
         //
         .add_systems(
             Startup,
@@ -112,12 +112,23 @@ fn main() {
             )
                 .chain(),
         )
+        //
+        .configure_sets(PreUpdate, ActionSet::PreUpdate)
+        .configure_sets(Update, ActionSet::Update)
+        .configure_sets(PostUpdate, ActionSet::PostUpdate)
+        .init_schedule(ActionSchedule::Assign)
+        .init_schedule(ActionSchedule::Validate)
+        .init_schedule(ActionSchedule::Tick)
+        .init_schedule(ActionSchedule::Apply)
+        .init_schedule(ActionSchedule::Animate)
+        //
         .add_systems(
-            ActionSchedule::Assign,
+            // ActionSchedule::Assign,
+            Update,
             (
-                action::check_player_plan,
-                apply_deferred.in_set(CustomFlush),
+                // apply_deferred.in_set(CustomFlush),
                 input::keybindings.run_if(in_state(PlayerInputState::Listen)),
+                action::check_player_plan.run_if(in_state(PlayerInputState::Listen)),
                 action::plan_agent_actions.run_if(on_event::<ActionPlanRequestEvent>()),
                 action::check_all_plans.run_if(on_event::<ActionVerifyAssignsEvent>()),
             )
@@ -129,13 +140,11 @@ fn main() {
         // optimistically, as little as possible
         .add_systems(
             ActionSchedule::Validate,
+            // Update, // FIXME
             (
                 action::validation::validate_move,
-                // TODO other validations
                 // ...
                 action::handle_action_invalid.run_if(on_event::<ActionInvalidEvent>()),
-                apply_deferred.in_set(CustomFlush),
-                action::set_state_run, // conditions
                 apply_deferred.in_set(CustomFlush),
             )
                 .chain()
@@ -145,6 +154,7 @@ fn main() {
         .add_systems(
             ActionSchedule::Tick,
             (
+                action::set_state_run,
                 action::clock_tick,
                 action::tick_actions,
                 apply_deferred.in_set(CustomFlush),

@@ -3,12 +3,15 @@ use crate::input::PlayerInputState;
 use super::*;
 
 pub(crate) fn bootstrap(
-    // mut commands: Commands,
     mut ev_plan_req: EventWriter<ActionPlanRequestEvent>,
+    mut next_state: ResMut<NextState<ActionSystemState>>,
+    mut input_state: ResMut<NextState<PlayerInputState>>,
 ) {
+    next_state.set(ActionSystemState::Plan);
+    input_state.set(PlayerInputState::Listen);
     ev_plan_req.send(ActionPlanRequestEvent);
-    // ...
 }
+/// ??
 
 pub(crate) fn set_state_plan(
     mut next_state: ResMut<NextState<ActionSystemState>>,
@@ -37,14 +40,18 @@ pub(crate) fn set_state_await_anim(
 
 pub(crate) fn check_player_plan(
     query: Query<(Entity, &Actor), With<Player>>,
-    mut next_state: ResMut<NextState<PlayerInputState>>,
+    mut input_state: ResMut<NextState<PlayerInputState>>,
+    mut events: EventWriter<ActionPlanRequestEvent>,
+    // mut next_state: ResMut<NextState<ActionSystemState>>,
 ) {
+    dbg!("check player plan");
     let (_, actor) = query.single();
 
     if actor.action.is_some() {
-        next_state.set(PlayerInputState::Inactive);
+        input_state.set(PlayerInputState::Inactive);
+        events.send(ActionPlanRequestEvent);
     } else {
-        next_state.set(PlayerInputState::Listen);
+        input_state.set(PlayerInputState::Listen);
     }
 }
 
@@ -52,6 +59,7 @@ pub(crate) fn check_all_plans(
     query: Query<(Entity, &Actor, Option<&Player>)>,
     mut ev_tick: EventWriter<TickEvent>,
 ) {
+    warn!("check all plans");
     if query
         .iter()
         .all(|(_, actor, _)| actor.action.is_some_and(|x| x.validated))
@@ -63,17 +71,20 @@ pub(crate) fn check_all_plans(
 pub(crate) fn handle_action_invalid(
     mut ev_invalid: EventReader<ActionInvalidEvent>,
     mut commands: Commands,
-    mut query: Query<(Entity, &mut Actor)>,
+    mut input_state: ResMut<NextState<PlayerInputState>>,
+    mut query: Query<(Entity, &mut Actor, Option<&Player>)>,
 ) {
-    warn!("HANDLER: handle_action_invalid");
+    // warn!("HANDLER: handle_action_invalid");
 
-    let (entity, mut actor) = query.single_mut();
-    for _ in ev_invalid.read() {
+    for ev in ev_invalid.read() {
+        let (_, mut actor, is_player) = query.get_mut(ev.entity).unwrap();
         actor.reset();
-        commands.entity(entity).insert(ActionPlanRequestMarker);
+        if is_player.is_some() {
+            input_state.set(PlayerInputState::Listen);
+        } else {
+            commands.entity(ev.entity).insert(ActionPlanRequestMarker);
+        }
     }
-
-    // TODO something
 }
 
 pub(crate) fn apply_completed_action_markers(

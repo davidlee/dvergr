@@ -13,6 +13,8 @@ pub(crate) fn keybindings(
     mut get_player: Query<(Entity, &Player, &mut Actor)>,
     keys: Res<Input<KeyCode>>,
 ) {
+    dbg!("keybindings");
+
     let shifted: bool = keys.any_pressed([KeyCode::ShiftLeft, KeyCode::ShiftRight]);
 
     let direction = if keys.just_pressed(KeyCode::Up) {
