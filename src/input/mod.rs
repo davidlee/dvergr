@@ -1,4 +1,4 @@
-use crate::action::{Action, ActionDetail, ActionStatus, Actor, MovementActionDetail};
+use crate::action::{Action, ActionDetail, ActionStatus, Actor, ActorAction, MovementActionDetail};
 
 use crate::typical::*;
 
@@ -10,8 +10,9 @@ pub(crate) enum PlayerInputState {
 }
 
 pub(crate) fn keybindings(
-    mut get_player: Query<(Entity, &Player, &mut Actor)>,
+    mut get_player: Query<(Entity, &Player, &mut Actor), Without<ActorAction>>,
     mut ev_added: EventWriter<ActionAddedEvent>,
+    mut commands: Commands,
     keys: Res<Input<KeyCode>>,
 ) {
     let shifted: bool = keys.any_pressed([KeyCode::ShiftLeft, KeyCode::ShiftRight]);
@@ -29,20 +30,16 @@ pub(crate) fn keybindings(
     };
 
     if let Some(direction) = direction {
-        let (entity, _player, mut actor) = get_player.single_mut();
-        if actor.action.is_some() {
-            panic!("Player unexpectedly already has an action");
-        }
+        let (entity, _player, _actor) = get_player.single_mut();
         let movement = MovementActionDetail::Walk(direction);
         let action = Action {
             entity,
-            status: ActionStatus::Queued,
+            status: ActionStatus::Idle,
             detail: ActionDetail::Move(movement),
             duration: 10,
-            validated: false,
         };
-        dbg!(action);
-        actor.action = Some(action);
+        dbg!("key command:", action);
+        commands.entity(entity).insert(ActorAction(action));
         ev_added.send(ActionAddedEvent { entity });
     }
 }

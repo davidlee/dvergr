@@ -136,13 +136,18 @@ fn main() {
                 .chain(),
         )
         //
+        .add_systems(OnEnter(ActionSystemState::Plan), action::init_or_check_plan)
         .add_systems(
             PreUpdate,
             (
                 (
+                    // should this run first or last?
+                    action::init_or_check_plan.run_if(
+                        on_event::<ActionAddedEvent>().or_else(on_event::<ActionValidatedEvent>()),
+                    ),
                     input::keybindings.run_if(in_state(PlayerInputState::Listen)),
-                    action::check_player_plan.run_if(in_state(PlayerInputState::Listen)),
                     action::plan_agent_actions.run_if(on_event::<ActionPlanRequestEvent>()),
+                    apply_deferred.run_if(on_event::<ActionAddedEvent>()),
                 )
                     .chain()
                     .in_set(ActionSet::Assign)
@@ -150,7 +155,10 @@ fn main() {
                 (
                     action::validation::validate_move.run_if(on_event::<ActionAddedEvent>()),
                     // put more validations here
-                    action::tick_if_conditions_met.run_if(on_event::<ActionValidatedEvent>()),
+
+                    // ensure ActionAddedEvent is consumed
+
+                    // then ..
                     action::handle_action_invalid.run_if(on_event::<ActionInvalidatedEvent>()),
                     apply_deferred,
                 )

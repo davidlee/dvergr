@@ -31,19 +31,16 @@ pub(crate) mod events {
     #[derive(Event, Debug, Clone)]
     pub(crate) struct ActionInvalidatedEvent {
         pub(crate) entity: Entity,
-        // pub(crate) at: u32,
     }
 
     #[derive(Event, Debug, Clone)]
     pub(crate) struct ActionValidatedEvent {
         pub(crate) entity: Entity,
-        // pub(crate) at: u32,
     }
 
     #[derive(Event, Debug, Clone)]
     pub(crate) struct ActionCompleteEvent {
         pub(crate) entity: Entity,
-        // pub(crate) at: u32,
     }
 
     #[derive(Event, Debug, Clone)]
@@ -54,13 +51,11 @@ pub(crate) mod events {
     #[derive(Event, Debug, Clone)]
     pub(crate) struct ActionStartedEvent {
         pub(crate) entity: Entity,
-        // pub(crate) at: u32,
     }
 
     #[derive(Event, Debug, Clone)]
     pub(crate) struct ActionAbortedEvent {
         pub(crate) entity: Entity,
-        // pub(crate) at: u32,
     }
 
     #[derive(Event, Debug)]
@@ -69,25 +64,24 @@ pub(crate) mod events {
 
 #[derive(Component, Default, Debug)]
 pub(crate) struct Actor {
-    pub action: Option<Action>,
     pub queue: VecDeque<Action>,
 }
 
 impl Actor {
-    pub(crate) fn reset(&mut self) {
-        self.action = None;
+    pub(crate) fn clear_queue(&mut self) {
         self.queue = VecDeque::new();
     }
 }
 
-#[derive(Event, Debug, PartialEq, Clone, Copy)]
+#[derive(Component, Debug, Clone, PartialEq)]
+pub(crate) struct ActorAction(pub Action);
+
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub(crate) struct Action {
     pub(crate) entity: Entity,
-    // player: bool,
     pub(crate) status: ActionStatus,
     pub(crate) detail: ActionDetail,
     pub(crate) duration: u32, // ticks
-    pub(crate) validated: bool,
 }
 
 impl Action {
@@ -112,32 +106,31 @@ impl Action {
         };
     }
 
-    fn is_running(&self) -> bool {
-        if let ActionStatus::Active {
-            start_tick: _,
-            complete_tick: _,
-        } = self.status
-        {
-            true
-        } else {
-            false
-        }
+    fn is_idle(&self) -> bool {
+        self.status == ActionStatus::Idle
     }
 
-    fn is_queued(&self) -> bool {
-        self.status == ActionStatus::Queued
+    fn is_ready(&self) -> bool {
+        self.status == ActionStatus::Ready
     }
 
-    // FIXME success? complete?
-    fn is_success(&self) -> bool {
+    fn is_runnable(&self) -> bool {
+        matches!(
+            self.status,
+            ActionStatus::Ready | ActionStatus::Active { .. }
+        )
+    }
+
+    fn is_active(&self) -> bool {
+        matches!(self.status, ActionStatus::Active { .. })
+    }
+
+    fn is_complete(&self) -> bool {
         self.status == ActionStatus::Complete
     }
 
-    fn is_failed(&self) -> bool {
-        match self.status {
-            ActionStatus::Invalid | ActionStatus::Aborted => true,
-            _ => false,
-        }
+    fn is_aborted(&self) -> bool {
+        self.status == ActionStatus::Aborted
     }
 
     fn should_complete(&self, current_tick: u32) -> bool {
@@ -157,14 +150,13 @@ impl Action {
 #[derive(Default, Debug, Eq, PartialEq, Ord, PartialOrd, Clone, Copy, Hash)]
 pub(crate) enum ActionStatus {
     #[default]
-    Queued,
-    // Validated,
+    Idle, // not validated
+    Ready, // preconditions satisfied
     Active {
         start_tick: u32,
         complete_tick: u32,
     },
     Complete,
-    Invalid,
     Aborted,
 }
 

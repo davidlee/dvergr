@@ -2,6 +2,7 @@ use crate::input::PlayerInputState;
 
 use super::*;
 
+// delete?
 pub(crate) fn bootstrap(
     mut ev_plan_req: EventWriter<ActionPlanRequestEvent>,
     mut next_state: ResMut<NextState<ActionSystemState>>,
@@ -11,7 +12,40 @@ pub(crate) fn bootstrap(
     input_state.set(PlayerInputState::Listen);
     ev_plan_req.send(ActionPlanRequestEvent);
 }
-/// ??
+
+//
+pub(crate) fn init_or_check_plan(
+    player: Query<(Entity, &Actor, Option<&ActorAction>), With<Player>>,
+    idle_actors: Query<(Entity, &Actor), (Without<Player>, Without<ActorAction>)>,
+    actors: Query<(Entity, &Actor, &ActorAction), Without<Player>>,
+    mut input_state: ResMut<NextState<PlayerInputState>>,
+    mut ev_planner: EventWriter<ActionPlanRequestEvent>,
+    mut ev_tick: EventWriter<TickEvent>,
+) {
+    let mut ready = false;
+
+    if let (_, _, Some(action)) = player.single() {
+        dbg!("init, player action ({:?})", action.0);
+
+        input_state.set(PlayerInputState::Inactive);
+        if action.0.is_ready() {
+            ready = true;
+        } else if action.0.is_idle() {
+            dbg!("idle, ", action);
+            // let's make validation happen
+        }
+    } else {
+        input_state.set(PlayerInputState::Listen);
+    }
+
+    if idle_actors.iter().count() > 0 {
+        dbg!("idle actors ..");
+        ev_planner.send(ActionPlanRequestEvent);
+    } else if ready && actors.iter().all(|x| x.2 .0.is_runnable()) {
+        ev_tick.send(TickEvent);
+        dbg!("TICK");
+    } // else fix it
+}
 
 pub(crate) fn set_state_plan(
     mut next_state: ResMut<NextState<ActionSystemState>>,
@@ -36,58 +70,36 @@ pub(crate) fn set_state_await_anim(
     input_state.set(PlayerInputState::Listen);
 }
 
-// ...
+// pub(crate) fn tick_if_conditions_met(
+//     query: Query<(Entity, &Actor, Option<&Player>)>,
+//     mut ev_tick: EventWriter<TickEvent>,
+// ) {
+//     warn!("checking if we can tick");
+//     //
+//     // check if any actions are missing
+//     // then if any are not valid
+//     //
 
-pub(crate) fn check_player_plan(
-    query: Query<(Entity, &Actor), With<Player>>,
-    mut input_state: ResMut<NextState<PlayerInputState>>,
-    // mut events: EventWriter<ActionPlanRequestEvent>,
-    // mut next_state: ResMut<NextState<ActionSystemState>>,
-) {
-    // dbg!("check player plan");
+//     // FIXME
 
-    let (_, actor) = query.single();
-
-    if actor.action.is_some() {
-        dbg!("player got an action");
-        input_state.set(PlayerInputState::Inactive);
-        // events.send(ActionPlanRequestEvent);
-    } else {
-        // dbg!("player got none");
-        input_state.set(PlayerInputState::Listen);
-    }
-}
-
-pub(crate) fn tick_if_conditions_met(
-    query: Query<(Entity, &Actor, Option<&Player>)>,
-    mut ev_tick: EventWriter<TickEvent>,
-) {
-    warn!("checking if we can tick");
-    //
-    // check if any actions are missing
-    // then if any are not valid
-    //
-
-    // FIXME
-
-    if query
-        .iter()
-        .all(|(_, actor, _)| actor.action.is_some_and(|x| x.validated))
-    {
-        info!("seems legit, sending Tick event");
-        ev_tick.send(TickEvent);
-    } else {
-        warn!("nah, let's see");
-        for (_, actor, is_player) in query.iter() {
-            info!(
-                "?? -- {:?},{:?}, {:?}",
-                actor,
-                actor.action.is_some(),
-                is_player
-            );
-        }
-    }
-}
+//     if query
+//         .iter()
+//         .all(|(_, actor, _)| actor.action.is_some_and(|x| x.validated))
+//     {
+//         info!("seems legit, sending Tick event");
+//         ev_tick.send(TickEvent);
+//     } else {
+//         warn!("nah, let's see");
+//         for (_, actor, is_player) in query.iter() {
+//             info!(
+//                 "?? -- {:?},{:?}, {:?}",
+//                 actor,
+//                 actor.action.is_some(),
+//                 is_player
+//             );
+//         }
+//     }
+// }
 
 pub(crate) fn handle_action_invalid(
     mut ev_invalid: EventReader<ActionInvalidatedEvent>,
@@ -99,7 +111,7 @@ pub(crate) fn handle_action_invalid(
 
     for ev in ev_invalid.read() {
         let (_, mut actor, is_player) = query.get_mut(ev.entity).unwrap();
-        actor.reset();
+        actor.clear_queue();
         if is_player.is_some() {
             input_state.set(PlayerInputState::Listen);
         } else {
@@ -110,19 +122,15 @@ pub(crate) fn handle_action_invalid(
 
 pub(crate) fn apply_completed_action_markers(
     mut commands: Commands,
-    // mut actors: Query<(Entity, &mut Actor)>,
-    mut query: Query<(Entity, &mut Actor)>,
+    query: Query<(Entity, &Actor, &ActorAction)>,
     mut next_state: ResMut<NextState<ActionSystemState>>,
-    // time: Res<TickCount>,
 ) {
-    for (entity, mut actor) in query.iter_mut() {
-        if actor.action.is_some_and(|x| x.is_success()) {
-            let action = actor.action.take().unwrap();
-
+    for (entity, _actor, action) in query.iter() {
+        if action.0.is_complete() {
             // insert the detail as a marker component
             // we'll look for these in queries inside on_success systems
             let mut cmds = commands.entity(entity);
-            match action.detail {
+            match action.0.detail {
                 ActionDetail::Move(x) => {
                     cmds.insert(x);
                 }
@@ -137,10 +145,11 @@ pub(crate) fn apply_completed_action_markers(
                 }
                 ActionDetail::Wait => {} // noop
             }
-            // cmds.log_components();
+        } else {
+            // anything else to clean up?
+            dbg!("....", action.0);
         }
     }
-    warn!(">> animate");
     next_state.set(ActionSystemState::AwaitAnim);
 }
 
@@ -148,14 +157,12 @@ pub(crate) fn apply_completed_action_markers(
 // this will end up needing to fold into tick_actions to deal with monitors, etc
 // ie we won't be able to know the next interesting tick in advance.
 
-pub(crate) fn clock_tick(mut clock: ResMut<TickCount>, query: Query<&Actor>) {
+pub(crate) fn clock_tick(mut clock: ResMut<TickCount>, query: Query<(&Actor, &ActorAction)>) {
     let mut ts: Vec<u32> = vec![];
 
-    for actor in query.iter() {
-        if actor.action.is_some() {
-            if let Some(t) = actor.action.unwrap().ticks_left() {
-                ts.push(t);
-            }
+    for (_, action) in query.iter() {
+        if let Some(t) = action.0.ticks_left() {
+            ts.push(t);
         }
     }
 
@@ -171,81 +178,65 @@ pub(crate) fn clock_tick(mut clock: ResMut<TickCount>, query: Query<&Actor>) {
 
 pub(crate) fn tick_actions(
     mut commands: Commands,
-    mut query: Query<(Entity, &mut Actor, Option<&Player>)>,
+    mut query: Query<(Entity, &mut Actor, &ActorAction, Option<&Player>)>,
     mut ev_start: EventWriter<ActionStartedEvent>,
     mut ev_complete: EventWriter<ActionCompleteEvent>,
     mut ev_abort: EventWriter<ActionAbortedEvent>,
-    mut ev_plan_req: EventWriter<ActionPlanRequestEvent>,
+    // ut ev_plan_req: EventWriter<ActionPlanRequestEvent>,
     time: Res<TickCount>,
 ) {
     // debounce
     dbg!("tick actions");
-    let mut plan_req = false;
 
-    for (entity, mut actor, player) in query.iter_mut() {
-        let mut action = actor.action.unwrap();
-        if action.is_queued() {
-            dbg!("queued");
+    for (entity, mut actor, action, player) in query.iter_mut() {
+        let mut action = action.0;
+        if action.is_ready() {
+            dbg!("starting:", action);
             action.start(time.as_u32());
             ev_start.send(ActionStartedEvent { entity });
-        } else if action.is_running() {
-            dbg!("running");
+        } else if action.is_active() {
+            dbg!("active", action);
+
             if action.should_complete(time.as_u32()) {
                 action.status = ActionStatus::Complete;
-                actor.action = Some(action);
-                ev_complete.send(ActionCompleteEvent { entity })
-            } else {
-                dbg!("bow wow");
-                // BAU
-                // TODO .. check interrupts, monitors, etc
-            };
-        } else if action.is_failed() {
-            dbg!("failed action, reset queue ... ");
-            actor.reset();
-            commands.entity(entity).insert(ActionPlanRequestMarker);
-            plan_req = true;
-            ev_abort.send(ActionAbortedEvent { entity });
-        } else if actor.action.is_none() {
-            if let Some(mut next_action) = actor.queue.pop_front() {
-                next_action.start(time.as_u32());
-                actor.action = Some(next_action);
-            } else if player.is_none() {
-                commands.entity(entity).insert(ActionPlanRequestMarker);
-                plan_req = true;
-            }
-        } else {
-            panic!("unknown action tick scenario");
-        }
-    }
+                ev_complete.send(ActionCompleteEvent { entity });
 
-    if plan_req == true {
-        ev_plan_req.send(ActionPlanRequestEvent);
+                if let Some(mut next_action) = actor.queue.pop_front() {
+                    next_action.start(time.as_u32());
+                    commands.entity(entity).insert(ActorAction(next_action));
+                } else if player.is_none() {
+                    commands.entity(entity).insert(ActionPlanRequestMarker);
+                } else {
+                    // TODO set input state?
+                }
+            }
+        } else if action.is_aborted() {
+            warn!("failed action, reset queue ... ");
+            actor.clear_queue();
+            commands.entity(entity).remove::<ActorAction>();
+            ev_abort.send(ActionAbortedEvent { entity });
+        }
     }
 }
 
 pub(crate) fn plan_agent_actions(
-    mut actors: Query<(Entity, &mut Actor, Option<&Player>), With<ActionPlanRequestMarker>>,
+    mut actors: Query<(Entity, &mut Actor, Option<&Player>), Without<ActorAction>>,
     mut ev_added: EventWriter<ActionAddedEvent>,
+    mut commands: Commands,
 ) {
-    for (entity, mut actor, maybe_player) in actors.iter_mut() {
+    for (entity, _actor, maybe_player) in actors.iter_mut() {
         if maybe_player.is_some() {
-            panic!("don't handle this yet ... i guess its the confusion case");
+            dbg!("don't handle this case");
+            continue;
         }
 
-        if actor.action.is_none() {
-            //
-            // TODO something smarter
-            actor.action = Some(Action {
-                entity,
-                status: ActionStatus::Queued,
-                detail: ActionDetail::Wait,
-                duration: 10,
-                validated: false,
-            });
-            ev_added.send(ActionAddedEvent { entity });
-        } else {
-            warn!("expected empty action queue but found some");
-            panic!("log etc");
-        }
+        commands.entity(entity).insert(ActorAction(Action {
+            entity,
+            status: ActionStatus::Idle,
+            detail: ActionDetail::Wait,
+            duration: 10,
+        }));
+
+        ev_added.send(ActionAddedEvent { entity });
     }
 }
