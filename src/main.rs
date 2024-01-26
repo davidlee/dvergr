@@ -13,7 +13,6 @@ pub mod player;
 pub mod time;
 pub mod typical;
 
-use bevy::ecs::schedule::ScheduleLabel;
 use bevy::window::{PresentMode, WindowResolution, WindowTheme};
 use bevy_fps_counter::FpsCounterPlugin;
 use bevy_turborand::prelude::RngPlugin;
@@ -23,8 +22,8 @@ use player::SpawnPlayerEvent;
 use typical::graphics::*;
 
 // System sets and such
-#[derive(Ord, ScheduleLabel, Debug, Hash, PartialEq, Eq, Clone, PartialOrd)]
-enum ActionSchedule {
+#[derive(Ord, SystemSet, Debug, Hash, PartialEq, Eq, Clone, PartialOrd)]
+enum ActionSet {
     // Plan:
     Assign,
     Validate,
@@ -39,11 +38,14 @@ enum ActionSchedule {
 struct CustomFlush;
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
-enum ActionSet {
-    PreUpdate,
-    Update,
-    PostUpdate,
-}
+struct ActorBehaviour;
+
+// #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
+// enum ActionSet {
+//     PreUpdate,
+//     Update,
+//     PostUpdate,
+// }
 
 fn main() {
     // let schedule = Schedule::new(ActionSchedule::Assign);
@@ -84,12 +86,13 @@ fn main() {
         // EVENTS
         .add_event::<SpawnPlayerEvent>()
         .add_event::<TickEvent>()
-        .add_event::<ActionInvalidEvent>()
+        .add_event::<ActionInvalidatedEvent>()
+        .add_event::<ActionValidatedEvent>()
         .add_event::<ActionPlanRequestEvent>()
         .add_event::<ActionCompleteEvent>()
-        .add_event::<ActionVerifyAssignsEvent>()
-        .add_event::<ActionStartEvent>()
-        .add_event::<ActionAbortEvent>()
+        .add_event::<ActionAddedEvent>()
+        .add_event::<ActionStartedEvent>()
+        .add_event::<ActionAbortedEvent>()
         .add_event::<StillWaitForAnimEvent>()
         //
         // SYSTEMS
@@ -112,74 +115,74 @@ fn main() {
             )
                 .chain(),
         )
+        // Custom schedules: how do they even work?
+        // here we're configuring our custom SystemSet
         //
-        .configure_sets(PreUpdate, ActionSet::PreUpdate)
-        .configure_sets(Update, ActionSet::Update)
-        .configure_sets(PostUpdate, ActionSet::PostUpdate)
-        .init_schedule(ActionSchedule::Assign)
-        .init_schedule(ActionSchedule::Validate)
-        .init_schedule(ActionSchedule::Tick)
-        .init_schedule(ActionSchedule::Apply)
-        .init_schedule(ActionSchedule::Animate)
+        // .configure_sets(PreUpdate, ActionSet::PreUpdate)
+        // .configure_sets(Update, ActionSet::Update)
+        // .configure_sets(PostUpdate, ActionSet::PostUpdate)
+        // .configure_sets(PreUpdate, ActorBehaviour)
+        // .configure_sets(Update, ActionSet::Update)
+        // .configure_sets(PostUpdate, ActionSet::PostUpdate)
+        .configure_sets(
+            PreUpdate,
+            (
+                ActionSet::Assign,
+                ActionSet::Validate,
+                ActionSet::Tick,
+                ActionSet::Apply,
+                ActionSet::Animate,
+            )
+                .chain(),
+        )
         //
         .add_systems(
-            // ActionSchedule::Assign,
+            PreUpdate,
+            (
+                (
+                    input::keybindings.run_if(in_state(PlayerInputState::Listen)),
+                    action::check_player_plan.run_if(in_state(PlayerInputState::Listen)),
+                    action::plan_agent_actions.run_if(on_event::<ActionPlanRequestEvent>()),
+                )
+                    .chain()
+                    .in_set(ActionSet::Assign)
+                    .run_if(in_state(ActionSystemState::Plan)),
+                (
+                    action::validation::validate_move.run_if(on_event::<ActionAddedEvent>()),
+                    // put more validations here
+                    action::tick_if_conditions_met.run_if(on_event::<ActionValidatedEvent>()),
+                    action::handle_action_invalid.run_if(on_event::<ActionInvalidatedEvent>()),
+                    apply_deferred,
+                )
+                    .chain()
+                    .in_set(ActionSet::Validate)
+                    .run_if(in_state(ActionSystemState::Plan)),
+                (
+                    action::set_state_run,
+                    action::clock_tick,
+                    action::tick_actions,
+                    // now check if ready for tick
+                    apply_deferred,
+                )
+                    .chain()
+                    .in_set(ActionSet::Tick)
+                    .run_if(on_event::<TickEvent>()),
+                (
+                    action::apply_completed_action_markers,
+                    apply_deferred,
+                    action::on_success::apply_move,
+                    action::on_success::apply_attack,
+                    // ...
+                    action::set_state_await_anim,
+                    apply_deferred, // .in_set(CustomFlush),
+                )
+                    .chain()
+                    .in_set(ActionSet::Apply)
+                    .run_if(on_event::<ActionCompleteEvent>()),
+            ),
+        )
+        .add_systems(
             Update,
-            (
-                // apply_deferred.in_set(CustomFlush),
-                input::keybindings.run_if(in_state(PlayerInputState::Listen)),
-                action::check_player_plan.run_if(in_state(PlayerInputState::Listen)),
-                action::plan_agent_actions.run_if(on_event::<ActionPlanRequestEvent>()),
-                action::check_all_plans.run_if(on_event::<ActionVerifyAssignsEvent>()),
-            )
-                .chain()
-                .in_set(ActionSet::PreUpdate)
-                .run_if(in_state(ActionSystemState::Plan)),
-        )
-        // hmmm there's devil in the detail of how we ensure we validate
-        // optimistically, as little as possible
-        .add_systems(
-            ActionSchedule::Validate,
-            // Update, // FIXME
-            (
-                action::validation::validate_move,
-                // ...
-                action::handle_action_invalid.run_if(on_event::<ActionInvalidEvent>()),
-                apply_deferred.in_set(CustomFlush),
-            )
-                .chain()
-                .in_set(ActionSet::PreUpdate)
-                .run_if(in_state(ActionSystemState::Plan)),
-        )
-        .add_systems(
-            ActionSchedule::Tick,
-            (
-                action::set_state_run,
-                action::clock_tick,
-                action::tick_actions,
-                apply_deferred.in_set(CustomFlush),
-            )
-                .chain()
-                .in_set(ActionSet::PreUpdate)
-                .run_if(on_event::<TickEvent>()),
-        )
-        .add_systems(
-            ActionSchedule::Apply,
-            (
-                action::apply_completed_action_markers,
-                apply_deferred.in_set(CustomFlush),
-                action::on_success::apply_move,
-                action::on_success::apply_attack,
-                // ...
-                action::set_state_await_anim,
-                apply_deferred.in_set(CustomFlush),
-            )
-                .chain()
-                .in_set(ActionSet::PreUpdate)
-                .run_if(on_event::<ActionCompleteEvent>()),
-        )
-        .add_systems(
-            ActionSchedule::Animate,
             (
                 graphics::player_avatar::flicker_torches,
                 graphics::move_anim::animate_player_fov,
@@ -190,7 +193,7 @@ fn main() {
                     .run_if(not(on_event::<StillWaitForAnimEvent>())),
             )
                 .chain()
-                .in_set(ActionSet::Update)
+                .in_set(ActionSet::Animate)
                 .run_if(in_state(ActionSystemState::AwaitAnim)),
         )
         .add_systems(Update, bevy::window::close_on_esc)

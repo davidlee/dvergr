@@ -28,36 +28,39 @@ pub(crate) mod events {
     #[derive(Event, Debug)]
     pub(crate) struct ActionPlanRequestEvent;
 
-    // #[derive(Event, Debug, Clone)]
-    // pub(crate) struct PlayerActionInvalidEvent; // deprecate
+    #[derive(Event, Debug, Clone)]
+    pub(crate) struct ActionInvalidatedEvent {
+        pub(crate) entity: Entity,
+        // pub(crate) at: u32,
+    }
 
     #[derive(Event, Debug, Clone)]
-    pub(crate) struct ActionInvalidEvent {
+    pub(crate) struct ActionValidatedEvent {
         pub(crate) entity: Entity,
-        pub(crate) at: u32,
+        // pub(crate) at: u32,
     }
 
     #[derive(Event, Debug, Clone)]
     pub(crate) struct ActionCompleteEvent {
         pub(crate) entity: Entity,
-        pub(crate) at: u32,
+        // pub(crate) at: u32,
     }
 
     #[derive(Event, Debug, Clone)]
-    pub(crate) struct ActionVerifyAssignsEvent {
-        pub(crate) at: u32,
-    }
-
-    #[derive(Event, Debug, Clone)]
-    pub(crate) struct ActionStartEvent {
+    pub(crate) struct ActionAddedEvent {
         pub(crate) entity: Entity,
-        pub(crate) at: u32,
     }
 
     #[derive(Event, Debug, Clone)]
-    pub(crate) struct ActionAbortEvent {
+    pub(crate) struct ActionStartedEvent {
         pub(crate) entity: Entity,
-        pub(crate) at: u32,
+        // pub(crate) at: u32,
+    }
+
+    #[derive(Event, Debug, Clone)]
+    pub(crate) struct ActionAbortedEvent {
+        pub(crate) entity: Entity,
+        // pub(crate) at: u32,
     }
 
     #[derive(Event, Debug)]

@@ -11,10 +11,9 @@ pub(crate) enum PlayerInputState {
 
 pub(crate) fn keybindings(
     mut get_player: Query<(Entity, &Player, &mut Actor)>,
+    mut ev_added: EventWriter<ActionAddedEvent>,
     keys: Res<Input<KeyCode>>,
 ) {
-    dbg!("keybindings");
-
     let shifted: bool = keys.any_pressed([KeyCode::ShiftLeft, KeyCode::ShiftRight]);
 
     let direction = if keys.just_pressed(KeyCode::Up) {
@@ -42,6 +41,8 @@ pub(crate) fn keybindings(
             duration: 10,
             validated: false,
         };
+        dbg!(action);
         actor.action = Some(action);
+        ev_added.send(ActionAddedEvent { entity });
     }
 }

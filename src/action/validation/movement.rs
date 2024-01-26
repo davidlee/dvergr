@@ -1,11 +1,12 @@
 use super::*;
 
 pub(crate) fn validate_move(
-    mut ev_invalid: EventWriter<ActionInvalidEvent>,
+    mut ev_invalid: EventWriter<ActionInvalidatedEvent>,
+    mut ev_valid: EventWriter<ActionValidatedEvent>,
     mut query: Query<(Entity, &mut Actor, &Locus)>,
-    time: Res<TickCount>,
     board: Res<Board>,
 ) {
+    info!("validating move");
     for (entity, mut actor, locus) in query.iter_mut() {
         if let Some(action) = &mut actor.action {
             if action.validated {
@@ -19,12 +20,12 @@ pub(crate) fn validate_move(
                         .apply_direction(&locus.position, &dir)
                         .is_ok_and(|dir| board.is_unoccupied(&dir))
                     {
+                        dbg!("yeah its good");
                         action.validated = true;
+                        ev_valid.send(ActionValidatedEvent { entity });
                     } else {
-                        ev_invalid.send(ActionInvalidEvent {
-                            entity,
-                            at: time.as_u32(),
-                        });
+                        dbg!("nah its bad");
+                        ev_invalid.send(ActionInvalidatedEvent { entity });
                     };
                 }
                 ActionDetail::Move(_) => panic!("not implemented"),
