@@ -1,11 +1,7 @@
 use super::*;
 use crate::typical::*;
 
-pub(crate) const TILE_SIZE_W: f32 = 32.0;
-pub(crate) const TILE_SIZE_H: f32 = 32.0;
-pub(crate) const SPRITE_SCALE: f32 = 0.6;
-
-pub fn spawn(
+pub fn spawn_player_sprite_and_2d_camera(
     mut commands: Commands,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     asset_server: Res<AssetServer>,

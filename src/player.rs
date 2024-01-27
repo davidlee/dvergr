@@ -45,7 +45,7 @@ impl Default for PlayerBundle {
     }
 }
 
-pub(crate) fn spawn(
+pub(crate) fn spawn_player_and_3d_elements(
     mut commands: Commands,
     mut board: ResMut<Board>,
     mut ev: EventReader<SpawnPlayerEvent>,

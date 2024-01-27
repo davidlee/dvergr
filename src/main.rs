@@ -106,12 +106,11 @@ fn main() {
             Startup,
             (
                 board::generator::populate_board,
-                apply_deferred, // ensure player exists
-                graphics::init_map::spawn_voxel_map,
-                apply_deferred, // ensure player exists
-                player::spawn,
+                graphics::spawn_voxel_map,
                 apply_deferred,
-                graphics::player_avatar::spawn,
+                player::spawn_player_and_3d_elements,
+                apply_deferred,
+                graphics::spawn_player_sprite_and_2d_camera,
                 action::bootstrap,
             )
                 .chain(),
