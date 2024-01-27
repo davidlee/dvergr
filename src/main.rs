@@ -86,6 +86,7 @@ fn main() {
         // EVENTS
         .add_event::<SpawnPlayerEvent>()
         .add_event::<TickEvent>()
+        .add_event::<PlayerInputRequestEvent>()
         .add_event::<ActionInvalidatedEvent>()
         .add_event::<ActionValidatedEvent>()
         .add_event::<ActionPlanRequestEvent>()
@@ -136,13 +137,16 @@ fn main() {
                 .chain(),
         )
         //
-        .add_systems(OnEnter(ActionSystemState::Plan), action::init_or_check_plan)
+        .add_systems(
+            OnEnter(ActionSystemState::Plan),
+            action::plan_init_check_or_tick,
+        )
         .add_systems(
             PreUpdate,
             (
                 (
                     // should this run first or last?
-                    action::init_or_check_plan.run_if(
+                    action::plan_init_check_or_tick.run_if(
                         on_event::<ActionAddedEvent>().or_else(on_event::<ActionValidatedEvent>()),
                     ),
                     input::keybindings.run_if(in_state(PlayerInputState::Listen)),
@@ -169,8 +173,8 @@ fn main() {
                     action::set_state_run,
                     action::clock_tick,
                     action::tick_actions,
-                    // now check if ready for tick
                     apply_deferred,
+                    action::plan_init_check_or_tick, // proceed to next tick?
                 )
                     .chain()
                     .in_set(ActionSet::Tick)
@@ -182,7 +186,7 @@ fn main() {
                     action::on_success::apply_attack,
                     // ...
                     action::set_state_await_anim,
-                    apply_deferred, // .in_set(CustomFlush),
+                    apply_deferred,
                 )
                     .chain()
                     .in_set(ActionSet::Apply)
@@ -205,5 +209,24 @@ fn main() {
                 .run_if(in_state(ActionSystemState::AwaitAnim)),
         )
         .add_systems(Update, bevy::window::close_on_esc)
+        .add_systems(
+            Update,
+            instrument_time.run_if(in_state(PlayerInputState::Inactive)),
+        )
         .run();
+}
+
+fn instrument_time(
+    frame: Res<FrameCount>,
+    tick: Res<TickCount>,
+    res: Res<State<ActionSystemState>>,
+) {
+    if frame.0 % 10 == 0 {
+        warn!(
+            "😈 frame / tick / state: {:?} / {:?} => {:?}",
+            frame.0,
+            tick.0,
+            res.get()
+        );
+    }
 }

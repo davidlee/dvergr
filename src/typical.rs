@@ -25,6 +25,7 @@ pub(crate) use crate::material::{Species, Substance};
 pub(crate) use crate::player::Player;
 pub(crate) use crate::time::{Clock, TickCount, Unit};
 
+pub use bevy::core::{FrameCount, FrameCountPlugin};
 pub use bevy::core_pipeline::clear_color::ClearColorConfig;
 pub use bevy::log::LogPlugin;
 pub use bevy::math::{IVec2, IVec3};

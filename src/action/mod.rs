@@ -28,6 +28,9 @@ pub(crate) mod events {
     #[derive(Event, Debug)]
     pub(crate) struct ActionPlanRequestEvent;
 
+    #[derive(Event, Debug)]
+    pub(crate) struct PlayerInputRequestEvent;
+
     #[derive(Event, Debug, Clone)]
     pub(crate) struct ActionInvalidatedEvent {
         pub(crate) entity: Entity,
@@ -133,6 +136,10 @@ impl Action {
         self.status == ActionStatus::Aborted
     }
 
+    fn is_done(&self) -> bool {
+        matches!(self.status, ActionStatus::Complete | ActionStatus::Aborted)
+    }
+
     fn should_complete(&self, current_tick: u32) -> bool {
         if let ActionStatus::Active {
             start_tick: _,
@@ -142,6 +149,14 @@ impl Action {
             complete_tick <= current_tick
         } else {
             false
+        }
+    }
+
+    fn ticks_remaining(&self, current_tick: u32) -> u32 {
+        if let ActionStatus::Active { complete_tick, .. } = self.status {
+            complete_tick - current_tick
+        } else {
+            panic!("inactive, N/A");
         }
     }
 }

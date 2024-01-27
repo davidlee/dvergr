@@ -8,13 +8,13 @@ pub(crate) fn validate_move(
 ) {
     info!("validating move");
     for (entity, _actor, mut action, locus) in query.iter_mut() {
-        dbg!("?????", action.clone());
+        dbg!("validating move", &action.0.status);
 
         if action.0.is_runnable() {
             dbg!("runnable");
             continue;
         } else {
-            dbg!("huh", action.clone());
+            dbg!("not runny");
         }
 
         let valid = match action.0.detail {
@@ -32,12 +32,12 @@ pub(crate) fn validate_move(
             ActionStatus::Aborted
         };
 
-        dbg!("well is it ? ", valid, action);
+        dbg!("determined validity: ", valid, action);
+
         if valid {
             ev_valid.send(ActionValidatedEvent { entity });
         } else {
             ev_invalid.send(ActionInvalidatedEvent { entity });
         }
     }
-    dbg!("ende!");
 }
