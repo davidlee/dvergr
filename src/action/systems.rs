@@ -13,10 +13,12 @@ pub(crate) fn bootstrap(
     ev_plan_req.send(ActionPlanRequestEvent);
 }
 
+type Pc = With<Player>;
+type Npc = Without<Player>;
 pub(crate) fn plan_init_check_or_tick(
     mut commands: Commands,
-    mut player: Query<(Entity, &mut Actor, Option<&ActorAction>), With<Player>>,
-    idle_actors: Query<(Entity, &Actor), (Without<Player>, Without<ActorAction>)>,
+    mut player: Query<(Entity, &mut Actor, Option<&ActorAction>), Pc>,
+    idle_actors: Query<(Entity, &Actor), (Npc, Without<ActorAction>)>,
     actors: Query<(Entity, &Actor, &ActorAction), Without<Player>>,
     mut input_state: ResMut<NextState<PlayerInputState>>,
     mut ev_planner: EventWriter<ActionPlanRequestEvent>,

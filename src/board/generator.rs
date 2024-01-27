@@ -21,7 +21,8 @@ impl Ord for Room {
 
 impl PartialOrd for Room {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        [self.x, self.y].partial_cmp(&[other.x, other.y])
+        // [self.x, self.y].partial_cmp(&[other.x, other.y])
+        Some(self.cmp(other))
     }
 }
 
@@ -60,10 +61,9 @@ impl Room {
     }
 }
 
-fn collision_free(room: &Room, rooms: &Vec<Room>) -> bool {
+fn collision_free(room: &Room, rooms: &[Room]) -> bool {
     rooms.iter().all(|r| {
-        false
-            || (r.max_x() + MARGIN) < room.x
+        (r.max_x() + MARGIN) < room.x
             || (r.max_y() + MARGIN) < room.y
             || (room.max_x() + MARGIN) < r.x
             || (room.max_y() + MARGIN) < r.y

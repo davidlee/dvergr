@@ -49,7 +49,6 @@ pub fn spawn(
             avatar.spawn(Camera2dBundle {
                 camera_2d: Camera2d {
                     clear_color: ClearColorConfig::None,
-                    ..default()
                 },
                 transform: Transform::from_xyz(0., 0., -1.).with_scale(Vec3::splat(SPRITE_SCALE)),
                 camera: Camera {

@@ -56,13 +56,12 @@ impl Dur {
 
 impl PartialEq for Dur {
     fn eq(&self, other: &Dur) -> bool {
-        // &(Into::<u32>::into(*self) as u32) == &(Into::<u32>::into(*other) as u32)
         self.as_u32().eq(&other.as_u32())
     }
 }
 impl PartialOrd for Dur {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        self.as_u32().partial_cmp(&other.as_u32())
+        Some(self.cmp(other))
     }
 }
 
