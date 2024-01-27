@@ -4,6 +4,7 @@ use super::*;
 // use crate::typical::*;
 
 #[derive(Bundle, Debug, Clone)]
+#[derive(Default)]
 pub struct CharacterBundle {
     pub character: Character,
     // pub blood
@@ -14,16 +15,7 @@ pub struct CharacterBundle {
     // Journal
 }
 
-impl Default for CharacterBundle {
-    fn default() -> Self {
-        Self {
-            character: Character::default(),
-            recipes: RecipeList::default(),
-            blueprints: BlueprintList::default(),
-            rituals: RitualList::default(),
-        }
-    }
-}
+
 
 #[derive(Component, Debug, Clone, Default)]
 pub struct Character {

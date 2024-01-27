@@ -81,6 +81,6 @@ impl Board {
     // FIXME check for things other than walls - statues, pillars, creatures, doors ...
 
     pub(crate) fn is_unoccupied(&self, pos: &IVec3) -> bool {
-        self.wall_store.get(&pos).is_none()
+        self.wall_store.get(pos).is_none()
     }
 }

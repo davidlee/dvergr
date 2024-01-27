@@ -18,7 +18,7 @@ pub(crate) struct PlayerBundle {
 impl Default for PlayerBundle {
     fn default() -> Self {
         PlayerBundle {
-            player: Player::default(),
+            player: Player,
             creature: CreatureBundle {
                 locus: Locus {
                     position: IVec3::new(3, 3, 0),
