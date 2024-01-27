@@ -109,9 +109,9 @@ impl Action {
         };
     }
 
-    fn is_idle(&self) -> bool {
-        self.status == ActionStatus::Idle
-    }
+    // fn is_idle(&self) -> bool {
+    //     self.status == ActionStatus::Idle
+    // }
 
     fn is_ready(&self) -> bool {
         self.status == ActionStatus::Ready
@@ -136,9 +136,9 @@ impl Action {
         self.status == ActionStatus::Aborted
     }
 
-    fn is_done(&self) -> bool {
-        matches!(self.status, ActionStatus::Complete | ActionStatus::Aborted)
-    }
+    // fn is_done(&self) -> bool {
+    //     matches!(self.status, ActionStatus::Complete | ActionStatus::Aborted)
+    // }
 
     fn should_complete(&self, current_tick: u32) -> bool {
         if let ActionStatus::Active {
@@ -152,13 +152,13 @@ impl Action {
         }
     }
 
-    fn ticks_remaining(&self, current_tick: u32) -> u32 {
-        if let ActionStatus::Active { complete_tick, .. } = self.status {
-            complete_tick - current_tick
-        } else {
-            panic!("inactive, N/A");
-        }
-    }
+    // fn ticks_remaining(&self, current_tick: u32) -> u32 {
+    //     if let ActionStatus::Active { complete_tick, .. } = self.status {
+    //         complete_tick - current_tick
+    //     } else {
+    //         panic!("inactive, N/A");
+    //     }
+    // }
 }
 
 #[allow(dead_code)]
