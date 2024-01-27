@@ -47,10 +47,9 @@ pub(crate) mod graphics {
     pub(crate) use super::*;
     pub(crate) use crate::graphics::anim::LerpVec3;
     pub(crate) use crate::graphics::{
-        CameraMarker, CreatureEntityRef, DwarfSpritesheet, TorchMarker, TorchSecondaryLightMarker,
+        CameraMarker, CreatureEntityRef, DwarfSpritesheet, MapMarker, TorchMarker,
+        TorchSecondaryLightMarker,
     };
-    // these are slightly more public than the above ..
-    pub(crate) use crate::graphics::{LogicalGraphicalEntityMapper, MapMarker, PlayerAvatar};
 
     pub use bevy::window::{PresentMode, Window, WindowPlugin, WindowResolution, WindowTheme};
 }

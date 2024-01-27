@@ -9,7 +9,7 @@ pub fn spawn(
     mut commands: Commands,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     asset_server: Res<AssetServer>,
-    player_query: Query<(Entity, &Player, &PlayerAvatar)>,
+    player_query: Query<(Entity, &Player)>,
 ) {
     let texture_handle: Handle<Image> = asset_server.load(SPRITESHEET_ASSET_PATH);
     let vec2 = Vec2::new(TILE_SIZE_W, TILE_SIZE_H);
@@ -24,7 +24,7 @@ pub fn spawn(
 
     commands
         .get_entity(player_entity)
-        .expect("nowhere for sprite")
+        .expect("no player for sprite")
         .with_children(|avatar| {
             avatar.spawn((SpriteSheetBundle {
                 texture_atlas: texture_atlas_handle,

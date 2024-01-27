@@ -17,7 +17,6 @@ pub(crate) mod typical;
 use bevy::window::{PresentMode, WindowResolution, WindowTheme};
 use bevy_fps_counter::FpsCounterPlugin;
 use bevy_turborand::prelude::RngPlugin;
-use graphics::LogicalGraphicalEntityMapper;
 use input::PlayerInputState;
 use player::SpawnPlayerEvent;
 use typical::graphics::*;
@@ -78,7 +77,6 @@ fn main() {
         .add_plugins(time::TimePlugin)
         // RESOURCES
         .insert_resource(ClearColor(Color::BLACK))
-        .insert_resource(LogicalGraphicalEntityMapper::new())
         .insert_resource(Msaa::default())
         .init_resource::<Board>()
         // STATE

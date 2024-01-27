@@ -69,7 +69,6 @@ pub(crate) fn spawn(
         let player_id = inside_map
             .spawn((
                 player_bundle,
-                PlayerAvatar,
                 SpatialBundle {
                     transform: Transform::from_xyz(position.x as f32, position.y as f32, 0.),
                     ..default()

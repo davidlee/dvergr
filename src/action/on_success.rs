@@ -1,15 +1,13 @@
 use super::*;
 
 use crate::graphics::anim::LerpVec3;
-use crate::graphics::LogicalGraphicalEntityMapper;
 
 pub(crate) fn apply_move(
     mut query_logic: Query<(Entity, &mut Locus, &mut MovementActionDetail)>,
     mut commands: Commands,
     mut board: ResMut<Board>,
-    mapper: Res<LogicalGraphicalEntityMapper>,
 ) {
-    for (logical_entity, mut locus, mov) in query_logic.iter_mut() {
+    for (entity, mut locus, mov) in query_logic.iter_mut() {
         dbg!(&locus, &mov);
         let pos = locus.position;
 
@@ -20,18 +18,13 @@ pub(crate) fn apply_move(
         locus.position = dest;
 
         // keep the board's reference up to date
-        board.creature_store.update(logical_entity, locus.position);
-
-        // remove marker component
-        commands
-            .entity(logical_entity)
-            .remove::<MovementActionDetail>();
+        board.creature_store.update(entity, locus.position);
 
         // then add an animation marker to the graphics
         let anim = LerpVec3::from_translation(pos.as_vec3(), dest.as_vec3(), 6);
-        let gfx_entity = mapper.graphical_entity(&logical_entity).unwrap();
-
-        commands.entity(*gfx_entity).insert(anim);
+        // remove marker component
+        commands.entity(entity).remove::<MovementActionDetail>();
+        commands.entity(entity).insert(anim);
     }
 }
 
