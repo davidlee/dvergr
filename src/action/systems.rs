@@ -13,15 +13,6 @@ pub(crate) fn bootstrap(
     ev_plan_req.send(ActionPlanRequestEvent);
 }
 
-// pub(crate) fn handle_player_input_request(
-//     mut input_state: ResMut<NextState<PlayerInputState>>,
-//     mut state: ResMut<NextState<ActionSystemState>>,
-// ) {
-//     dbg!("handle PLAYER INPUT request");
-//     state.set(ActionSystemState::Plan);
-//     input_state.set(PlayerInputState::Listen);
-// }
-
 pub(crate) fn plan_init_check_or_tick(
     mut commands: Commands,
     mut player: Query<(Entity, &mut Actor, Option<&ActorAction>), With<Player>>,
@@ -156,8 +147,9 @@ pub(crate) fn apply_completed_action_markers(
 }
 
 // find the next tick in which an action completes - and advance to it
-// this will end up needing to fold into tick_actions to deal with monitors, etc
-// ie we won't be able to know the next interesting tick in advance.
+// this makes everything feel a lot more responsive ...
+// but I'd love not to need it because it might not be workable when eg.
+// actions require monitor validations each tick
 
 #[allow(dead_code)]
 pub(crate) fn clock_tick_eager(
