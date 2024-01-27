@@ -4,7 +4,7 @@ use bevy::utils::HashMap;
 // CellStore
 //
 #[derive(Resource, Eq, PartialEq, Clone, Debug, Default)]
-pub struct EntityPositionStore {
+pub(crate) struct EntityPositionStore {
     // TODO make this IVec3, Entity
     to_entity: HashMap<IVec3, Entity>,
     to_uvec: HashMap<Entity, IVec3>,
@@ -12,12 +12,10 @@ pub struct EntityPositionStore {
 
 impl EntityPositionStore {
     pub fn as_hashset2d(&self) -> HashSet<[i32; 2]> {
-        self.to_entity
-            .keys()
-            .fold(HashSet::new(), |mut acc, pos| {
-                acc.insert([pos.x, pos.y]);
-                acc
-            })
+        self.to_entity.keys().fold(HashSet::new(), |mut acc, pos| {
+            acc.insert([pos.x, pos.y]);
+            acc
+        })
     }
 
     pub fn set(&mut self, pos: IVec3, entity: Entity) {

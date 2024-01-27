@@ -1,17 +1,18 @@
 // #![allow(dead_code)]
 
-pub mod action;
-pub mod board;
-pub mod combat;
-pub mod creature;
-pub mod dice;
-pub mod graphics;
-pub mod input;
-pub mod inventory;
-pub mod material;
-pub mod player;
-pub mod time;
-pub mod typical;
+pub(crate) mod action;
+pub(crate) mod board;
+pub(crate) mod combat;
+pub(crate) mod creature;
+pub(crate) mod dice;
+pub(crate) mod goblin;
+pub(crate) mod graphics;
+pub(crate) mod input;
+pub(crate) mod inventory;
+pub(crate) mod material;
+pub(crate) mod player;
+pub(crate) mod time;
+pub(crate) mod typical;
 
 use bevy::window::{PresentMode, WindowResolution, WindowTheme};
 use bevy_fps_counter::FpsCounterPlugin;
@@ -107,24 +108,16 @@ fn main() {
             Startup,
             (
                 board::generator::populate_board,
-                player::spawn,
                 apply_deferred, // ensure player exists
                 graphics::init_map::spawn_voxel_map,
+                apply_deferred, // ensure player exists
+                player::spawn,
                 apply_deferred,
                 graphics::player_avatar::spawn,
                 action::bootstrap,
             )
                 .chain(),
         )
-        // Custom schedules: how do they even work?
-        // here we're configuring our custom SystemSet
-        //
-        // .configure_sets(PreUpdate, ActionSet::PreUpdate)
-        // .configure_sets(Update, ActionSet::Update)
-        // .configure_sets(PostUpdate, ActionSet::PostUpdate)
-        // .configure_sets(PreUpdate, ActorBehaviour)
-        // .configure_sets(Update, ActionSet::Update)
-        // .configure_sets(PostUpdate, ActionSet::PostUpdate)
         .configure_sets(
             PreUpdate,
             (
@@ -145,7 +138,6 @@ fn main() {
             PreUpdate,
             (
                 (
-                    // should this run first or last?
                     action::plan_init_check_or_tick.run_if(
                         on_event::<ActionAddedEvent>().or_else(on_event::<ActionValidatedEvent>()),
                     ),
@@ -159,10 +151,6 @@ fn main() {
                 (
                     action::validation::validate_move.run_if(on_event::<ActionAddedEvent>()),
                     // put more validations here
-
-                    // ensure ActionAddedEvent is consumed
-
-                    // then ..
                     action::handle_action_invalid.run_if(on_event::<ActionInvalidatedEvent>()),
                     apply_deferred,
                 )
@@ -196,7 +184,7 @@ fn main() {
         .add_systems(
             Update,
             (
-                graphics::player_avatar::flicker_torches,
+                graphics::torchlight::flicker_torches,
                 graphics::move_anim::animate_player_fov,
                 graphics::move_anim::lerp_vec3_translation,
                 // keep-alive or return to set player input

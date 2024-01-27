@@ -1,4 +1,4 @@
-// use crate::board::geometry::*;
+#![allow(dead_code)]
 use crate::typical::*;
 
 use std::f32::consts::TAU;
@@ -20,6 +20,7 @@ use Dir::*;
 
 use super::geometry::abs_degrees;
 
+#[allow(dead_code)]
 impl Dir {
     const DIRECTION_NUM: usize = 8;
 

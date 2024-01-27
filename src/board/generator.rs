@@ -4,6 +4,9 @@ use crate::typical::*;
 
 type CoOrdinate = [i32; 2];
 
+// #[derive(Component)]
+// struct PlayerPositionMarker(IVec3);
+
 #[derive(Debug, Clone, Eq, PartialEq)]
 struct Room {
     x: i32,
@@ -177,14 +180,6 @@ pub(crate) fn populate_board(
 
     rooms.sort();
 
-    info!(
-        "GENERATED ROOMS: {:?} of {:?}, with {:?} discards :: {:?}",
-        rooms.len(),
-        target_rooms,
-        retries,
-        rooms
-    );
-
     // place Player in first room
     let fst = rooms.first().expect("can't play without a player ...");
     let initial = IVec3::new(fst.x + 1, fst.y + 1, 0);
@@ -220,7 +215,6 @@ pub(crate) fn populate_board(
 
             board.cell_store.set(*pos, entity);
             board.floor_store.set(*pos, entity);
-            board.visibility_store.set(*pos, entity);
         }
     });
 }

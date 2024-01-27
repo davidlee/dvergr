@@ -64,8 +64,8 @@ impl Default for CreatureBundle {
 #[allow(dead_code)]
 #[derive(Component, Debug, Clone)]
 pub(crate) struct Creature {
-    dry_weight: f32, // kg
-    height: i32,     // cm
+    pub dry_weight: f32, // kg
+    pub height: i32,     // cm
 }
 
 impl Default for Creature {

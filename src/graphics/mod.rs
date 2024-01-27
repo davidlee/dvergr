@@ -5,6 +5,7 @@ pub(crate) mod anim;
 pub(crate) mod init_map;
 pub(crate) mod move_anim;
 pub(crate) mod player_avatar;
+pub(crate) mod torchlight;
 
 use bevy::{prelude::*, utils::HashMap};
 

@@ -6,12 +6,13 @@ use bevy::utils::HashMap;
 #[derive(Resource, Clone, Debug)]
 #[allow(dead_code)]
 #[derive(Default)]
-pub struct CreatureStore {
+pub(crate) struct CreatureStore {
     to_entity: HashMap<IVec3, Entity>,
     // this is the source of truth for #to_entity
     to_pos: HashMap<Entity, IVec3>,
 }
 
+#[allow(dead_code)]
 impl CreatureStore {
     pub fn insert(&mut self, entity: Entity, pos: IVec3) {
         self.to_pos.insert(entity, pos);
