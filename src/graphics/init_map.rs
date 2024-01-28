@@ -42,38 +42,47 @@ pub(crate) fn spawn_voxel_map(
         .into(),
     );
 
+    // FIXME
     commands.insert_resource(AmbientLight {
-        color: Color::RED,
-        brightness: 100.0,
+        color: Color::BLACK,
+        brightness: 0.0,
     });
+
+    let bx = 0. - (board.size.x / 2) as f32;
+    let by = 0. - (board.size.y / 2) as f32;
 
     let (entity, _marker) = query.single();
-    commands.entity(entity).insert(SpatialBundle {
-        transform: Transform::from_xyz(0., 0., 0.),
-        ..default()
-    });
-
-    for (ivec, entity) in board.cell_store.iter() {
-        let [x, y, z] = ivec.to_array();
-
-        // floors
-        commands.entity(*entity).insert((PbrBundle {
-            mesh: shape.clone(),
-            material: floor_material.clone(),
-            transform: Transform::from_xyz(x as f32, y as f32, z as f32 - 1.0),
+    commands
+        .entity(entity)
+        .insert(SpatialBundle {
+            transform: Transform::from_xyz(bx, by, 0.),
             ..default()
-        },));
-    }
+        })
+        .with_children(|ch| {
+            for (ivec, entity) in board.cell_store.iter() {
+                let [x, y, z] = ivec.to_array();
 
-    for (ivec, entity) in board.wall_store.iter() {
-        let [x, y, z] = ivec.to_array();
+                // ?? SHOULD THIS be commands.entity(cell_entity).insert(( ... )) ?n
 
-        // walls
-        commands.entity(*entity).insert((PbrBundle {
-            mesh: shape.clone(),
-            material: floor_material.clone(),
-            transform: Transform::from_xyz(x as f32, y as f32, z as f32),
-            ..default()
-        },));
-    }
+                // floors
+                ch.spawn((PbrBundle {
+                    mesh: shape.clone(),
+                    material: floor_material.clone(),
+                    transform: Transform::from_xyz(x as f32, y as f32, z as f32 - 1.0),
+                    ..default()
+                },));
+            }
+
+            for (ivec, entity) in board.wall_store.iter() {
+                let [x, y, z] = ivec.to_array();
+
+                // walls
+                ch.spawn((PbrBundle {
+                    mesh: shape.clone(),
+                    material: floor_material.clone(),
+                    transform: Transform::from_xyz(x as f32, y as f32, z as f32),
+                    ..default()
+                },));
+            }
+        });
 }

@@ -51,6 +51,7 @@ pub(crate) fn spawn_player_and_3d_elements(
     mut commands: Commands,
     mut board: ResMut<Board>,
     mut ev: EventReader<SpawnPlayerEvent>,
+    query: Query<(Entity, &mut BoardMarker)>,
 ) {
     let position = ev.read().next().unwrap().0;
 
@@ -69,8 +70,13 @@ pub(crate) fn spawn_player_and_3d_elements(
         ..default()
     };
 
-    commands
-        .spawn((
+    // let bx = 0. - (board.size.x / 2) as f32;
+    // let by = 0. - (board.size.y / 2) as f32;
+
+    // let cell_entity = board.cell_store.get(&position).unwrap();
+    let (entity, _marker) = query.single();
+    commands.entity(entity).with_children(|ch| {
+        ch.spawn((
             Player2DMarker,
             SpatialBundle {
                 transform: Transform::from_xyz(0., 0., 0.),
@@ -102,6 +108,7 @@ pub(crate) fn spawn_player_and_3d_elements(
                         .with_children(|torch| {
                             torch.spawn((TorchSecondaryLightMarker, SpatialBundle::default()));
                         });
+
                     player.spawn((
                 CameraMarker,
                 Camera3dBundle {
@@ -109,8 +116,8 @@ pub(crate) fn spawn_player_and_3d_elements(
                         fov: FOV,
                         ..default()
                     }),
-                    transform: Transform::from_xyz(0., 0., CAMERA3D_Z_POS)
-                        .looking_at(Vec3::new(0., 0., 0.), Vec3::Y),
+                    transform: Transform::from_xyz(0., 0., 50.)
+                        .looking_at(Vec3::new(0., 0., 0.), Vec3::new(0.,0.,0.)),
                     camera_3d: Camera3d {
                         clear_color: ClearColorConfig::Custom(Color::BLACK),
                         screen_space_specular_transmission_steps: 3,
@@ -132,4 +139,5 @@ pub(crate) fn spawn_player_and_3d_elements(
                 .id();
             board.creature_store.insert(player_id, position);
         });
+    });
 }
