@@ -196,26 +196,28 @@ pub(crate) fn populate_board(
     }
 
     // create cells
-    commands.spawn_empty().with_children(|parent| {
-        for pos in board.coords().iter() {
-            let [x, y, z] = pos.to_array();
-            let cell = Cell::new(x, y, z);
-            let floor = Floor::new(x, y, z, Substance::Dirt);
+    commands.spawn(BoardMarker).with_children(|childer| {
+        childer.spawn(ChunkMarker).with_children(|chunk| {
+            for pos in board.coords().iter() {
+                let [x, y, z] = pos.to_array();
+                let cell = Cell::new(x, y, z);
+                let floor = Floor::new(x, y, z, Substance::Dirt);
 
-            let entity: Entity;
-            if blanks.contains(&[x, y]) {
-                entity = parent.spawn((cell, floor)).id();
-                false
-            } else {
-                let wall = Wall::new(x, y, z, Substance::Dirt);
-                entity = parent.spawn((cell, floor, wall)).id();
-                board.wall_store.set(*pos, entity);
-                true
-            };
+                let entity: Entity;
+                if blanks.contains(&[x, y]) {
+                    entity = chunk.spawn((cell, floor)).id();
+                    board.floor_store.set(*pos, entity);
+                    false
+                } else {
+                    let wall = Wall::new(x, y, z, Substance::Dirt);
+                    entity = chunk.spawn((cell, floor, wall)).id();
+                    board.wall_store.set(*pos, entity);
+                    true
+                };
 
-            board.cell_store.set(*pos, entity);
-            board.floor_store.set(*pos, entity);
-        }
+                board.cell_store.set(*pos, entity);
+            }
+        });
     });
 }
 

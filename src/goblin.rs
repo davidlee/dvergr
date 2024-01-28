@@ -6,23 +6,22 @@ pub(crate) struct SpawnGoblinEvent(pub IVec3);
 
 pub(crate) fn spawn_goblins(
     map_query: Query<Entity, With<MapMarker>>,
+    cell_query: Query<Entity, &Cell>,
     mut board: ResMut<Board>,
     mut commands: Commands,
     mut ev_gobs: EventReader<SpawnGoblinEvent>,
     sprite: Res<GoblinSpritesheet>,
 ) {
-    //
-    let entity = map_query.single();
     for SpawnGoblinEvent(position) in ev_gobs.read() {
-        commands.entity(entity).with_children(|inside_map| {
-            let goblin_id = inside_map
+        let entity = board.cell_store.get(position).unwrap();
+        commands.entity(*entity).with_children(|inside_cell| {
+            let goblin_id = inside_cell
                 .spawn(goblin_bundle(position))
                 .with_children(|gobbo| {
-                    // let [x, y, z] = position.as_vec3().to_array();
                     gobbo.spawn((SpriteSheetBundle {
                         texture_atlas: sprite.atlas_handle.clone(),
                         sprite: TextureAtlasSprite::new(0),
-                        transform: Transform::from_translation(position.as_vec3()),
+                        transform: Transform::from_translation(Vec3::splat(0.)), // (position.as_vec3()),
                         ..default()
                     },));
                 })

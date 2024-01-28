@@ -1,13 +1,19 @@
 use bevy::prelude::Component;
 
 #[derive(Component, Debug)]
-pub struct MapMarker;
+pub(crate) struct ChunkMarker;
 
 #[derive(Component, Debug)]
-pub struct TorchMarker;
+pub(crate) struct BoardMarker;
 
 #[derive(Component, Debug)]
-pub struct TorchSecondaryLightMarker;
+pub(crate) struct MapMarker;
 
 #[derive(Component, Debug)]
-pub struct CameraMarker;
+pub(crate) struct TorchMarker;
+
+#[derive(Component, Debug)]
+pub(crate) struct TorchSecondaryLightMarker;
+
+#[derive(Component, Debug)]
+pub(crate) struct CameraMarker;

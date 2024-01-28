@@ -99,6 +99,7 @@ fn main() {
                 graphics::load_spritesheets,
                 board::generator::populate_board,
                 board::generator::add_fun,
+                apply_deferred,
                 graphics::spawn_voxel_map,
                 apply_deferred,
                 player::spawn_player_and_3d_elements,

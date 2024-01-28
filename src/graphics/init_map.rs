@@ -11,7 +11,7 @@ pub(crate) fn spawn_voxel_map(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-
+    query: Query<(Entity, &mut BoardMarker)>,
     board: Res<Board>,
     asset_server: ResMut<AssetServer>,
 ) {
@@ -43,41 +43,37 @@ pub(crate) fn spawn_voxel_map(
     );
 
     commands.insert_resource(AmbientLight {
-        color: Color::BLACK,
-        brightness: 0.0,
+        color: Color::RED,
+        brightness: 100.0,
     });
 
-    commands
-        .spawn((
-            MapMarker,
-            SpatialBundle {
-                transform: Transform::from_xyz(0., 0., 0.),
-                ..default()
-            },
-        ))
-        .with_children(|ch| {
-            for (ivec, _e) in board.cell_store.iter() {
-                let [x, y, z] = ivec.to_array();
+    let (entity, _marker) = query.single();
+    commands.entity(entity).insert(SpatialBundle {
+        transform: Transform::from_xyz(0., 0., 0.),
+        ..default()
+    });
 
-                // floor
-                ch.spawn((PbrBundle {
-                    mesh: shape.clone(),
-                    material: floor_material.clone(),
-                    transform: Transform::from_xyz(x as f32, y as f32, z as f32 - 1.0),
-                    ..default()
-                },));
-            }
+    for (ivec, entity) in board.cell_store.iter() {
+        let [x, y, z] = ivec.to_array();
 
-            for (ivec, _e) in board.wall_store.iter() {
-                let [x, y, z] = ivec.to_array();
+        // floors
+        commands.entity(*entity).insert((PbrBundle {
+            mesh: shape.clone(),
+            material: floor_material.clone(),
+            transform: Transform::from_xyz(x as f32, y as f32, z as f32 - 1.0),
+            ..default()
+        },));
+    }
 
-                // wall
-                ch.spawn((PbrBundle {
-                    mesh: shape.clone(),
-                    material: floor_material.clone(),
-                    transform: Transform::from_xyz(x as f32, y as f32, z as f32),
-                    ..default()
-                },));
-            }
-        });
+    for (ivec, entity) in board.wall_store.iter() {
+        let [x, y, z] = ivec.to_array();
+
+        // walls
+        commands.entity(*entity).insert((PbrBundle {
+            mesh: shape.clone(),
+            material: floor_material.clone(),
+            transform: Transform::from_xyz(x as f32, y as f32, z as f32),
+            ..default()
+        },));
+    }
 }
