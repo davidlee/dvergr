@@ -1,3 +1,4 @@
+use crate::player::Player2DMarker;
 use crate::typical::graphics::*;
 
 const DWARF_SPRITESHEET_ASSET_PATH: &str = "vettlingr/dwarves.png";
@@ -51,7 +52,7 @@ pub fn load_spritesheets(
 pub fn spawn_player_sprite_and_2d_camera(
     mut commands: Commands,
     dwarf: Res<DwarfSpritesheet>,
-    player_query: Query<(Entity, &Player)>,
+    player_query: Query<(Entity, &Player2DMarker)>,
 ) {
     let player_entity = player_query.single().0;
 

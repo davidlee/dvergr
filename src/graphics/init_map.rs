@@ -42,9 +42,6 @@ pub(crate) fn spawn_voxel_map(
         .into(),
     );
 
-    let bx = 0.0 - board.size.x as f32;
-    let by = 0.0 - board.size.y as f32;
-
     commands.insert_resource(AmbientLight {
         color: Color::BLACK,
         brightness: 0.0,
@@ -54,11 +51,9 @@ pub(crate) fn spawn_voxel_map(
         .spawn((
             MapMarker,
             SpatialBundle {
-                transform: Transform::from_xyz(bx, by, 0.),
+                transform: Transform::from_xyz(0., 0., 0.),
                 ..default()
             },
-            // Visibility::Inherited,
-            // InheritedVisibility::default(),
         ))
         .with_children(|ch| {
             for (ivec, _e) in board.cell_store.iter() {
