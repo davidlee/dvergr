@@ -53,12 +53,12 @@ pub(crate) fn spawn_voxel_map(
     commands
         .spawn((
             MapMarker,
-            TransformBundle {
-                local: Transform::from_xyz(bx, by, 0.),
+            SpatialBundle {
+                transform: Transform::from_xyz(bx, by, 0.),
                 ..default()
             },
-            Visibility::Inherited,
-            InheritedVisibility::default(),
+            // Visibility::Inherited,
+            // InheritedVisibility::default(),
         ))
         .with_children(|ch| {
             for (ivec, _e) in board.cell_store.iter() {

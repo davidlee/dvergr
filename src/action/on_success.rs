@@ -8,7 +8,7 @@ pub(crate) fn apply_move(
     mut board: ResMut<Board>,
 ) {
     for (entity, mut locus, mov) in query_logic.iter_mut() {
-        dbg!(&locus, &mov);
+        // dbg!(&locus, &mov);
         let pos = locus.position;
 
         // update the logical model
@@ -17,10 +17,9 @@ pub(crate) fn apply_move(
         locus.facing = *mov.direction();
         locus.position = dest;
 
-        // keep the board's reference up to date
         board.creature_store.update(entity, locus.position);
 
-        // then add an animation marker to the graphics
+        // add an animation marker to the graphics
         let anim = LerpVec3::from_translation(pos.as_vec3(), dest.as_vec3(), 6);
         // remove marker component
         commands.entity(entity).remove::<MovementActionDetail>();

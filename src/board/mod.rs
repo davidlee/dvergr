@@ -10,8 +10,8 @@ pub(crate) use creature_store::*;
 
 pub(crate) const BOARD_SIZE_X: i32 = 48;
 pub(crate) const BOARD_SIZE_Y: i32 = 24;
-
-// pub(crate) const BOARD_SIZE_Z: i32 = 1;
+#[allow(dead_code)]
+pub(crate) const BOARD_SIZE_Z: i32 = 1;
 
 use crate::typical::*;
 
