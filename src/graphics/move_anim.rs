@@ -1,5 +1,4 @@
 use crate::graphics::anim::LerpVec3;
-use crate::graphics::TorchMarker;
 use crate::typical::*;
 
 pub(crate) fn lerp_vec3_translation(

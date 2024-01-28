@@ -9,6 +9,7 @@ pub(crate) mod goblin;
 pub(crate) mod graphics;
 pub(crate) mod input;
 pub(crate) mod inventory;
+pub(crate) mod marker_components;
 pub(crate) mod material;
 pub(crate) mod player;
 pub(crate) mod time;
@@ -40,15 +41,7 @@ struct CustomFlush;
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 struct ActorBehaviour;
 
-// #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
-// enum ActionSet {
-//     PreUpdate,
-//     Update,
-//     PostUpdate,
-// }
-
 fn main() {
-    // let schedule = Schedule::new(ActionSchedule::Assign);
     App::new()
         .add_plugins(
             DefaultPlugins
@@ -77,7 +70,7 @@ fn main() {
         .add_plugins(time::TimePlugin)
         // RESOURCES
         .insert_resource(ClearColor(Color::BLACK))
-        .insert_resource(Msaa::default())
+        .init_resource::<Msaa>()
         .init_resource::<Board>()
         // STATE
         .add_state::<ActionSystemState>()
@@ -94,27 +87,31 @@ fn main() {
         .add_event::<ActionStartedEvent>()
         .add_event::<ActionAbortedEvent>()
         .add_event::<StillWaitForAnimEvent>()
+        .add_event::<SpawnGoblinEvent>()
         //
         // SYSTEMS
         //
         // Startup
-        // .configure_sets(PreUpdate, ActionSet::PreUpdate)
-        // .configure_sets(Update, ActionSet::Update)
-        // .configure_sets(PostUpdate, ActionSet::PostUpdate)
         //
         .add_systems(
             Startup,
             (
+                graphics::load_spritesheets,
                 board::generator::populate_board,
+                board::generator::add_fun,
                 graphics::spawn_voxel_map,
                 apply_deferred,
                 player::spawn_player_and_3d_elements,
+                goblin::spawn_goblins,
                 apply_deferred,
                 graphics::spawn_player_sprite_and_2d_camera,
                 action::bootstrap,
             )
                 .chain(),
         )
+        //
+        // Actions
+        //
         .configure_sets(
             PreUpdate,
             (
@@ -194,6 +191,10 @@ fn main() {
                 .run_if(in_state(ActionSystemState::AwaitAnim)),
         )
         .add_systems(Update, bevy::window::close_on_esc)
+        .add_systems(
+            PostUpdate,
+            goblin::spawn_goblins.run_if(on_event::<SpawnGoblinEvent>()),
+        )
         .add_systems(
             Update,
             instrument_time.run_if(in_state(PlayerInputState::Inactive)),

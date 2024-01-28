@@ -1,4 +1,4 @@
-use super::*;
+use crate::marker_components::*;
 use crate::Board;
 use bevy::pbr::OpaqueRendererMethod;
 use bevy::prelude::*;

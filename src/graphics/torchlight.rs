@@ -1,7 +1,5 @@
 use crate::typical::*;
 
-use super::TorchSecondaryLightMarker;
-
 use bevy_turborand::prelude::*;
 use bevy_turborand::GlobalChaChaRng;
 use bevy_turborand::RngComponent;

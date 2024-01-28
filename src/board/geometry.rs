@@ -8,6 +8,7 @@ use super::{BOARD_SIZE_X, BOARD_SIZE_Y};
 // https://www.redblobgames.com/coordinates/axes-and-angles/#angles
 // https://www.redblobgames.com/grids/line-drawing/
 
+#[allow(dead_code)]
 pub fn circle(centre: IVec3, radius: f32) -> HashSet<[i32; 2]> {
     let mut circle: HashSet<[i32; 2]> = HashSet::new();
 
@@ -33,6 +34,7 @@ pub fn circle(centre: IVec3, radius: f32) -> HashSet<[i32; 2]> {
     circle
 }
 
+#[allow(dead_code)]
 pub fn take_sector(
     angle: f32,
     width: f32,
@@ -64,11 +66,13 @@ pub fn take_sector(
         .collect()
 }
 
+#[allow(dead_code)]
 pub fn sector_facing(facing: Dir, centre: &IVec3, circle: HashSet<[i32; 2]>) -> HashSet<[i32; 2]> {
     let angle = f32::to_radians(COMPASS_DEGREES[facing as usize]);
     take_sector(angle, f32::to_radians(90.), centre, circle)
 }
 
+#[allow(dead_code)]
 pub fn fov_facing(centre: &IVec3, facing: Dir, radius: f32) -> HashSet<[i32; 2]> {
     take_sector(
         facing.to_degrees(),
@@ -99,6 +103,7 @@ pub fn fov_facing(centre: &IVec3, facing: Dir, radius: f32) -> HashSet<[i32; 2]>
 //     )
 // }
 
+#[allow(dead_code)]
 pub fn angle_between_2d(a: &IVec2, b: &IVec2) -> f32 {
     let (x1, y1, x2, y2) = (a.x as f32, a.y as f32, b.x as f32, b.y as f32);
     abs_radians(f32::atan2(x2 - x1, y2 - y1))
@@ -126,6 +131,8 @@ pub fn abs_degrees(a: f32) -> f32 {
 }
 // https://www.redblobgames.com/grids/line-drawing/
 //
+
+#[allow(dead_code)]
 pub fn line(p0: IVec3, p1: IVec3) -> Vec<IVec3> {
     let mut points = vec![];
     let n = distance_between_2d(p0, p1);

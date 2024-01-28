@@ -218,3 +218,23 @@ pub(crate) fn populate_board(
         }
     });
 }
+
+pub(crate) fn add_fun(
+    board: ResMut<Board>,
+    mut ev_writer: EventWriter<SpawnGoblinEvent>,
+    mut global_rng: ResMut<GlobalChaChaRng>,
+) {
+    let mut gobbos_left = 3;
+    let mut rng = RngComponent::from(&mut global_rng);
+    let mut coords = board.coords();
+    // randomize order
+    coords.sort_unstable_by(|_a, _b| rng.u8(0..1).cmp(&1));
+
+    while gobbos_left > 0 {
+        let pos = coords.pop().unwrap();
+        if board.is_unoccupied(&pos) {
+            ev_writer.send(SpawnGoblinEvent(pos));
+            gobbos_left -= 1;
+        }
+    }
+}

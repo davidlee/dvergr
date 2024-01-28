@@ -1,10 +1,6 @@
 use super::*;
-// use crate::anatomy::*;
-// use crate::creature::*;
-// use crate::typical::*;
 
-#[derive(Bundle, Debug, Clone)]
-#[derive(Default)]
+#[derive(Bundle, Debug, Clone, Default)]
 pub struct CharacterBundle {
     pub character: Character,
     // pub blood
@@ -14,8 +10,6 @@ pub struct CharacterBundle {
     pub rituals: RitualList,
     // Journal
 }
-
-
 
 #[derive(Component, Debug, Clone, Default)]
 pub struct Character {

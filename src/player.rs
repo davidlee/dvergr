@@ -1,5 +1,4 @@
-use crate::creature::{Character, CharacterBundle, CharacterLevel, CreatureBundle};
-use crate::typical::{graphics::*, *};
+use crate::typical::graphics::*;
 use bevy::core_pipeline::clear_color::ClearColorConfig;
 use bevy::prelude::*;
 use bevy::render::view::ColorGrading;
@@ -59,6 +58,10 @@ pub(crate) fn spawn_player_and_3d_elements(
                 position,
                 ..default()
             },
+            spatial: SpatialBundle {
+                transform: Transform::from_xyz(position.x as f32, position.y as f32, 0.),
+                ..default()
+            },
             ..default()
         },
         ..default()
@@ -67,13 +70,7 @@ pub(crate) fn spawn_player_and_3d_elements(
     let (map_entity, _) = map_query.single();
     commands.entity(map_entity).with_children(|inside_map| {
         let player_id = inside_map
-            .spawn((
-                player_bundle,
-                SpatialBundle {
-                    transform: Transform::from_xyz(position.x as f32, position.y as f32, 0.),
-                    ..default()
-                },
-            ))
+            .spawn(player_bundle)
             .with_children(|player| {
                 player
                     .spawn((

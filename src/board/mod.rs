@@ -1,13 +1,12 @@
-pub mod cell;
-pub mod cell_store;
-pub mod creature_store;
-pub mod direction;
-pub mod generator;
-pub mod geometry;
-pub mod primitives;
-
-pub use cell_store::*;
-pub use creature_store::*;
+pub(crate) mod cell;
+pub(crate) mod cell_store;
+pub(crate) mod creature_store;
+pub(crate) mod direction;
+pub(crate) mod generator;
+pub(crate) mod geometry;
+pub(crate) mod primitives;
+pub(crate) use cell_store::*;
+pub(crate) use creature_store::*;
 
 pub(crate) const BOARD_SIZE_X: i32 = 48;
 pub(crate) const BOARD_SIZE_Y: i32 = 24;

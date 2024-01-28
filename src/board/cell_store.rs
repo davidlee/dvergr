@@ -10,6 +10,7 @@ pub(crate) struct EntityPositionStore {
     to_uvec: HashMap<Entity, IVec3>,
 }
 
+#[allow(dead_code)]
 impl EntityPositionStore {
     pub fn as_hashset2d(&self) -> HashSet<[i32; 2]> {
         self.to_entity.keys().fold(HashSet::new(), |mut acc, pos| {

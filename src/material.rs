@@ -1,4 +1,4 @@
-// Material
+#![allow(dead_code)]
 use bevy::prelude::Component;
 
 // stuff other stuff can be made of (adjective)

@@ -34,6 +34,28 @@ pub(crate) struct CreatureBundle {
     pub approach: Approach,
     pub conditions: ConditionList,
     pub locus: Locus,
+    pub spatial: SpatialBundle,
+}
+
+impl CreatureBundle {
+    fn from_position(position: IVec3) -> Self {
+        //Self::default()
+        Self {
+            locus: Locus {
+                position,
+                ..default()
+            },
+            spatial: SpatialBundle {
+                transform: Transform::from_xyz(
+                    position.x as f32,
+                    position.y as f32,
+                    position.z as f32,
+                ),
+                ..default()
+            },
+            ..default()
+        }
+    }
 }
 
 impl Default for CreatureBundle {
@@ -54,6 +76,7 @@ impl Default for CreatureBundle {
             approach: Approach::default(),
             conditions: ConditionList::default(),
             locus: Locus::default(),
+            spatial: SpatialBundle::default(),
         }
     }
 }
