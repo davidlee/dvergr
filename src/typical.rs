@@ -39,6 +39,8 @@ pub use bevy_turborand::prelude::*;
 pub use bevy_turborand::GlobalChaChaRng;
 pub use bevy_turborand::RngComponent;
 
+pub use bevy_mod_picking::PickableBundle;
+
 pub use std::cmp::Ordering;
 pub use std::collections::VecDeque;
 pub use std::convert::From;

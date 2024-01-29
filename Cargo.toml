@@ -18,3 +18,5 @@ bevy_ecs_tilemap = { git = "https://github.com/divark/bevy_ecs_tilemap", branch 
 bevy-fps-counter = "0.3.0"
 num-rational = "0.4.1"
 bevy_mod_picking = "0.17.0"
+bevy_sprite3d = "2.7.0"
+bevy_asset_loader = { version = "0.19.1", features = ["2d"] }

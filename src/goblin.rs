@@ -7,20 +7,21 @@ pub(crate) struct SpawnGoblinEvent(pub IVec3);
 // https://bevy-cheatbook.github.io/cookbook/cursor2world.html
 
 pub(crate) fn spawn_goblins(
-    map_query: Query<Entity, With<MapMarker>>,
-    cell_query: Query<Entity, &Cell>,
+    cam_query: Query<(Entity, &Camera3d)>,
+    other_query: Query<(Entity, &BoardMarker)>,
     mut board: ResMut<Board>,
     mut commands: Commands,
     mut ev_gobs: EventReader<SpawnGoblinEvent>,
     sprite: Res<GoblinSpritesheet>,
 ) {
-    for SpawnGoblinEvent(position) in ev_gobs.read() {
-        let entity = board.cell_store.get(position).unwrap();
-        //
-        // FIXME I don't think we want to put em in a cell
-        //
-        commands.entity(*entity).with_children(|inside_cell| {
-            let goblin_id = inside_cell
+    return;
+
+    let (e, _) = other_query.single();
+    let (ce, cam) = cam_query.single();
+
+    commands.entity(e).with_children(|on_board| {
+        for SpawnGoblinEvent(position) in ev_gobs.read() {
+            let goblin_id = on_board
                 .spawn(goblin_bundle(position))
                 .with_children(|gobbo| {
                     gobbo.spawn((SpriteSheetBundle {
@@ -33,8 +34,8 @@ pub(crate) fn spawn_goblins(
                 .id();
             board.creature_store.insert(goblin_id, *position);
             warn!("goblin spawned at {:?}", position);
-        });
-    }
+        }
+    });
 }
 
 fn goblin_bundle(position: &IVec3) -> CreatureBundle {

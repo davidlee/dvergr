@@ -116,7 +116,7 @@ pub(crate) fn spawn_player_and_3d_elements(
                         fov: FOV,
                         ..default()
                     }),
-                    transform: Transform::from_xyz(0., 0., 50.)
+                    transform: Transform::from_xyz(0., -20., 20.)
                         .looking_at(Vec3::new(0., 0., 0.), Vec3::new(0.,0.,0.)),
                     camera_3d: Camera3d {
                         clear_color: ClearColorConfig::Custom(Color::BLACK),

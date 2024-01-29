@@ -17,6 +17,7 @@ pub(crate) mod typical;
 
 use bevy::window::{PresentMode, WindowResolution, WindowTheme};
 use bevy_fps_counter::FpsCounterPlugin;
+use bevy_mod_picking::DefaultPickingPlugins;
 use bevy_turborand::prelude::RngPlugin;
 use input::PlayerInputState;
 use player::SpawnPlayerEvent;
@@ -34,6 +35,13 @@ enum ActionSet {
     // AwaitAnim:
     Animate,
 }
+
+// #[derive(States, Debug, Default, Hash, Eq, Clone, PartialEq)]
+// enum AssetLoadState {
+//     #[default]
+//     Loading,
+//     Ready,
+// }
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone, SystemSet)]
 struct CustomFlush;
@@ -68,6 +76,7 @@ fn main() {
         .add_plugins(FpsCounterPlugin)
         .add_plugins(RngPlugin::default())
         .add_plugins(time::TimePlugin)
+        .add_plugins(DefaultPickingPlugins)
         // RESOURCES
         .insert_resource(ClearColor(Color::BLACK))
         .init_resource::<Msaa>()
@@ -75,6 +84,7 @@ fn main() {
         // STATE
         .add_state::<ActionSystemState>()
         .add_state::<PlayerInputState>()
+        // .add_state::<AssetLoadState>()
         // EVENTS
         .add_event::<SpawnPlayerEvent>()
         .add_event::<TickEvent>()
@@ -179,8 +189,6 @@ fn main() {
         .add_systems(
             Update,
             (
-                graphics::torchlight::flicker_torches,
-                graphics::move_anim::animate_player_fov,
                 graphics::move_anim::lerp_vec3_translation,
                 // keep-alive or return to set player input
                 (action::set_state_plan, apply_deferred.in_set(CustomFlush))
@@ -192,6 +200,13 @@ fn main() {
                 .run_if(in_state(ActionSystemState::AwaitAnim)),
         )
         .add_systems(Update, bevy::window::close_on_esc)
+        .add_systems(
+            Update,
+            (
+                graphics::torchlight::flicker_torches,
+                graphics::move_anim::animate_player_fov,
+            ),
+        )
         .add_systems(
             PostUpdate,
             goblin::spawn_goblins.run_if(on_event::<SpawnGoblinEvent>()),

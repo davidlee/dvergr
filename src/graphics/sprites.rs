@@ -1,3 +1,5 @@
+use bevy::asset::AssetLoader;
+
 use crate::player::Player2DMarker;
 use crate::typical::graphics::*;
 
@@ -13,11 +15,16 @@ pub struct GoblinSpritesheet {
     pub atlas_handle: Handle<TextureAtlas>,
 }
 
+// #[derive(Resource,Debug)]
+// pub(crate) struct AssetsLoading(Vec<HandleUntyped>);
+
 pub fn load_spritesheets(
     mut commands: Commands,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     asset_server: Res<AssetServer>,
 ) {
+    // let mut loading = vec![];
+
     let dwarf_texture_handle: Handle<Image> = asset_server.load(DWARF_SPRITESHEET_ASSET_PATH);
     let dwarf_texture_atlas = TextureAtlas::from_grid(
         dwarf_texture_handle.clone(),
@@ -46,8 +53,16 @@ pub fn load_spritesheets(
     commands.insert_resource(GoblinSpritesheet {
         atlas_handle: goblin_texture_atlas_handle,
     });
-    warn!("wat");
+
+    // loading.push(dwarf_texture_atlas_handle.untyped());
+    // loading.push(goblin_texture_atlas_handle.untyped());
+
+    // commands.insert_resource(AssetsLoading(loading));
 }
+
+// pub fn check_assets_loaded(asset_server: Res<AssetServer>) {
+//     //
+// }
 
 pub fn spawn_player_sprite_and_2d_camera(
     mut commands: Commands,
