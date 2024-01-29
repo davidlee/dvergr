@@ -17,3 +17,4 @@ bevy_turborand = { version = "0.7.0", features = ["chacha"] }
 bevy_ecs_tilemap = { git = "https://github.com/divark/bevy_ecs_tilemap", branch = "0.12-fixes" }
 bevy-fps-counter = "0.3.0"
 num-rational = "0.4.1"
+bevy_mod_picking = "0.17.0"
